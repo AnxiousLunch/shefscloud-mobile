@@ -1,5 +1,4 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from "react-native"
-import { LinearGradient } from "expo-linear-gradient"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useCart } from "../contexts/CartContext"
 
@@ -23,9 +22,9 @@ export default function CartScreen() {
   if (items.length === 0) {
     return (
       <SafeAreaView style={styles.container}>
-        <LinearGradient colors={["#dc2626", "#b91c1c"]} style={styles.header}>
+        <View style={styles.header}>
           <Text style={styles.headerTitle}>My Cart</Text>
-        </LinearGradient>
+        </View>
 
         <View style={styles.emptyState}>
           <Text style={styles.emptyIcon}>🛒</Text>
@@ -38,9 +37,9 @@ export default function CartScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <LinearGradient colors={["#dc2626", "#b91c1c"]} style={styles.header}>
+      <View style={styles.header}>
         <Text style={styles.headerTitle}>My Cart</Text>
-      </LinearGradient>
+      </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {items.map((item) => (
@@ -100,17 +99,20 @@ export default function CartScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#ffffff",
   },
   header: {
+    backgroundColor: "#ffffff",
     paddingHorizontal: 25,
     paddingVertical: 25,
     alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f1f5f9",
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: "800",
-    color: "#ffffff",
+    color: "#1f2937",
   },
   content: {
     flex: 1,
@@ -128,11 +130,11 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 4,
     },
     shadowOpacity: 0.08,
-    shadowRadius: 30,
-    elevation: 8,
+    shadowRadius: 20,
+    elevation: 4,
   },
   itemImage: {
     width: 70,
@@ -198,11 +200,11 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 4,
     },
     shadowOpacity: 0.08,
-    shadowRadius: 30,
-    elevation: 8,
+    shadowRadius: 20,
+    elevation: 4,
   },
   totalRow: {
     flexDirection: "row",

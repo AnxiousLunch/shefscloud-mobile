@@ -1,11 +1,26 @@
 import { Tabs } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 import { useCart } from "../../contexts/CartContext";
+import { Ionicons } from '@expo/vector-icons';
 
-function TabBarIcon({ icon, label, focused }: { icon: string; label: string; focused: boolean }) {
+function TabBarIcon({ 
+  iconName, 
+  label, 
+  focused 
+}: { 
+  iconName: keyof typeof Ionicons.glyphMap; 
+  label: string; 
+  focused: boolean;
+}) {
   return (
     <View style={[styles.tabItem, focused && styles.tabItemActive]}>
-      <Text style={[styles.tabIcon, focused && styles.tabIconActive]}>{icon}</Text>
+      <View style={styles.iconContainer}>
+        <Ionicons 
+          name={iconName} 
+          size={24} 
+          color={focused ? "#ffffff" : "#6b7280"} 
+        />
+      </View>
       <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>{label}</Text>
     </View>
   );
@@ -18,10 +33,16 @@ function CartTabBarIcon({ focused }: { focused: boolean }) {
   return (
     <View style={[styles.tabItem, focused && styles.tabItemActive]}>
       <View style={styles.cartIconContainer}>
-        <Text style={[styles.tabIcon, focused && styles.tabIconActive]}>🛒</Text>
+        <View style={styles.iconContainer}>
+          <Ionicons 
+            name="bag-outline" 
+            size={24} 
+            color={focused ? "#ffffff" : "#6b7280"} 
+          />
+        </View>
         {itemCount > 0 && (
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>{itemCount}</Text>
+            <Text style={styles.badgeText}>{itemCount > 99 ? '99+' : itemCount}</Text>
           </View>
         )}
       </View>
@@ -43,14 +64,18 @@ export default function CustomerLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ focused }) => <TabBarIcon icon="🏠" label="Home" focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabBarIcon iconName="home-outline" label="Home" focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
         name="browse"
         options={{
           title: "Browse",
-          tabBarIcon: ({ focused }) => <TabBarIcon icon="🔍" label="Browse" focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabBarIcon iconName="search-outline" label="Browse" focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
@@ -64,7 +89,9 @@ export default function CustomerLayout() {
         name="orders"
         options={{
           title: "Orders",
-          tabBarIcon: ({ focused }) => <TabBarIcon icon="📋" label="Orders" focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabBarIcon iconName="receipt-outline" label="Orders" focused={focused} />
+          ),
         }}
       />
     </Tabs>
@@ -73,56 +100,91 @@ export default function CustomerLayout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
-    borderTopWidth: 1,
-    borderTopColor: "rgba(0, 0, 0, 0.05)",
-    paddingBottom: 25,
-    paddingTop: 12,
-    height: 90,
+    backgroundColor: "rgba(255, 255, 255, 0.98)",
+    borderTopWidth: 0,
+    elevation: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    paddingBottom: 28,
+    paddingTop: 16,
+    height: 95,
+    paddingHorizontal: 8,
   },
   tabItem: {
     alignItems: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 18,
-    minWidth: 65,
+    justifyContent: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 24,
+    minWidth: 70,
+    minHeight: 60,
+    transition: "all 0.2s ease",
   },
   tabItemActive: {
     backgroundColor: "#dc2626",
+    transform: [{ scale: 1.05 }],
+    shadowColor: "#dc2626",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  tabIcon: {
-    fontSize: 22,
+  iconContainer: {
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 4,
-    color: "#6b7280",
-  },
-  tabIconActive: {
-    color: "#ffffff",
+    height: 28,
   },
   tabLabel: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "600",
     color: "#6b7280",
+    textAlign: "center",
+    letterSpacing: 0.5,
   },
   tabLabelActive: {
     color: "#ffffff",
+    fontWeight: "700",
   },
   cartIconContainer: {
     position: "relative",
+    alignItems: "center",
   },
   badge: {
     position: "absolute",
-    top: -2,
-    right: -8,
+    top: -6,
+    right: -12,
     backgroundColor: "#ef4444",
     borderRadius: 12,
-    paddingHorizontal: 7,
+    paddingHorizontal: 6,
     paddingVertical: 2,
-    minWidth: 18,
+    minWidth: 20,
+    minHeight: 20,
     alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#ffffff",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 4,
   },
   badgeText: {
     color: "#ffffff",
     fontSize: 10,
-    fontWeight: "700",
+    fontWeight: "800",
+    textAlign: "center",
   },
-}); 
+});

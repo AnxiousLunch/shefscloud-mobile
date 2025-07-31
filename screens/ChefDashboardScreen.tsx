@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Dimensions } from "react-native"
-import { LinearGradient } from "expo-linear-gradient"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useAuth } from "../contexts/AuthContext"
 
@@ -35,10 +34,10 @@ export default function ChefDashboardScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <LinearGradient colors={["#dc2626", "#b91c1c", "#991b1b"]} style={styles.header}>
+        <View style={styles.header}>
           <Text style={styles.greeting}>Welcome, {user?.name?.split(" ")[1]}!</Text>
           <Text style={styles.location}>📍 Professional Kitchen Dashboard</Text>
-        </LinearGradient>
+        </View>
 
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
@@ -106,30 +105,35 @@ export default function ChefDashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#ffffff",
   },
   header: {
+    backgroundColor: "#ffffff",
     paddingHorizontal: 25,
     paddingTop: 35,
-    paddingBottom: 45,
+    paddingBottom: 25,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f1f5f9",
   },
   greeting: {
     fontSize: 28,
     fontWeight: "800",
-    color: "#ffffff",
+    color: "#1f2937",
     marginBottom: 8,
   },
   location: {
-    color: "rgba(255, 255, 255, 0.9)",
+    color: "#6b7280",
     fontSize: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   statsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 18,
     paddingHorizontal: 25,
-    marginTop: -25,
-    marginBottom: 25,
+    paddingVertical: 25,
   },
   statCard: {
     backgroundColor: "#ffffff",
@@ -140,11 +144,11 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 4,
     },
     shadowOpacity: 0.08,
-    shadowRadius: 30,
-    elevation: 8,
+    shadowRadius: 20,
+    elevation: 4,
   },
   statNumber: {
     fontSize: 28,
@@ -239,11 +243,11 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 4,
     },
     shadowOpacity: 0.08,
-    shadowRadius: 30,
-    elevation: 8,
+    shadowRadius: 20,
+    elevation: 4,
   },
   noOrdersText: {
     color: "#6b7280",

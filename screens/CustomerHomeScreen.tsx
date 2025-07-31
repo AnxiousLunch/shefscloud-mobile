@@ -3,33 +3,63 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Dimens
 import { LinearGradient } from "expo-linear-gradient"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useAuth } from "../contexts/AuthContext"
-import { useRouter } from "expo-router"
+import { useNavigation } from "@react-navigation/native"
 
-const { width } = Dimensions.get("window")
+const { width, height } = Dimensions.get("window")
 
 const categories = [
-  { id: "italian", name: "Italian", icon: "🍝", count: "24 dishes available" },
-  { id: "asian", name: "Asian", icon: "🍜", count: "31 dishes available" },
-  { id: "mexican", name: "Mexican", icon: "🌮", count: "18 dishes available" },
-  { id: "indian", name: "Indian", icon: "🍛", count: "27 dishes available" },
+  {
+    id: "biryani",
+    name: "Biryani",
+    count: "24 dishes available",
+    imageStyle: { backgroundColor: "#f59e0b" },
+  },
+  {
+    id: "italian",
+    name: "Italian",
+    count: "31 dishes available",
+    imageStyle: { backgroundColor: "#ef4444" },
+  },
+  {
+    id: "chinese",
+    name: "Chinese",
+    count: "18 dishes available",
+    imageStyle: { backgroundColor: "#10b981" },
+  },
+  {
+    id: "indian",
+    name: "Indian",
+    count: "27 dishes available",
+    imageStyle: { backgroundColor: "#8b5cf6" },
+  },
 ]
 
 export default function CustomerHomeScreen() {
   const { user } = useAuth()
-  const router = useRouter()
+  const navigation = useNavigation()
 
   const handleCategoryPress = (categoryId: string) => {
-    router.push("/(customer)/browse")
+    navigation.navigate("Browse", { category: categoryId })
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }}>
         {/* Header */}
-        <LinearGradient colors={["#dc2626", "#b91c1c", "#991b1b"]} style={styles.header}>
-          <Text style={styles.greeting}>Good Evening, {user?.name?.split(" ")[0]}!</Text>
-          <Text style={styles.location}>📍 Manhattan, New York</Text>
-        </LinearGradient>
+        <View style={styles.header}>
+          <View style={styles.headerContent}>
+            <View>
+              <Text style={styles.greeting}>Good Evening, {user?.name?.split(" ")[0]}!</Text>
+              <View style={styles.location}>
+                <Text style={styles.locationIcon}>📍</Text>
+                <Text style={styles.locationText}>Manhattan, New York</Text>
+              </View>
+            </View>
+            <View style={styles.profileAvatar}>
+              <Text style={styles.profileAvatarText}>S</Text>
+            </View>
+          </View>
+        </View>
 
         {/* Search Section */}
         <View style={styles.searchSection}>
@@ -46,7 +76,7 @@ export default function CustomerHomeScreen() {
         {/* Categories */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Browse Cuisines</Text>
+            <Text style={styles.sectionTitle}>Browse by Cuisine</Text>
             <TouchableOpacity>
               <Text style={styles.seeAll}>See All</Text>
             </TouchableOpacity>
@@ -58,9 +88,7 @@ export default function CustomerHomeScreen() {
                 style={styles.categoryCard}
                 onPress={() => handleCategoryPress(category.id)}
               >
-                <View style={styles.categoryIcon}>
-                  <Text style={styles.categoryIconText}>{category.icon}</Text>
-                </View>
+                <View style={[styles.categoryImage, category.imageStyle]} />
                 <Text style={styles.categoryName}>{category.name}</Text>
                 <Text style={styles.categoryCount}>{category.count}</Text>
               </TouchableOpacity>
@@ -88,7 +116,7 @@ export default function CustomerHomeScreen() {
                 </View>
                 <View style={styles.chefStats}>
                   <Text style={styles.stat}>⭐ 4.9</Text>
-                  <Text style={styles.stat}>🍽️ 1.2k orders</Text>
+                  <Text style={styles.stat}>🍽 1.2k orders</Text>
                   <Text style={styles.stat}>📍 Italian Cuisine</Text>
                 </View>
               </View>
@@ -101,7 +129,7 @@ export default function CustomerHomeScreen() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Today's Special</Text>
           </View>
-          <LinearGradient colors={["#dc2626", "#b91c1c", "#991b1b"]} style={styles.featuredCard}>
+          <LinearGradient colors={["#7f1d1d", "#991b1b", "#dc2626"]} style={styles.featuredCard}>
             <Text style={styles.featuredTitle}>Chef's Signature Menu</Text>
             <Text style={styles.featuredSubtitle}>
               Handcrafted dishes from our top-rated chefs, prepared with premium ingredients
@@ -119,46 +147,65 @@ export default function CustomerHomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#ffffff",
   },
   header: {
-    paddingHorizontal: 25,
-    paddingTop: 35,
-    paddingBottom: 45,
+    backgroundColor: "#ffffff",
+    paddingHorizontal: width * 0.06,
+    paddingTop: height * 0.03,
+    paddingBottom: height * 0.02,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f1f5f9",
+  },
+  headerContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   greeting: {
-    fontSize: 28,
+    fontSize: width * 0.065,
     fontWeight: "800",
-    color: "#ffffff",
+    color: "#1f2937",
     marginBottom: 8,
   },
   location: {
-    color: "rgba(255, 255, 255, 0.9)",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  locationIcon: {
+    fontSize: 16,
+  },
+  locationText: {
+    color: "#6b7280",
+    fontSize: width * 0.035,
+  },
+  profileAvatar: {
+    width: width * 0.1,
+    height: width * 0.1,
+    borderRadius: width * 0.05,
+    backgroundColor: "#f59e0b",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  profileAvatarText: {
+    color: "#ffffff",
+    fontWeight: "700",
     fontSize: 16,
   },
   searchSection: {
-    paddingHorizontal: 25,
-    marginTop: -25,
-    marginBottom: 25,
+    paddingHorizontal: width * 0.06,
+    paddingVertical: height * 0.03,
+    backgroundColor: "#ffffff",
   },
   searchContainer: {
     position: "relative",
-    backgroundColor: "#ffffff",
-    borderRadius: 20,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 10,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 40,
-    elevation: 10,
   },
   searchInput: {
-    paddingVertical: 18,
-    paddingLeft: 25,
-    paddingRight: 55,
-    fontSize: 16,
+    paddingVertical: height * 0.022,
+    paddingLeft: width * 0.06,
+    paddingRight: width * 0.14,
+    fontSize: width * 0.04,
     backgroundColor: "#f8fafc",
     borderRadius: 25,
     borderWidth: 2,
@@ -172,91 +219,77 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   section: {
-    paddingHorizontal: 25,
-    marginBottom: 30,
+    paddingHorizontal: width * 0.06,
+    marginBottom: height * 0.03,
   },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 20,
+    marginBottom: height * 0.015,
   },
   sectionTitle: {
-    fontSize: 22,
+    fontSize: width * 0.055,
     fontWeight: "800",
     color: "#1f2937",
   },
   seeAll: {
     color: "#dc2626",
     fontWeight: "600",
-    fontSize: 14,
+    fontSize: width * 0.035,
   },
   categoriesGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 18,
+    justifyContent: "space-between",
+    rowGap: 18,
   },
   categoryCard: {
     backgroundColor: "#ffffff",
     borderRadius: 20,
-    padding: 25,
+    padding: 20,
     alignItems: "center",
-    width: (width - 68) / 2,
+    width: (width - width * 0.18) / 2,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 4,
     },
     shadowOpacity: 0.08,
-    shadowRadius: 30,
-    elevation: 8,
+    shadowRadius: 20,
+    elevation: 4,
     borderWidth: 1,
     borderColor: "rgba(0, 0, 0, 0.05)",
   },
-  categoryIcon: {
-    width: 70,
-    height: 70,
-    borderRadius: 20,
-    backgroundColor: "#dc2626",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 18,
-    shadowColor: "#dc2626",
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 25,
-    elevation: 8,
-  },
-  categoryIconText: {
-    fontSize: 32,
-    color: "#ffffff",
+  categoryImage: {
+    width: "100%",
+    height: width * 0.28,
+    borderRadius: 15,
+    marginBottom: 15,
   },
   categoryName: {
     fontWeight: "700",
     color: "#1f2937",
-    fontSize: 16,
+    fontSize: width * 0.04,
     marginBottom: 5,
   },
   categoryCount: {
     color: "#6b7280",
-    fontSize: 13,
+    fontSize: width * 0.032,
     textAlign: "center",
   },
   chefCard: {
     backgroundColor: "#ffffff",
     borderRadius: 20,
-    padding: 25,
+    padding: width * 0.06,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 4,
     },
     shadowOpacity: 0.08,
-    shadowRadius: 30,
-    elevation: 8,
+    shadowRadius: 20,
+    elevation: 4,
     borderWidth: 1,
     borderColor: "rgba(0, 0, 0, 0.05)",
   },
@@ -266,8 +299,8 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   chefAvatar: {
-    width: 60,
-    height: 60,
+    width: width * 0.15,
+    height: width * 0.15,
     borderRadius: 20,
     backgroundColor: "#3b82f6",
     justifyContent: "center",
@@ -284,7 +317,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#1f2937",
     marginBottom: 4,
-    fontSize: 16,
+    fontSize: width * 0.04,
   },
   chefBadge: {
     backgroundColor: "#10b981",
@@ -302,19 +335,20 @@ const styles = StyleSheet.create({
   chefStats: {
     flexDirection: "row",
     gap: 20,
+    flexWrap: "wrap",
   },
   stat: {
-    fontSize: 13,
+    fontSize: width * 0.033,
     color: "#6b7280",
   },
   featuredCard: {
     borderRadius: 25,
-    padding: 30,
+    padding: width * 0.08,
     position: "relative",
     overflow: "hidden",
   },
   featuredTitle: {
-    fontSize: 24,
+    fontSize: width * 0.06,
     fontWeight: "800",
     color: "#ffffff",
     marginBottom: 12,
@@ -323,6 +357,7 @@ const styles = StyleSheet.create({
     color: "rgba(255, 255, 255, 0.9)",
     marginBottom: 25,
     lineHeight: 22,
+    fontSize: width * 0.035,
   },
   featuredButton: {
     backgroundColor: "rgba(255, 255, 255, 0.2)",

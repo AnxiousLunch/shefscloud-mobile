@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState } from "react"
+import { useState } from "react";
 import {
   View,
   Text,
@@ -11,268 +11,400 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-} from "react-native"
-import { LinearGradient } from "expo-linear-gradient"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { useAuth } from "../contexts/AuthContext"
+  Dimensions,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../contexts/AuthContext";
+import { Ionicons } from "@expo/vector-icons";
+
+const { width, height } = Dimensions.get("window");
 
 export default function AuthScreen() {
-  const [selectedRole, setSelectedRole] = useState<"customer" | "chef">("customer")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const { login } = useAuth()
+  const [selectedRole, setSelectedRole] = useState<"customer" | "chef">("customer");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const { login } = useAuth();
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Error", "Please fill in all fields")
-      return
+      Alert.alert("Error", "Please fill in all fields");
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      await login(email, password, selectedRole)
+      await login(email, password, selectedRole);
     } catch (error) {
-      Alert.alert("Error", "Login failed. Please try again.")
+      Alert.alert("Error", "Login failed. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
-
-  const handleSignup = () => {
-    Alert.alert("Sign Up", "Signup functionality would be implemented with additional form fields and validation.")
-  }
+  };
 
   return (
-    <LinearGradient colors={["#dc2626", "#b91c1c", "#991b1b"]} style={styles.container}>
+    <View style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardView}>
-          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-            <View style={styles.logoContainer}>
-              <Text style={styles.logoText}>SC</Text>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.keyboardView}
+        >
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {/* Gradient background */}
+            <LinearGradient
+              colors={["#5a0000", "#8b0000", "#b30000", "#e40c0c"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.modernBackground}
+            />
+
+            {/* Header */}
+            <View style={styles.authHeader}>
+              <LinearGradient colors={["#b30000", "#ff0000"]} style={styles.logoGradient}>
+                <Text style={styles.logoText}>SC</Text>
+              </LinearGradient>
+              <Text style={styles.title}>Shefs Cloud</Text>
+              <Text style={styles.subtitle}>
+                Discover exceptional culinary experiences from verified professional chefs
+              </Text>
             </View>
 
-            <Text style={styles.title}>Welcome to Shefs Cloud</Text>
-            <Text style={styles.subtitle}>
-              Discover exceptional culinary experiences from verified professional chefs
-            </Text>
-
+            {/* Form */}
             <View style={styles.formContainer}>
-              <View style={styles.roleSelector}>
-                <TouchableOpacity
-                  style={[styles.roleButton, selectedRole === "customer" && styles.roleButtonActive]}
-                  onPress={() => setSelectedRole("customer")}
-                >
-                  <Text style={styles.roleIcon}>🍽️</Text>
-                  <Text style={[styles.roleText, selectedRole === "customer" && styles.roleTextActive]}>
-                    Food Lover
-                  </Text>
-                </TouchableOpacity>
+              <View style={styles.glassMorphism} />
 
-                <TouchableOpacity
-                  style={[styles.roleButton, selectedRole === "chef" && styles.roleButtonActive]}
-                  onPress={() => setSelectedRole("chef")}
-                >
-                  <Text style={styles.roleIcon}>👨‍🍳</Text>
-                  <Text style={[styles.roleText, selectedRole === "chef" && styles.roleTextActive]}>
-                    Professional Chef
-                  </Text>
-                </TouchableOpacity>
+              {/* Role Selector */}
+              <View style={styles.roleSelector}>
+                {["customer", "chef"].map((role) => (
+                  <TouchableOpacity
+                    key={role}
+                    style={[
+                      styles.roleButton,
+                      selectedRole === role && styles.roleButtonActive,
+                    ]}
+                    onPress={() => setSelectedRole(role as "customer" | "chef")}
+                  >
+                    <View
+                      style={[
+                        styles.roleIconContainer,
+                        selectedRole === role && styles.roleIconActive,
+                      ]}
+                    >
+                      <Ionicons
+                        name={role === "customer" ? "restaurant-outline" : "storefront-outline"}
+                        size={20}
+                        color={selectedRole === role ? "#b10707ff" : "#cc0000"}
+                      />
+                    </View>
+                    <Text
+                      style={[
+                        styles.roleText,
+                        selectedRole === role && styles.roleTextActive,
+                      ]}
+                    >
+                      {role === "customer" ? "Food Lover" : "Chef"}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
               </View>
 
+              {/* Email Field */}
               <View style={styles.formGroup}>
                 <Text style={styles.label}>Email Address</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your email address"
-                  placeholderTextColor="#9ca3af"
-                  value={email}
-                  onChangeText={setEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                />
+                <View style={styles.inputContainer}>
+                  <Ionicons name="mail-outline" size={20} color="#530202" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter your email"
+                    placeholderTextColor="#7a7979ff"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                  />
+                </View>
               </View>
 
+              {/* Password Field */}
               <View style={styles.formGroup}>
                 <Text style={styles.label}>Password</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter your password"
-                  placeholderTextColor="#9ca3af"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                />
+                <View style={styles.inputContainer}>
+                  <Ionicons name="lock-closed-outline" size={20} color="#530202" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter your password"
+                    placeholderTextColor="#7a7979ff"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                  />
+                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
+                    <Ionicons
+                      name={showPassword ? "eye-outline" : "eye-off-outline"}
+                      size={20}
+                      color="#530202"
+                    />
+                  </TouchableOpacity>
+                </View>
               </View>
 
+              {/* Login Button */}
               <TouchableOpacity
                 style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
                 onPress={handleLogin}
                 disabled={isLoading}
               >
-                <Text style={styles.primaryButtonText}>{isLoading ? "Signing In..." : "Sign In"}</Text>
+                <LinearGradient
+                  colors={["#b30000", "#e40c0c"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.gradientButton}
+                >
+                  {isLoading ? (
+                    <View style={styles.loadingContainer}>
+                      <View style={styles.loadingDot} />
+                      <View style={[styles.loadingDot, styles.loadingDot2]} />
+                      <View style={[styles.loadingDot, styles.loadingDot3]} />
+                    </View>
+                  ) : (
+                    <Text style={styles.primaryButtonText}>Sign In</Text>
+                  )}
+                </LinearGradient>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.secondaryButton} onPress={handleSignup}>
-                <Text style={styles.secondaryButtonText}>Create New Account</Text>
+              {/* Apple Sign-In */}
+              <TouchableOpacity style={styles.appleButton} onPress={() => Alert.alert("Coming Soon")}>
+                <Ionicons name="logo-apple" size={18} color="#fff" />
+                <Text style={styles.appleButtonText}>Sign in with Apple</Text>
+              </TouchableOpacity>
+
+              {/* Create Account */}
+              <TouchableOpacity
+                style={styles.tertiaryButton}
+                onPress={() => Alert.alert("Sign Up coming soon")}
+              >
+                <Text style={styles.tertiaryButtonText}>Create New Account</Text>
+                <Ionicons name="arrow-forward" size={16} color="#cf0c0c" />
               </TouchableOpacity>
             </View>
 
-            <Text style={styles.termsText}>By continuing, you agree to our{"\n"}Terms of Service & Privacy Policy</Text>
+            <Text style={styles.termsText}>
+              By continuing, you agree to our{"\n"}
+              <Text style={styles.termsLink}>Terms of Service</Text> &{" "}
+              <Text style={styles.termsLink}>Privacy Policy</Text>
+            </Text>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
-    </LinearGradient>
-  )
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#f8fafc",
   },
-  safeArea: {
-    flex: 1,
-  },
-  keyboardView: {
-    flex: 1,
-  },
+  safeArea: { flex: 1 },
+  keyboardView: { flex: 1 },
   scrollContent: {
-    flexGrow: 1,
-    justifyContent: "center",
-    paddingHorizontal: 30,
-    paddingVertical: 40,
+    paddingBottom: 40,
+    paddingHorizontal: width * 0.05,
+    alignItems: "center",
   },
-  logoContainer: {
-    width: 100,
-    height: 100,
-    backgroundColor: "#ffffff",
-    borderRadius: 25,
+  modernBackground: {
+    position: "absolute",
+    top: 0,
+    width: width,
+    height: height * 0.4,
+    borderBottomLeftRadius: 50,
+    borderBottomRightRadius: 50,
+    zIndex: -1,
+  },
+  authHeader: {
+    alignItems: "center",
+    marginTop: height * 0.08,
+    marginBottom: 30,
+  },
+  logoGradient: {
+    width: 80,
+    height: 80,
+    borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",
-    alignSelf: "center",
-    marginBottom: 35,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 15,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 35,
-    elevation: 15,
+    marginBottom: 15,
   },
   logoText: {
-    fontSize: 40,
+    fontSize: 28,
     fontWeight: "900",
-    color: "#dc2626",
+    color: "#fff",
   },
   title: {
     fontSize: 28,
     fontWeight: "800",
+    color: "#fff",
+    marginBottom: 8,
     textAlign: "center",
-    color: "#ffffff",
-    marginBottom: 12,
-    letterSpacing: -0.5,
   },
   subtitle: {
-    color: "rgba(255, 255, 255, 0.9)",
+    fontSize: 15,
+    color: "#f8f8f8",
     textAlign: "center",
-    marginBottom: 40,
-    fontSize: 16,
-    lineHeight: 24,
+    lineHeight: 22,
   },
   formContainer: {
-    backgroundColor: "rgba(255, 255, 255, 0.98)",
-    borderRadius: 25,
-    padding: 35,
-    marginBottom: 25,
+    width: "100%",
+    backgroundColor: "rgba(255,255,255,0.1)",
+    padding: 20,
+    borderRadius: 20,
+    marginBottom: 20,
+  },
+  glassMorphism: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(255,255,255,0.25)",
+    borderRadius: 20,
   },
   roleSelector: {
     flexDirection: "row",
-    gap: 15,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderRadius: 15,
+    overflow: "hidden",
     marginBottom: 25,
   },
   roleButton: {
     flex: 1,
-    padding: 20,
-    borderWidth: 2,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#f9fafb",
-    borderRadius: 18,
+    paddingVertical: 14,
+    flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
   },
   roleButtonActive: {
-    borderColor: "#dc2626",
-    backgroundColor: "#fef2f2",
+    backgroundColor: "#cc0000",
   },
-  roleIcon: {
-    fontSize: 32,
-    marginBottom: 8,
+  roleIconContainer: {
+    marginRight: 8,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    padding: 6,
+    borderRadius: 8,
+  },
+  roleIconActive: {
+    backgroundColor: "#fff",
   },
   roleText: {
+    fontSize: 14,
     fontWeight: "600",
-    color: "#374151",
+    color: "#cc0000",
   },
   roleTextActive: {
-    color: "#dc2626",
+    color: "#fff",
   },
   formGroup: {
-    marginBottom: 25,
+    marginBottom: 18,
   },
   label: {
+    fontSize: 14,
     fontWeight: "600",
-    color: "#374151",
-    fontSize: 15,
-    marginBottom: 10,
+    color: "#1f2937",
+    marginBottom: 6,
+  },
+  inputContainer: {
+    position: "relative",
+    flexDirection: "row",
+    alignItems: "center",
   },
   input: {
-    width: "100%",
-    padding: 18,
-    borderWidth: 2,
-    borderColor: "#e5e7eb",
-    borderRadius: 15,
-    fontSize: 16,
-    backgroundColor: "#f9fafb",
+    flex: 1,
+    paddingVertical: 14,
+    paddingLeft: 48,
+    paddingRight: 48,
+    backgroundColor: "rgba(224, 8, 8, 0.3)",
+    borderRadius: 12,
+    color: "#610303ff",
+    fontSize: 14,
+  },
+  inputIcon: {
+    position: "absolute",
+    left: 16,
+  },
+  eyeIcon: {
+    position: "absolute",
+    right: 16,
   },
   primaryButton: {
-    width: "100%",
-    padding: 18,
-    backgroundColor: "#dc2626",
-    borderRadius: 15,
+    borderRadius: 14,
+    overflow: "hidden",
+    marginBottom: 16,
+  },
+  gradientButton: {
+    paddingVertical: 16,
     alignItems: "center",
-    marginBottom: 15,
-    shadowColor: "#dc2626",
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 25,
-    elevation: 8,
+    justifyContent: "center",
   },
   primaryButtonText: {
-    color: "#ffffff",
+    color: "#fff",
     fontSize: 16,
     fontWeight: "700",
   },
-  secondaryButton: {
-    width: "100%",
-    padding: 18,
-    backgroundColor: "#6b7280",
-    borderRadius: 15,
+  loadingContainer: {
+    flexDirection: "row",
+    gap: 6,
+  },
+  loadingDot: {
+    width: 8,
+    height: 8,
+    backgroundColor: "#fff",
+    borderRadius: 4,
+  },
+  loadingDot2: { opacity: 0.6 },
+  loadingDot3: { opacity: 0.9 },
+  appleButton: {
+    flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#1f2937",
+    borderRadius: 14,
+    paddingVertical: 16,
+    marginBottom: 16,
+    gap: 8,
   },
-  secondaryButtonText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "700",
+  appleButtonText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  tertiaryButton: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 14,
+    paddingVertical: 16,
+    borderColor: "#cc0000",
+    borderWidth: 1.2,
+    backgroundColor: "transparent",
+    gap: 6,
+  },
+  tertiaryButtonText: {
+    color: "#b30000",
+    fontWeight: "600",
+    fontSize: 15,
   },
   buttonDisabled: {
-    opacity: 0.7,
+    opacity: 0.6,
   },
   termsText: {
-    color: "rgba(255, 255, 255, 0.8)",
-    fontSize: 14,
     textAlign: "center",
-    lineHeight: 20,
+    fontSize: 12,
+    color: "#6b7280",
+    marginBottom: 30,
   },
-})
+  termsLink: {
+    fontWeight: "600",
+    color: "#b30000",
+  },
+});

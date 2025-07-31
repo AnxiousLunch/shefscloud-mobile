@@ -1,6 +1,6 @@
-"use client"
-import FoodDetailScreen from "../../screens/FoodDetailScreen"
+// "use client"
+// import FoodDetailScreen from "../../screens/FoodDetailScreen"
 
-export default function FoodDetail() {
-  return <FoodDetailScreen />
-} 
+// export default function FoodDetail() {
+//   return <FoodDetailScreen  />
+// } 

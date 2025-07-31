@@ -1,6 +1,5 @@
 "use client"
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from "react-native"
-import { LinearGradient } from "expo-linear-gradient"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useAuth } from "../contexts/AuthContext"
 
@@ -24,9 +23,9 @@ export default function ChefProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <LinearGradient colors={["#dc2626", "#b91c1c"]} style={styles.header}>
+      <View style={styles.header}>
         <Text style={styles.headerTitle}>Chef Profile</Text>
-      </LinearGradient>
+      </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Profile Header */}
@@ -138,17 +137,20 @@ export default function ChefProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#ffffff",
   },
   header: {
+    backgroundColor: "#ffffff",
     paddingHorizontal: 25,
     paddingVertical: 25,
     alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f1f5f9",
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: "800",
-    color: "#ffffff",
+    color: "#1f2937",
   },
   content: {
     flex: 1,
@@ -163,11 +165,11 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 4,
     },
     shadowOpacity: 0.08,
-    shadowRadius: 30,
-    elevation: 8,
+    shadowRadius: 20,
+    elevation: 4,
   },
   avatar: {
     width: 100,
@@ -229,11 +231,11 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 4,
     },
     shadowOpacity: 0.08,
-    shadowRadius: 30,
-    elevation: 8,
+    shadowRadius: 20,
+    elevation: 4,
   },
   cardTitle: {
     fontWeight: "700",
@@ -282,11 +284,11 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 4,
     },
     shadowOpacity: 0.08,
-    shadowRadius: 30,
-    elevation: 8,
+    shadowRadius: 20,
+    elevation: 4,
   },
   actionsGrid: {
     flexDirection: "row",

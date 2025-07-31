@@ -1,29 +1,29 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from "react-native"
-import { LinearGradient } from "expo-linear-gradient"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { useRouter, useLocalSearchParams } from "expo-router"
+import { useNavigation, useRoute } from "@react-navigation/native"
 import { useCart } from "../contexts/CartContext"
 
 export default function FoodDetailScreen() {
-  const router = useRouter()
+  const navigation = useNavigation()
+  const route = useRoute()
   const { addItem } = useCart()
-  const { foodId } = useLocalSearchParams<{ foodId: string }>()
+const foodId = route?.params?.foodId ?? "default-id"
 
   // Mock data - in real app, fetch based on foodId
   const foodItem = {
-    id: "pasta",
-    name: "Truffle Pasta Carbonara",
-    chef: "Chef Marco Rossi",
+    id: "chicken",
+    name: "Grilled Chicken",
+    chef: "Test Chef",
     price: 24.99,
     rating: 4.9,
     reviews: 124,
-    icon: "🍝",
+    imageStyle: { backgroundColor: "#f59e0b" },
     description:
-      "Authentic Italian pasta carbonara elevated with premium black truffle shavings. Made with fresh farm eggs, aged pecorino Romano, crispy pancetta, and freshly cracked black pepper. A luxurious take on the classic Roman dish.",
-    ingredients: "Fresh Pasta, Farm Eggs, Pecorino Romano, Pancetta, Black Truffle, Black Pepper",
-    prepTime: "25 min",
+      "Perfectly grilled chicken breast seasoned with herbs and spices. Served with fresh vegetables and your choice of side. A healthy and delicious option that's packed with protein and flavor.",
+    ingredients: "Fresh Chicken Breast, Herbs, Spices, Seasonal Vegetables",
+    prepTime: "20 min",
     spiceLevel: "Mild",
-    serves: "2 people",
+    serves: "1 person",
   }
 
   const handleAddToCart = () => {
@@ -32,29 +32,28 @@ export default function FoodDetailScreen() {
       name: foodItem.name,
       price: foodItem.price,
       chef: foodItem.chef,
-      image: foodItem.icon,
+      image: "🍗",
     })
 
     Alert.alert("Added to Cart!", `${foodItem.name} has been added to your cart.`, [{ text: "OK" }])
   }
 
   const handleBackPress = () => {
-    router.back()
+    navigation.goBack()
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <LinearGradient colors={["#dc2626", "#b91c1c"]} style={styles.header}>
+      <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
           <Text style={styles.backButtonText}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Dish Details</Text>
-      </LinearGradient>
+        <Text style={styles.headerTitle}>{foodItem.name}</Text>
+      </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.detailCard}>
-          <View style={styles.foodImageLarge}>
-            <Text style={styles.foodIconLarge}>{foodItem.icon}</Text>
+          <View style={[styles.foodImageLarge, foodItem.imageStyle]}>
             <View style={styles.popularBadge}>
               <Text style={styles.popularBadgeText}>Popular Choice</Text>
             </View>
@@ -84,17 +83,17 @@ export default function FoodDetailScreen() {
 
             <View style={styles.infoGrid}>
               <View style={styles.infoCard}>
-                <Text style={styles.infoIcon}>⏱️</Text>
+                <Text style={styles.infoIcon}>⏱</Text>
                 <Text style={styles.infoLabel}>Prep Time</Text>
                 <Text style={styles.infoValue}>{foodItem.prepTime}</Text>
               </View>
               <View style={styles.infoCard}>
-                <Text style={styles.infoIcon}>🌶️</Text>
+                <Text style={styles.infoIcon}>🌶</Text>
                 <Text style={styles.infoLabel}>Spice Level</Text>
                 <Text style={styles.infoValue}>{foodItem.spiceLevel}</Text>
               </View>
               <View style={styles.infoCard}>
-                <Text style={styles.infoIcon}>🍽️</Text>
+                <Text style={styles.infoIcon}>🍽</Text>
                 <Text style={styles.infoLabel}>Serves</Text>
                 <Text style={styles.infoValue}>{foodItem.serves}</Text>
               </View>
@@ -113,19 +112,22 @@ export default function FoodDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#ffffff",
   },
   header: {
+    backgroundColor: "#ffffff",
     paddingHorizontal: 25,
     paddingVertical: 25,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f1f5f9",
   },
   backButton: {
     position: "absolute",
     left: 25,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: "#f3f4f6",
     width: 45,
     height: 45,
     borderRadius: 22,
@@ -133,14 +135,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   backButtonText: {
-    color: "#ffffff",
+    color: "#374151",
     fontSize: 20,
     fontWeight: "600",
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: "800",
-    color: "#ffffff",
+    color: "#1f2937",
   },
   content: {
     flex: 1,
@@ -153,22 +155,17 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 15,
+      height: 8,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 50,
-    elevation: 15,
+    shadowOpacity: 0.08,
+    shadowRadius: 30,
+    elevation: 8,
   },
   foodImageLarge: {
     height: 250,
-    backgroundColor: "#f59e0b",
     justifyContent: "center",
     alignItems: "center",
     position: "relative",
-  },
-  foodIconLarge: {
-    fontSize: 100,
-    color: "#ffffff",
   },
   popularBadge: {
     position: "absolute",

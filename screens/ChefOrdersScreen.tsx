@@ -83,17 +83,20 @@ export default function ChefOrdersScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#ffffff",
   },
   header: {
+    backgroundColor: "#ffffff",
     paddingHorizontal: 25,
     paddingVertical: 25,
     alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f1f5f9",
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: "800",
-    color: "#ffffff",
+    color: "#1f2937",
   },
   content: {
     flex: 1,
@@ -108,11 +111,11 @@ const styles = StyleSheet.create({
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 4,
     },
     shadowOpacity: 0.08,
-    shadowRadius: 30,
-    elevation: 8,
+    shadowRadius: 20,
+    elevation: 4,
     borderWidth: 1,
     borderColor: "rgba(0, 0, 0, 0.05)",
   },
