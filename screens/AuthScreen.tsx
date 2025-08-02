@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,21 +12,42 @@ import {
   KeyboardAvoidingView,
   Platform,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAuth } from "../contexts/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
+import { handleUserLogin } from "../auth_endpoints/AuthEndpoints";
+import { useDispatch, useSelector } from 'react-redux';
+import { useRouter } from "expo-router";
+import { loginAndSaveUser, loadUserFromStorage } from '../store/user';
+import { AppDispatch } from "../store/store";
+import { useAppSelector } from "@/hooks/hooks";
 
 const { width, height } = Dimensions.get("window");
 
 export default function AuthScreen() {
-  const [selectedRole, setSelectedRole] = useState<"customer" | "chef">("customer");
+  const [selectedRole, setSelectedRole] = useState("customer");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { login } = useAuth();
+  
+  const { userInfo, isLoading: reduxLoading, isInitialized } = useAppSelector((state) => state.user);
+  const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
+
+  // Load user data from AsyncStorage when component mounts
+  useEffect(() => {
+    dispatch(loadUserFromStorage());
+  }, [dispatch]);
+
+  // Navigate to appropriate screen once user data is loaded and user is authenticated
+  useEffect(() => {
+    if (isInitialized && userInfo) {
+      router.replace('/(customer)');
+    }
+  }, [userInfo, isInitialized, router]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -36,12 +57,28 @@ export default function AuthScreen() {
 
     setIsLoading(true);
     try {
-      await login(email, password, selectedRole);
+      const res = await handleUserLogin({ email, password });
+      dispatch(loginAndSaveUser(res));
+      Alert.alert("Successfully Logged In");
     } catch (error) {
       Alert.alert("Error", "Login failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Show loading screen while checking for existing user data
+  if (!isInitialized || reduxLoading) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color="#b30000" />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+
+  const navigateToSignUp = () => {
+    router.push('/signup');
   };
 
   return (
@@ -173,7 +210,7 @@ export default function AuthScreen() {
                       <View style={[styles.loadingDot, styles.loadingDot3]} />
                     </View>
                   ) : (
-                    <Text style={styles.primaryButtonText}>Sign In</Text>
+                    <Text onPress={navigateToSignUp} style={styles.primaryButtonText}>Sign In</Text>
                   )}
                 </LinearGradient>
               </TouchableOpacity>
@@ -187,7 +224,7 @@ export default function AuthScreen() {
               {/* Create Account */}
               <TouchableOpacity
                 style={styles.tertiaryButton}
-                onPress={() => Alert.alert("Sign Up coming soon")}
+                onPress={navigateToSignUp}
               >
                 <Text style={styles.tertiaryButtonText}>Create New Account</Text>
                 <Ionicons name="arrow-forward" size={16} color="#cf0c0c" />
@@ -206,10 +243,20 @@ export default function AuthScreen() {
   );
 }
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f8fafc",
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#b30000',
   },
   safeArea: { flex: 1 },
   keyboardView: { flex: 1 },
@@ -350,10 +397,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "700",
-  },
-  loadingContainer: {
-    flexDirection: "row",
-    gap: 6,
   },
   loadingDot: {
     width: 8,

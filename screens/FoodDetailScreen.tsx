@@ -2,12 +2,19 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from "rea
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useNavigation, useRoute } from "@react-navigation/native"
 import { useCart } from "../contexts/CartContext"
+import { RootStackParamList } from "@/types/types"
+import { NativeStackNavigationProp } from "@react-navigation/native-stack"
+import { RouteProp } from "@react-navigation/native"
+
+type FoodDetailScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'FoodDetail'>;
+type FoodDetailScreenRouteProp = RouteProp<RootStackParamList, 'FoodDetail'>;
 
 export default function FoodDetailScreen() {
-  const navigation = useNavigation()
-  const route = useRoute()
+  const navigation = useNavigation<FoodDetailScreenNavigationProp>();
+  const route = useRoute<FoodDetailScreenRouteProp>();
   const { addItem } = useCart()
-const foodId = route?.params?.foodId ?? "default-id"
+  const foodId = route.params?.foodId || "default-id";
+
 
   // Mock data - in real app, fetch based on foodId
   const foodItem = {
