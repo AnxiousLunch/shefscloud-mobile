@@ -24,7 +24,18 @@ import { loginAndSaveUser, loadUserFromStorage } from '../store/user';
 import { AppDispatch } from "../store/store";
 import { useAppSelector } from "@/hooks/hooks";
 
-const { width, height } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window")
+
+// Responsive helper functions
+const isTablet = width >= 768
+const isSmallPhone = width < 375
+const responsiveWidth = (percentage: number) => width * (percentage / 100)
+const responsiveHeight = (percentage: number) => height * (percentage / 100)
+const responsiveFontSize = (size: number) => {
+  if (isTablet) return size * 1.2
+  if (isSmallPhone) return size * 0.9
+  return size
+}
 
 export default function AuthScreen() {
   const [selectedRole, setSelectedRole] = useState("customer");
@@ -51,19 +62,18 @@ export default function AuthScreen() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Error", "Please fill in all fields");
-      return;
+      Alert.alert("Error", "Please fill in all fields")
+      return
     }
-
-    setIsLoading(true);
+    setIsLoading(true)
     try {
       const res = await handleUserLogin({ email, password });
       dispatch(loginAndSaveUser(res));
       Alert.alert("Successfully Logged In");
     } catch (error) {
-      Alert.alert("Error", "Login failed. Please try again.");
+      Alert.alert("Error", "Login failed. Please try again.")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
   };
 
@@ -84,10 +94,7 @@ export default function AuthScreen() {
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.keyboardView}
-        >
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardView}>
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
@@ -100,7 +107,6 @@ export default function AuthScreen() {
               end={{ x: 1, y: 1 }}
               style={styles.modernBackground}
             />
-
             {/* Header */}
             <View style={styles.authHeader}>
               <LinearGradient colors={["#b30000", "#ff0000"]} style={styles.logoGradient}>
@@ -111,51 +117,35 @@ export default function AuthScreen() {
                 Discover exceptional culinary experiences from verified professional chefs
               </Text>
             </View>
-
             {/* Form */}
             <View style={styles.formContainer}>
               <View style={styles.glassMorphism} />
-
               {/* Role Selector */}
               <View style={styles.roleSelector}>
                 {["customer", "chef"].map((role) => (
                   <TouchableOpacity
                     key={role}
-                    style={[
-                      styles.roleButton,
-                      selectedRole === role && styles.roleButtonActive,
-                    ]}
+                    style={[styles.roleButton, selectedRole === role && styles.roleButtonActive]}
                     onPress={() => setSelectedRole(role as "customer" | "chef")}
                   >
-                    <View
-                      style={[
-                        styles.roleIconContainer,
-                        selectedRole === role && styles.roleIconActive,
-                      ]}
-                    >
+                    <View style={[styles.roleIconContainer, selectedRole === role && styles.roleIconActive]}>
                       <Ionicons
                         name={role === "customer" ? "restaurant-outline" : "storefront-outline"}
-                        size={20}
+                        size={isTablet ? 24 : 20}
                         color={selectedRole === role ? "#b10707ff" : "#cc0000"}
                       />
                     </View>
-                    <Text
-                      style={[
-                        styles.roleText,
-                        selectedRole === role && styles.roleTextActive,
-                      ]}
-                    >
+                    <Text style={[styles.roleText, selectedRole === role && styles.roleTextActive]}>
                       {role === "customer" ? "Food Lover" : "Chef"}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
-
               {/* Email Field */}
               <View style={styles.formGroup}>
                 <Text style={styles.label}>Email Address</Text>
                 <View style={styles.inputContainer}>
-                  <Ionicons name="mail-outline" size={20} color="#530202" style={styles.inputIcon} />
+                  <Ionicons name="mail-outline" size={isTablet ? 24 : 20} color="#530202" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     placeholder="Enter your email"
@@ -167,12 +157,16 @@ export default function AuthScreen() {
                   />
                 </View>
               </View>
-
               {/* Password Field */}
               <View style={styles.formGroup}>
                 <Text style={styles.label}>Password</Text>
                 <View style={styles.inputContainer}>
-                  <Ionicons name="lock-closed-outline" size={20} color="#530202" style={styles.inputIcon} />
+                  <Ionicons
+                    name="lock-closed-outline"
+                    size={isTablet ? 24 : 20}
+                    color="#530202"
+                    style={styles.inputIcon}
+                  />
                   <TextInput
                     style={styles.input}
                     placeholder="Enter your password"
@@ -184,13 +178,12 @@ export default function AuthScreen() {
                   <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
                     <Ionicons
                       name={showPassword ? "eye-outline" : "eye-off-outline"}
-                      size={20}
+                      size={isTablet ? 24 : 20}
                       color="#530202"
                     />
                   </TouchableOpacity>
                 </View>
               </View>
-
               {/* Login Button */}
               <TouchableOpacity
                 style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
@@ -214,23 +207,20 @@ export default function AuthScreen() {
                   )}
                 </LinearGradient>
               </TouchableOpacity>
-
               {/* Apple Sign-In */}
               <TouchableOpacity style={styles.appleButton} onPress={() => Alert.alert("Coming Soon")}>
-                <Ionicons name="logo-apple" size={18} color="#fff" />
+                <Ionicons name="logo-apple" size={isTablet ? 22 : 18} color="#fff" />
                 <Text style={styles.appleButtonText}>Sign in with Apple</Text>
               </TouchableOpacity>
-
               {/* Create Account */}
               <TouchableOpacity
                 style={styles.tertiaryButton}
                 onPress={navigateToSignUp}
               >
                 <Text style={styles.tertiaryButtonText}>Create New Account</Text>
-                <Ionicons name="arrow-forward" size={16} color="#cf0c0c" />
+                <Ionicons name="arrow-forward" size={isTablet ? 20 : 16} color="#cf0c0c" />
               </TouchableOpacity>
             </View>
-
             <Text style={styles.termsText}>
               By continuing, you agree to our{"\n"}
               <Text style={styles.termsLink}>Terms of Service</Text> &{" "}
@@ -240,7 +230,7 @@ export default function AuthScreen() {
         </KeyboardAvoidingView>
       </SafeAreaView>
     </View>
-  );
+  )
 }
 
 
@@ -261,72 +251,76 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   keyboardView: { flex: 1 },
   scrollContent: {
-    paddingBottom: 40,
-    paddingHorizontal: width * 0.05,
+    paddingBottom: responsiveHeight(5),
+    paddingHorizontal: Math.min(responsiveWidth(5), 40),
     alignItems: "center",
+    minHeight: height,
   },
   modernBackground: {
     position: "absolute",
     top: 0,
     width: width,
-    height: height * 0.4,
-    borderBottomLeftRadius: 50,
-    borderBottomRightRadius: 50,
+    height: Math.max(responsiveHeight(40), 300),
+    borderBottomLeftRadius: isTablet ? 60 : 50,
+    borderBottomRightRadius: isTablet ? 60 : 50,
     zIndex: -1,
   },
   authHeader: {
     alignItems: "center",
-    marginTop: height * 0.08,
-    marginBottom: 30,
+    marginTop: Math.max(responsiveHeight(8), 60),
+    marginBottom: isTablet ? 40 : 30,
+    paddingHorizontal: responsiveWidth(5),
   },
   logoGradient: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
+    width: isTablet ? 100 : isSmallPhone ? 70 : 80,
+    height: isTablet ? 100 : isSmallPhone ? 70 : 80,
+    borderRadius: isTablet ? 25 : 20,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 15,
+    marginBottom: isTablet ? 20 : 15,
   },
   logoText: {
-    fontSize: 28,
+    fontSize: responsiveFontSize(28),
     fontWeight: "900",
     color: "#fff",
   },
   title: {
-    fontSize: 28,
+    fontSize: responsiveFontSize(28),
     fontWeight: "800",
     color: "#fff",
     marginBottom: 8,
     textAlign: "center",
   },
   subtitle: {
-    fontSize: 15,
+    fontSize: responsiveFontSize(15),
     color: "#f8f8f8",
     textAlign: "center",
-    lineHeight: 22,
+    lineHeight: responsiveFontSize(22),
+    maxWidth: isTablet ? 400 : 300,
   },
   formContainer: {
     width: "100%",
+    maxWidth: isTablet ? 500 : 400,
     backgroundColor: "rgba(255,255,255,0.1)",
-    padding: 20,
-    borderRadius: 20,
+    padding: isTablet ? 30 : 20,
+    borderRadius: isTablet ? 25 : 20,
     marginBottom: 20,
   },
   glassMorphism: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(255,255,255,0.25)",
-    borderRadius: 20,
+    borderRadius: isTablet ? 25 : 20,
   },
   roleSelector: {
     flexDirection: "row",
     backgroundColor: "rgba(255,255,255,0.2)",
-    borderRadius: 15,
+    borderRadius: isTablet ? 18 : 15,
     overflow: "hidden",
-    marginBottom: 25,
+    marginBottom: isTablet ? 30 : 25,
   },
   roleButton: {
     flex: 1,
-    paddingVertical: 14,
+    paddingVertical: isTablet ? 18 : 14,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
@@ -335,16 +329,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#cc0000",
   },
   roleIconContainer: {
-    marginRight: 8,
+    marginRight: isTablet ? 12 : 8,
     backgroundColor: "rgba(255,255,255,0.2)",
-    padding: 6,
-    borderRadius: 8,
+    padding: isTablet ? 8 : 6,
+    borderRadius: isTablet ? 10 : 8,
   },
   roleIconActive: {
     backgroundColor: "#fff",
   },
   roleText: {
-    fontSize: 14,
+    fontSize: responsiveFontSize(14),
     fontWeight: "600",
     color: "#cc0000",
   },
@@ -352,13 +346,13 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   formGroup: {
-    marginBottom: 18,
+    marginBottom: isTablet ? 22 : 18,
   },
   label: {
-    fontSize: 14,
+    fontSize: responsiveFontSize(14),
     fontWeight: "600",
     color: "#1f2937",
-    marginBottom: 6,
+    marginBottom: isTablet ? 8 : 6,
   },
   inputContainer: {
     position: "relative",
@@ -367,42 +361,44 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    paddingVertical: 14,
-    paddingLeft: 48,
-    paddingRight: 48,
+    paddingVertical: isTablet ? 18 : 14,
+    paddingLeft: isTablet ? 56 : 48,
+    paddingRight: isTablet ? 56 : 48,
     backgroundColor: "rgba(224, 8, 8, 0.3)",
-    borderRadius: 12,
+    borderRadius: isTablet ? 15 : 12,
     color: "#610303ff",
-    fontSize: 14,
+    fontSize: responsiveFontSize(14),
   },
   inputIcon: {
     position: "absolute",
-    left: 16,
+    left: isTablet ? 20 : 16,
+    zIndex: 1,
   },
   eyeIcon: {
     position: "absolute",
-    right: 16,
+    right: isTablet ? 20 : 16,
+    zIndex: 1,
   },
   primaryButton: {
-    borderRadius: 14,
+    borderRadius: isTablet ? 18 : 14,
     overflow: "hidden",
-    marginBottom: 16,
+    marginBottom: isTablet ? 20 : 16,
   },
   gradientButton: {
-    paddingVertical: 16,
+    paddingVertical: isTablet ? 20 : 16,
     alignItems: "center",
     justifyContent: "center",
   },
   primaryButtonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: responsiveFontSize(16),
     fontWeight: "700",
   },
   loadingDot: {
-    width: 8,
-    height: 8,
+    width: isTablet ? 10 : 8,
+    height: isTablet ? 10 : 8,
     backgroundColor: "#fff",
-    borderRadius: 4,
+    borderRadius: isTablet ? 5 : 4,
   },
   loadingDot2: { opacity: 0.6 },
   loadingDot3: { opacity: 0.9 },
@@ -411,40 +407,42 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#1f2937",
-    borderRadius: 14,
-    paddingVertical: 16,
-    marginBottom: 16,
-    gap: 8,
+    borderRadius: isTablet ? 18 : 14,
+    paddingVertical: isTablet ? 20 : 16,
+    marginBottom: isTablet ? 20 : 16,
+    gap: isTablet ? 10 : 8,
   },
   appleButtonText: {
     color: "#fff",
-    fontSize: 15,
+    fontSize: responsiveFontSize(15),
     fontWeight: "600",
   },
   tertiaryButton: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 14,
-    paddingVertical: 16,
+    borderRadius: isTablet ? 18 : 14,
+    paddingVertical: isTablet ? 20 : 16,
     borderColor: "#cc0000",
     borderWidth: 1.2,
     backgroundColor: "transparent",
-    gap: 6,
+    gap: isTablet ? 8 : 6,
   },
   tertiaryButtonText: {
     color: "#b30000",
     fontWeight: "600",
-    fontSize: 15,
+    fontSize: responsiveFontSize(15),
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   termsText: {
     textAlign: "center",
-    fontSize: 12,
+    fontSize: responsiveFontSize(12),
     color: "#6b7280",
-    marginBottom: 30,
+    marginBottom: isTablet ? 40 : 30,
+    paddingHorizontal: responsiveWidth(5),
+    maxWidth: isTablet ? 400 : 300,
   },
   termsLink: {
     fontWeight: "600",

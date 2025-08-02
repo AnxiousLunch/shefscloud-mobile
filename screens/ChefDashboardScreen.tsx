@@ -1,11 +1,21 @@
 "use client"
-
 import { useState } from "react"
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Dimensions } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useAuth } from "../contexts/AuthContext"
 
-const { width } = Dimensions.get("window")
+const { width, height } = Dimensions.get("window")
+
+// Responsive helper functions
+const isTablet = width >= 768
+const isSmallPhone = width < 375
+const responsiveWidth = (percentage: number) => width * (percentage / 100)
+const responsiveHeight = (percentage: number) => height * (percentage / 100)
+const responsiveFontSize = (size: number) => {
+  if (isTablet) return size * 1.2
+  if (isSmallPhone) return size * 0.9
+  return size
+}
 
 export default function ChefDashboardScreen() {
   const { user } = useAuth()
@@ -32,7 +42,7 @@ export default function ChefDashboardScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.greeting}>Welcome, {user?.name?.split(" ")[1]}!</Text>
@@ -62,7 +72,6 @@ export default function ChefDashboardScreen() {
         {/* New Order Alerts */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>New Order Alerts</Text>
-
           {pendingOrders.map((order) => (
             <View key={order.id} style={styles.orderAlert}>
               <View style={styles.alertHeader}>
@@ -90,7 +99,6 @@ export default function ChefDashboardScreen() {
               </View>
             </View>
           ))}
-
           {pendingOrders.length === 0 && (
             <View style={styles.noOrdersContainer}>
               <Text style={styles.noOrdersText}>No pending orders at the moment</Text>
@@ -107,23 +115,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#ffffff",
   },
+  scrollContent: {
+    paddingBottom: responsiveHeight(3),
+  },
   header: {
     backgroundColor: "#ffffff",
-    paddingHorizontal: 25,
-    paddingTop: 35,
-    paddingBottom: 25,
+    paddingHorizontal: Math.min(responsiveWidth(6), 40),
+    paddingTop: isTablet ? 45 : 35,
+    paddingBottom: isTablet ? 35 : 25,
     borderBottomWidth: 1,
     borderBottomColor: "#f1f5f9",
   },
   greeting: {
-    fontSize: 28,
+    fontSize: responsiveFontSize(28),
     fontWeight: "800",
     color: "#1f2937",
-    marginBottom: 8,
+    marginBottom: isTablet ? 12 : 8,
   },
   location: {
     color: "#6b7280",
-    fontSize: 16,
+    fontSize: responsiveFontSize(16),
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
@@ -131,16 +142,18 @@ const styles = StyleSheet.create({
   statsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 18,
-    paddingHorizontal: 25,
-    paddingVertical: 25,
+    gap: isTablet ? 24 : 18,
+    paddingHorizontal: Math.min(responsiveWidth(6), 40),
+    paddingVertical: isTablet ? 35 : 25,
+    justifyContent: isTablet ? "space-between" : "center",
   },
   statCard: {
     backgroundColor: "#ffffff",
-    padding: 25,
-    borderRadius: 20,
+    padding: isTablet ? 30 : 25,
+    borderRadius: isTablet ? 25 : 20,
     alignItems: "center",
-    width: (width - 68) / 2,
+    width: isTablet ? Math.min((width - 88) / 4, 180) : Math.min((width - 68) / 2, 160),
+    minWidth: isSmallPhone ? 140 : 150,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -151,24 +164,26 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   statNumber: {
-    fontSize: 28,
+    fontSize: responsiveFontSize(28),
     fontWeight: "800",
     color: "#dc2626",
-    marginBottom: 8,
+    marginBottom: isTablet ? 12 : 8,
   },
   statLabel: {
     color: "#6b7280",
-    fontSize: 14,
+    fontSize: responsiveFontSize(14),
     textAlign: "center",
+    lineHeight: responsiveFontSize(18),
   },
   section: {
-    paddingHorizontal: 25,
+    paddingHorizontal: Math.min(responsiveWidth(6), 40),
+    paddingBottom: isTablet ? 30 : 20,
   },
   sectionTitle: {
-    fontSize: 22,
+    fontSize: responsiveFontSize(22),
     fontWeight: "800",
     color: "#1f2937",
-    marginBottom: 20,
+    marginBottom: isTablet ? 25 : 20,
   },
   orderAlert: {
     backgroundColor: "#fef2f2",
@@ -176,69 +191,78 @@ const styles = StyleSheet.create({
     borderColor: "#fecaca",
     borderLeftWidth: 4,
     borderLeftColor: "#dc2626",
-    marginBottom: 15,
-    padding: 20,
-    borderRadius: 18,
+    marginBottom: isTablet ? 20 : 15,
+    padding: isTablet ? 25 : 20,
+    borderRadius: isTablet ? 22 : 18,
+    maxWidth: isTablet ? 600 : "100%",
+    alignSelf: isTablet ? "center" : "stretch",
+    width: isTablet ? "100%" : "auto",
   },
   alertHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: isTablet ? 16 : 12,
+    flexWrap: "wrap",
+    gap: 8,
   },
   alertTitle: {
     fontWeight: "700",
     color: "#dc2626",
-    fontSize: 16,
+    fontSize: responsiveFontSize(16),
+    flex: 1,
   },
   alertTime: {
-    fontSize: 12,
+    fontSize: responsiveFontSize(12),
     color: "#6b7280",
   },
   alertDetails: {
-    marginBottom: 15,
+    marginBottom: isTablet ? 20 : 15,
   },
   alertText: {
-    lineHeight: 22,
+    lineHeight: responsiveFontSize(22),
     color: "#374151",
+    fontSize: responsiveFontSize(14),
   },
   alertLabel: {
     fontWeight: "600",
   },
   alertActions: {
-    flexDirection: "row",
-    gap: 12,
+    flexDirection: isSmallPhone ? "column" : "row",
+    gap: isSmallPhone ? 10 : 12,
   },
   acceptButton: {
     backgroundColor: "#10b981",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 10,
-    flex: 1,
+    paddingHorizontal: isTablet ? 25 : 20,
+    paddingVertical: isTablet ? 15 : 10,
+    borderRadius: isTablet ? 12 : 10,
+    flex: isSmallPhone ? 0 : 1,
     alignItems: "center",
+    minHeight: 44, // Minimum touch target
   },
   acceptButtonText: {
     color: "#ffffff",
-    fontSize: 14,
+    fontSize: responsiveFontSize(14),
     fontWeight: "600",
   },
   rejectButton: {
     backgroundColor: "#ef4444",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 10,
-    flex: 1,
+    paddingHorizontal: isTablet ? 25 : 20,
+    paddingVertical: isTablet ? 15 : 10,
+    borderRadius: isTablet ? 12 : 10,
+    flex: isSmallPhone ? 0 : 1,
     alignItems: "center",
+    minHeight: 44, // Minimum touch target
   },
   rejectButtonText: {
     color: "#ffffff",
-    fontSize: 14,
+    fontSize: responsiveFontSize(14),
     fontWeight: "600",
   },
   noOrdersContainer: {
     backgroundColor: "#ffffff",
-    padding: 40,
-    borderRadius: 20,
+    padding: isTablet ? 50 : 40,
+    borderRadius: isTablet ? 25 : 20,
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: {
@@ -248,10 +272,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 20,
     elevation: 4,
+    maxWidth: isTablet ? 500 : "100%",
+    alignSelf: "center",
   },
   noOrdersText: {
     color: "#6b7280",
-    fontSize: 16,
+    fontSize: responsiveFontSize(16),
     textAlign: "center",
+    lineHeight: responsiveFontSize(22),
   },
 })
