@@ -1,9 +1,11 @@
 "use client"
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Dimensions } from "react-native"
-import { LinearGradient } from "expo-linear-gradient"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { useAuth } from "../contexts/AuthContext"
 import { useNavigation } from "@react-navigation/native"
+import { LinearGradient } from "expo-linear-gradient"
+import { useState } from "react"
+import { Dimensions, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
+import { SafeAreaView } from "react-native-safe-area-context"
+import ProfileDropdown from "../components/ProfileDropdown"
+import { useAuth } from "../contexts/AuthContext"
 
 const { width, height } = Dimensions.get("window")
 
@@ -37,9 +39,14 @@ const categories = [
 export default function CustomerHomeScreen() {
   const { user } = useAuth()
   const navigation = useNavigation()
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false)
 
   const handleCategoryPress = (categoryId: string) => {
     navigation.navigate("Browse", { category: categoryId })
+  }
+
+  const handleProfilePress = () => {
+    setShowProfileDropdown(!showProfileDropdown)
   }
 
   return (
@@ -55,9 +62,9 @@ export default function CustomerHomeScreen() {
                 <Text style={styles.locationText}>Manhattan, New York</Text>
               </View>
             </View>
-            <View style={styles.profileAvatar}>
-              <Text style={styles.profileAvatarText}>S</Text>
-            </View>
+            <TouchableOpacity style={styles.profileAvatar} onPress={handleProfilePress}>
+              <Text style={styles.profileAvatarText}>{user?.name?.charAt(0) || "U"}</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -132,14 +139,18 @@ export default function CustomerHomeScreen() {
           <LinearGradient colors={["#7f1d1d", "#991b1b", "#dc2626"]} style={styles.featuredCard}>
             <Text style={styles.featuredTitle}>Chef's Signature Menu</Text>
             <Text style={styles.featuredSubtitle}>
-              Handcrafted dishes from our top-rated chefs, prepared with premium ingredients
+              Discover exclusive dishes crafted by our top-rated chefs. Limited time offer with premium ingredients and
+              authentic flavors.
             </Text>
-            <TouchableOpacity style={styles.featuredButton} onPress={() => handleCategoryPress("featured")}>
-              <Text style={styles.featuredButtonText}>Explore Specials</Text>
+            <TouchableOpacity style={styles.featuredButton}>
+              <Text style={styles.featuredButtonText}>Explore Menu</Text>
             </TouchableOpacity>
           </LinearGradient>
         </View>
       </ScrollView>
+
+      {/* Profile Dropdown */}
+      <ProfileDropdown isVisible={showProfileDropdown} onClose={() => setShowProfileDropdown(false)} />
     </SafeAreaView>
   )
 }

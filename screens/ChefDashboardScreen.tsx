@@ -1,7 +1,8 @@
 "use client"
 import { useState } from "react"
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Dimensions } from "react-native"
+import { Alert, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
+import ProfileDropdown from "../components/ProfileDropdown"
 import { useAuth } from "../contexts/AuthContext"
 
 const { width, height } = Dimensions.get("window")
@@ -19,6 +20,7 @@ const responsiveFontSize = (size: number) => {
 
 export default function ChefDashboardScreen() {
   const { user } = useAuth()
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false)
   const [pendingOrders, setPendingOrders] = useState([
     {
       id: "SC-003",
@@ -40,13 +42,24 @@ export default function ChefDashboardScreen() {
     setPendingOrders((orders) => orders.filter((order) => order.id !== orderId))
   }
 
+  const handleProfilePress = () => {
+    setShowProfileDropdown(!showProfileDropdown)
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.greeting}>Welcome, {user?.name?.split(" ")[1]}!</Text>
-          <Text style={styles.location}>📍 Professional Kitchen Dashboard</Text>
+          <View style={styles.headerContent}>
+            <View>
+              <Text style={styles.greeting}>Welcome, {user?.name?.split(" ")[1]}!</Text>
+              <Text style={styles.location}>📍 Professional Kitchen Dashboard</Text>
+            </View>
+            <TouchableOpacity style={styles.profileAvatar} onPress={handleProfilePress}>
+              <Text style={styles.profileAvatarText}>{user?.name?.charAt(0) || "C"}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Stats Grid */}
@@ -106,6 +119,9 @@ export default function ChefDashboardScreen() {
           )}
         </View>
       </ScrollView>
+
+      {/* Profile Dropdown */}
+      <ProfileDropdown isVisible={showProfileDropdown} onClose={() => setShowProfileDropdown(false)} />
     </SafeAreaView>
   )
 }
@@ -280,5 +296,23 @@ const styles = StyleSheet.create({
     fontSize: responsiveFontSize(16),
     textAlign: "center",
     lineHeight: responsiveFontSize(22),
+  },
+  headerContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  profileAvatar: {
+    width: responsiveWidth(10),
+    height: responsiveWidth(10),
+    borderRadius: responsiveWidth(5),
+    backgroundColor: "#f59e0b",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  profileAvatarText: {
+    color: "#ffffff",
+    fontWeight: "700",
+    fontSize: responsiveFontSize(16),
   },
 })
