@@ -5,11 +5,10 @@ import { Ionicons } from '@expo/vector-icons';
 
 function TabBarIcon({ 
   iconName, 
-  label, 
   focused 
 }: { 
   iconName: keyof typeof Ionicons.glyphMap; 
-  label: string; 
+   
   focused: boolean;
 }) {
   return (
@@ -21,7 +20,7 @@ function TabBarIcon({
           color={focused ? "#ffffff" : "#6b7280"} 
         />
       </View>
-      <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>{label}</Text>
+      {/* <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>{label}</Text> */}
     </View>
   );
 }
@@ -46,7 +45,6 @@ function CartTabBarIcon({ focused }: { focused: boolean }) {
           </View>
         )}
       </View>
-      <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>Cart</Text>
     </View>
   );
 }
@@ -65,7 +63,7 @@ export default function CustomerLayout() {
         options={{
           title: "Home",
           tabBarIcon: ({ focused }) => (
-            <TabBarIcon iconName="home-outline" label="Home" focused={focused} />
+            <TabBarIcon iconName="home-outline"  focused={focused} />
           ),
         }}
       />
@@ -74,7 +72,7 @@ export default function CustomerLayout() {
         options={{
           title: "Browse",
           tabBarIcon: ({ focused }) => (
-            <TabBarIcon iconName="search-outline" label="Browse" focused={focused} />
+            <TabBarIcon iconName="search-outline"  focused={focused} />
           ),
         }}
       />
@@ -90,7 +88,7 @@ export default function CustomerLayout() {
         options={{
           title: "Orders",
           tabBarIcon: ({ focused }) => (
-            <TabBarIcon iconName="receipt-outline" label="Orders" focused={focused} />
+            <TabBarIcon iconName="receipt-outline"  focused={focused} />
           ),
         }}
       />

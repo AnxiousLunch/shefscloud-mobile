@@ -1,37 +1,42 @@
-import { Tabs } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
-import { Ionicons } from '@expo/vector-icons';
+import { Tabs } from "expo-router"
+import { StyleSheet, Text, View, Dimensions } from "react-native"
+import { Ionicons } from "@expo/vector-icons"
+
+const { width, height } = Dimensions.get("window")
+
+// Responsive helper functions
+const isTablet = width >= 768
+const isSmallPhone = width < 375
+const responsiveWidth = (percentage: number) => width * (percentage / 100)
+const responsiveFontSize = (size: number) => {
+  if (isTablet) return size * 1.2
+  if (isSmallPhone) return size * 0.9
+  return size
+}
 
 function TabBarIcon({
   iconName,
-  label,
   focused,
   badge,
 }: {
-  iconName: keyof typeof Ionicons.glyphMap;
-  label: string;
-  focused: boolean;
-  badge?: number;
+  iconName: keyof typeof Ionicons.glyphMap
+  focused: boolean
+  badge?: number
 }) {
   return (
     <View style={[styles.tabItem, focused && styles.tabItemActive]}>
       <View style={styles.iconContainer}>
         <View style={styles.iconWrapper}>
-          <Ionicons 
-            name={iconName} 
-            size={24} 
-            color={focused ? "#ffffff" : "#6b7280"} 
-          />
+          <Ionicons name={iconName} size={isTablet ? 28 : 24} color={focused ? "#ffffff" : "#6b7280"} />
         </View>
         {badge && badge > 0 && (
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
+            <Text style={styles.badgeText}>{badge > 99 ? "99+" : badge}</Text>
           </View>
         )}
       </View>
-      <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>{label}</Text>
     </View>
-  );
+  )
 }
 
 export default function ChefLayout() {
@@ -47,9 +52,7 @@ export default function ChefLayout() {
         name="index"
         options={{
           title: "Dashboard",
-          tabBarIcon: ({ focused }) => (
-            <TabBarIcon iconName="grid-outline" label="Dashboard" focused={focused} />
-          ),
+          tabBarIcon: ({ focused }) => <TabBarIcon iconName="grid-outline"  focused={focused} />,
         }}
       />
       <Tabs.Screen
@@ -57,7 +60,7 @@ export default function ChefLayout() {
         options={{
           title: "Orders",
           tabBarIcon: ({ focused }) => (
-            <TabBarIcon iconName="receipt-outline" label="Orders" focused={focused} badge={5} />
+            <TabBarIcon iconName="receipt-outline"  focused={focused} badge={5} />
           ),
         }}
       />
@@ -65,22 +68,18 @@ export default function ChefLayout() {
         name="menu"
         options={{
           title: "Menu",
-          tabBarIcon: ({ focused }) => (
-            <TabBarIcon iconName="restaurant-outline" label="Menu" focused={focused} />
-          ),
+          tabBarIcon: ({ focused }) => <TabBarIcon iconName="restaurant-outline"  focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ focused }) => (
-            <TabBarIcon iconName="person-outline" label="Profile" focused={focused} />
-          ),
+          tabBarIcon: ({ focused }) => <TabBarIcon iconName="person-outline"  focused={focused} />,
         }}
       />
     </Tabs>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -95,31 +94,32 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.1,
     shadowRadius: 12,
-    paddingBottom: 28,
-    paddingTop: 16,
-    height: 95,
-    paddingHorizontal: 8,
+    paddingBottom: isTablet ? 35 : isSmallPhone ? 25 : 28,
+    paddingTop: isTablet ? 20 : 16,
+    height: isTablet ? 110 : isSmallPhone ? 85 : 95,
+    paddingHorizontal: Math.min(responsiveWidth(2), 16),
   },
   tabItem: {
     alignItems: "center",
     justifyContent: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 24,
-    minWidth: 70,
-    minHeight: 60,
-    transition: "all 0.2s ease",
+    paddingVertical: isTablet ? 12 : 10,
+    paddingHorizontal: isTablet ? 16 : isSmallPhone ? 8 : 12,
+    borderRadius: isTablet ? 28 : 24,
+    minWidth: isTablet ? 90 : isSmallPhone ? 60 : 70,
+    minHeight: isTablet ? 70 : isSmallPhone ? 50 : 60,
+    flex: 1,
+    maxWidth: isTablet ? 120 : 100,
   },
   tabItemActive: {
     backgroundColor: "#dc2626",
-    transform: [{ scale: 1.05 }],
+    transform: [{ scale: isTablet ? 1.08 : 1.05 }],
     shadowColor: "#dc2626",
     shadowOffset: {
       width: 0,
       height: 4,
     },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowRadius: isTablet ? 10 : 8,
     elevation: 8,
   },
   iconContainer: {
@@ -130,15 +130,16 @@ const styles = StyleSheet.create({
   iconWrapper: {
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 4,
-    height: 28,
+    marginBottom: isTablet ? 6 : 4,
+    height: isTablet ? 32 : 28,
   },
   tabLabel: {
-    fontSize: 12,
+    fontSize: responsiveFontSize(12),
     fontWeight: "600",
     color: "#6b7280",
     textAlign: "center",
     letterSpacing: 0.5,
+    lineHeight: responsiveFontSize(14),
   },
   tabLabelActive: {
     color: "#ffffff",
@@ -146,14 +147,14 @@ const styles = StyleSheet.create({
   },
   badge: {
     position: "absolute",
-    top: -6,
-    right: -12,
+    top: isTablet ? -8 : -6,
+    right: isTablet ? -16 : -12,
     backgroundColor: "#ef4444",
-    borderRadius: 12,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    minWidth: 20,
-    minHeight: 20,
+    borderRadius: isTablet ? 14 : 12,
+    paddingHorizontal: isTablet ? 8 : 6,
+    paddingVertical: isTablet ? 3 : 2,
+    minWidth: isTablet ? 24 : 20,
+    minHeight: isTablet ? 24 : 20,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
@@ -169,8 +170,9 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: "#ffffff",
-    fontSize: 10,
+    fontSize: responsiveFontSize(10),
     fontWeight: "800",
     textAlign: "center",
+    lineHeight: responsiveFontSize(12),
   },
-});
+})
