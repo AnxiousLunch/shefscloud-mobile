@@ -3,6 +3,11 @@ import { Ionicons } from "@expo/vector-icons"
 import { useEffect, useRef } from "react"
 import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native"
 import { useAuth } from "../contexts/AuthContext"
+import { signOutUser } from "@/store/user"
+import { useDispatch, UseDispatch } from "react-redux"
+import { useRouter } from "expo-router"
+import { AppDispatch } from "@/store/store"
+
 
 const { width } = Dimensions.get("window")
 
@@ -15,6 +20,8 @@ export default function ProfileDropdown({ isVisible, onClose }: ProfileDropdownP
   const { user, logout } = useAuth()
   const fadeAnim = useRef(new Animated.Value(0)).current
   const scaleAnim = useRef(new Animated.Value(0.8)).current
+  const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
 
   useEffect(() => {
     if (isVisible) {
@@ -47,9 +54,19 @@ export default function ProfileDropdown({ isVisible, onClose }: ProfileDropdownP
     }
   }, [isVisible])
 
-  const handleLogout = () => {
-    logout()
-    onClose()
+  // const handleLogout = () => {
+  //   logout()
+  //   onClose()
+  // }
+
+
+  const handleLogout = async () => {
+    try {
+      await dispatch(signOutUser())
+      router.replace('/(auth)');
+    } catch (error) {
+      console.error("Logout failed:", error)
+    }
   }
 
   if (!isVisible) return null

@@ -3,19 +3,20 @@ import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider } from "../contexts/AuthContext";
 import { CartProvider } from "../contexts/CartContext";
-import { store } from '../store/store'
+import { store } from "../store/store";
 import { Provider } from "react-redux";
 
 export default function RootLayout() {
   return (
-    <SafeAreaProvider>
-      <AuthProvider>
-        <CartProvider>
-          <Provider store={store}>
+    <Provider store={store}>
+      <SafeAreaProvider>
+        <AuthProvider>
+          <CartProvider>
             <Stack screenOptions={{ headerShown: false }} />
-          </Provider>
-        </CartProvider>
-      </AuthProvider>
-    </SafeAreaProvider>
+            <StatusBar style="auto" />
+          </CartProvider>
+        </AuthProvider>
+      </SafeAreaProvider>
+    </Provider>
   );
 }
