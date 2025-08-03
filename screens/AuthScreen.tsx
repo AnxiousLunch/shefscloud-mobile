@@ -20,11 +20,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { handleUserLogin } from "../auth_endpoints/AuthEndpoints";
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from "expo-router";
-import { loginAndSaveUser, loadUserFromStorage } from '../store/user';
+import { loginAndSaveUser, loadUserFromStorage, saveUserToStorage } from '../store/user';
 import { AppDispatch } from "../store/store";
 import { useAppSelector } from "@/hooks/hooks";
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
 
-const { width, height } = Dimensions.get("window")
+const { width, height } = Dimensions.get("window");
+WebBrowser.maybeCompleteAuthSession();
 
 // Responsive helper functions
 const isTablet = width >= 768
@@ -43,6 +46,9 @@ export default function AuthScreen() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
+  });
   
   const { userInfo, isLoading: reduxLoading, isInitialized } = useAppSelector((state) => state.user);
   const dispatch = useDispatch<AppDispatch>();
@@ -76,6 +82,24 @@ export default function AuthScreen() {
       setIsLoading(false)
     }
   };
+
+  const handleGoogleLogin = async () => {
+    const result = await promptAsync();
+    if (result.type === 'success') {
+      const user = await getUserInfo(result.authentication.accessToken);
+      dispatch(loginAndSaveUser(user));
+    } else {
+      console.log('Login cancelled or failed:', result.type);
+    }
+  };
+
+  const getUserInfo = async (accessToken: string) => {
+    const res = await fetch('https://www.googleapis.com/userinfo/v2/me', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    return await res.json();
+  };
+  
 
   // Show loading screen while checking for existing user data
   if (!isInitialized || reduxLoading) {
@@ -207,10 +231,10 @@ export default function AuthScreen() {
                   )}
                 </LinearGradient>
               </TouchableOpacity>
-              {/* Apple Sign-In */}
-              <TouchableOpacity style={styles.appleButton} onPress={() => Alert.alert("Coming Soon")}>
-                <Ionicons name="logo-apple" size={isTablet ? 22 : 18} color="#fff" />
-                <Text style={styles.appleButtonText}>Sign in with Apple</Text>
+              {/* Google Sign-In */}
+              <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
+                <Ionicons name="logo-google" size={isTablet ? 22 : 18} color="#fff" />
+                <Text style={styles.googleButtonText}>Sign in with Google</Text>
               </TouchableOpacity>
               {/* Create Account */}
               <TouchableOpacity
@@ -402,7 +426,7 @@ const styles = StyleSheet.create({
   },
   loadingDot2: { opacity: 0.6 },
   loadingDot3: { opacity: 0.9 },
-  appleButton: {
+  googleButton: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
@@ -412,7 +436,7 @@ const styles = StyleSheet.create({
     marginBottom: isTablet ? 20 : 16,
     gap: isTablet ? 10 : 8,
   },
-  appleButtonText: {
+  googleButtonText: {
     color: "#fff",
     fontSize: responsiveFontSize(15),
     fontWeight: "600",
