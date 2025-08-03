@@ -4,11 +4,27 @@ import { AppDispatch } from "./store";
 import { PayloadAction } from "@reduxjs/toolkit";
 
 export interface UserInfo {
-  id: string;
-  name: string;
-  email: string;
   access_token: string;
-  // Add other fields as needed
+  bio: string | null;
+  contract_signed: string | null;
+  cover_pic: string | null;
+  created_at: string;
+  deleted_at: string | null;
+  email: string;
+  email_verified_at: string;
+  first_name: string;
+  food_handle_certificate: string | null;
+  id: number;
+  is_active: number;
+  is_admin: number;
+  is_chef: number;
+  last_name: string;
+  last_order_address: string | null;
+  order_capacity: number | null;
+  phone: string;
+  profile_pic: string | null;
+  updated_at: string;
+  user_addresses: any[]; 
 }
 
 export interface UserState {

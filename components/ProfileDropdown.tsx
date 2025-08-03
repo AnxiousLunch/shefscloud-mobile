@@ -1,15 +1,21 @@
 "use client"
 import { Ionicons } from "@expo/vector-icons"
-import { useEffect, useRef } from "react"
-import { Animated, Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native"
-import { useAuth } from "../contexts/AuthContext"
+import { useEffect, useRef, useState } from "react"
+import { 
+  Animated, 
+  StyleSheet, 
+  Text, 
+  TouchableOpacity, 
+  View, 
+  ScrollView,
+  useWindowDimensions
+} from "react-native"
 import { signOutUser } from "@/store/user"
-import { useDispatch, UseDispatch } from "react-redux"
+import { useDispatch } from "react-redux"
 import { useRouter } from "expo-router"
 import { AppDispatch } from "@/store/store"
-
-
-const { width } = Dimensions.get("window")
+import { loadUserFromStorage } from "@/store/user"
+import { UserInfo } from "@/store/user"
 
 interface ProfileDropdownProps {
   isVisible: boolean
@@ -17,11 +23,34 @@ interface ProfileDropdownProps {
 }
 
 export default function ProfileDropdown({ isVisible, onClose }: ProfileDropdownProps) {
-  const { user, logout } = useAuth()
   const fadeAnim = useRef(new Animated.Value(0)).current
   const scaleAnim = useRef(new Animated.Value(0.8)).current
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
+  const { width, height } = useWindowDimensions();
+  const [user, setUser] = useState<UserInfo | null>(null);  
+  // Responsive scaling factors
+  const responsiveScale = Math.min(width / 400, 1);
+  const baseFontSize = 16 * responsiveScale;
+  const emailFontSize = Math.max(14 * responsiveScale, 12);
+
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      const res = await dispatch(loadUserFromStorage());
+      if (loadUserFromStorage.fulfilled.match(res)) {
+        const { userInfo } = res.payload;
+        
+        setUser(userInfo);
+      } else {
+        console.warn("Failed to load user:", res.error);
+      }
+    };
+    
+    console.log(user)
+    if (isVisible) {
+      fetchUserInfo();
+    }
+  }, [dispatch, isVisible]);
 
   useEffect(() => {
     if (isVisible) {
@@ -54,12 +83,6 @@ export default function ProfileDropdown({ isVisible, onClose }: ProfileDropdownP
     }
   }, [isVisible])
 
-  // const handleLogout = () => {
-  //   logout()
-  //   onClose()
-  // }
-
-
   const handleLogout = async () => {
     try {
       await dispatch(signOutUser())
@@ -73,32 +96,70 @@ export default function ProfileDropdown({ isVisible, onClose }: ProfileDropdownP
 
   return (
     <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
-      <TouchableOpacity style={styles.backdrop} onPress={onClose} activeOpacity={1} />
+      <TouchableOpacity 
+        style={styles.backdrop} 
+        onPress={onClose} 
+        activeOpacity={1} 
+      />
+      
       <Animated.View
         style={[
           styles.dropdown,
           {
             opacity: fadeAnim,
             transform: [{ scale: scaleAnim }],
+            top: height * 0.08, // Responsive top position
+            right: width * 0.05, // Responsive right margin
+            maxWidth: width * 0.9, // Max 90% of screen width
+            minWidth: Math.min(width * 0.7, 300), // Flexible min width
           },
         ]}
       >
-        <View style={styles.header}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{user?.name?.charAt(0) || "U"}</Text>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.header}>
+            <View style={[
+              styles.avatar, 
+              { width: 40 * responsiveScale, height: 40 * responsiveScale }
+            ]}>
+              <Text style={[styles.avatarText, { fontSize: baseFontSize }]}>
+                {user?.first_name?.charAt(0) || "U"}
+              </Text>
+            </View>
+            
+            <View style={styles.userInfo}>
+              <Text style={[styles.userName, { fontSize: baseFontSize }]}>
+                {user?.first_name}
+              </Text>
+              <Text 
+                style={[styles.userEmail, { fontSize: emailFontSize }]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                
+                {user?.email}
+              </Text>
+            </View>
           </View>
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>{user?.name}</Text>
-            <Text style={styles.userEmail}>{user?.email}</Text>
-          </View>
-        </View>
 
-        <View style={styles.divider} />
+          <View style={styles.divider} />
 
-        <TouchableOpacity style={styles.menuItem} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={20} color="#ef4444" />
-          <Text style={styles.menuText}>Logout</Text>
-        </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.menuItem} 
+            onPress={handleLogout}
+          >
+            <Ionicons 
+              name="log-out-outline" 
+              size={20 * responsiveScale} 
+              color="#ef4444" 
+            />
+            <Text style={[styles.menuText, { fontSize: baseFontSize }]}>
+              Logout
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
       </Animated.View>
     </Animated.View>
   )
@@ -119,12 +180,9 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     position: "absolute",
-    top: 100,
-    right: width * 0.06,
     backgroundColor: "#ffffff",
     borderRadius: 16,
     padding: 16,
-    minWidth: 200,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -133,6 +191,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 20,
     elevation: 10,
+    maxHeight: "50%", // Prevent dropdown from being too tall
+  },
+  scrollContainer: {
+    flexGrow: 1,
   },
   header: {
     flexDirection: "row",
@@ -140,8 +202,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   avatar: {
-    width: 40,
-    height: 40,
     borderRadius: 20,
     backgroundColor: "#f59e0b",
     justifyContent: "center",
@@ -151,19 +211,17 @@ const styles = StyleSheet.create({
   avatarText: {
     color: "#ffffff",
     fontWeight: "700",
-    fontSize: 16,
   },
   userInfo: {
     flex: 1,
+    minWidth: "50%", // Ensure proper text wrapping
   },
   userName: {
-    fontSize: 16,
     fontWeight: "700",
     color: "#1f2937",
-    marginBottom: 2,
+    marginBottom: 4,
   },
   userEmail: {
-    fontSize: 14,
     color: "#6b7280",
   },
   divider: {
@@ -180,8 +238,7 @@ const styles = StyleSheet.create({
   },
   menuText: {
     marginLeft: 12,
-    fontSize: 16,
     fontWeight: "600",
     color: "#ef4444",
   },
-}) 
+})
