@@ -87,7 +87,7 @@ export default function SignUpScreen() {
 
     setIsLoading(true);
     try {
-        const res = await handleUserSignUp({first_name, last_name, phone, password});
+        const res = await handleUserSignUp({email, password, phone, first_name, last_name});
         Alert.alert(
           typeof res.message === "string"
             ? res.message
@@ -150,7 +150,7 @@ export default function SignUpScreen() {
                 <Ionicons name="person-outline" size={20} color="#530202" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter your full name"
+                  placeholder="Enter your first name"
                   placeholderTextColor="#7a7979ff"
                   value={first_name}
                   onChangeText={setFirstName}
@@ -165,7 +165,7 @@ export default function SignUpScreen() {
                 <Ionicons name="person-outline" size={20} color="#530202" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter your full name"
+                  placeholder="Enter your last name"
                   placeholderTextColor="#7a7979ff"
                   value={last_name}
                   onChangeText={setLastName}
@@ -189,18 +189,20 @@ export default function SignUpScreen() {
                 />
               </View>
             </View>
-
-            <TextInputMask
-                type={'custom'}
-                options={{
-                    mask: '03999999999',
-                }}
-                value={phone}
-                onChangeText={setPhone}
-                keyboardType="numeric"
-                placeholder="03XXXXXXXXX"
-                style={styles.input}
+            <View>
+              <Ionicons name="call-outline" size={20} color="#530202" style={styles.inputIconCall}/>
+              <TextInputMask
+                  type={'custom'}
+                  options={{
+                      mask: '03999999999',
+                  }}
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="numeric"
+                  placeholder="03XXXXXXXXX"
+                  style={styles.input}
                 />
+            </View>
 
             <View style={styles.formGroup}>
               <Text style={styles.label}>Password</Text>
@@ -411,6 +413,11 @@ const styles = StyleSheet.create({
   inputIcon: {
     position: "absolute",
     left: 16,
+  },
+  inputIconCall: {
+    position: "absolute",
+    left: 16,
+    marginTop: 16,
   },
   eyeIcon: {
     position: "absolute",
