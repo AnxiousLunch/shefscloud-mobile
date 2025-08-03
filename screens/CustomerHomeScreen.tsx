@@ -1,49 +1,46 @@
 "use client"
 import { useNavigation } from "@react-navigation/native"
 import { LinearGradient } from "expo-linear-gradient"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Dimensions, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import ProfileDropdown from "../components/ProfileDropdown"
 import { useAuth } from "../contexts/AuthContext"
+import { Alert, Image } from "react-native"
+import {handleGetFoodCategory} from '../services/get_methods'
 
 const { width, height } = Dimensions.get("window")
 
-const categories = [
-  {
-    id: "biryani",
-    name: "Biryani",
-    count: "24 dishes available",
-    imageStyle: { backgroundColor: "#f59e0b" },
-  },
-  {
-    id: "italian",
-    name: "Italian",
-    count: "31 dishes available",
-    imageStyle: { backgroundColor: "#ef4444" },
-  },
-  {
-    id: "chinese",
-    name: "Chinese",
-    count: "18 dishes available",
-    imageStyle: { backgroundColor: "#10b981" },
-  },
-  {
-    id: "indian",
-    name: "Indian",
-    count: "27 dishes available",
-    imageStyle: { backgroundColor: "#8b5cf6" },
-  },
-]
+interface FoodCategory {
+  id: number | null;
+  name: string;
+  image: string;
+  created_at: string;
+  updated_at: string | null;
+  deleted_at: string | null;
+}
+
 
 export default function CustomerHomeScreen() {
   const { user } = useAuth()
   const navigation = useNavigation()
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
+  const [foodCategory, setFoodCategory] = useState<FoodCategory[]>([{id: null, name: "", image: "", created_at: "", updated_at: null, deleted_at: null}]);
 
-  const handleCategoryPress = (categoryId: string) => {
-    navigation.navigate("Browse", { category: categoryId })
-  }
+
+  // GET Food category - API
+  useEffect(() => {
+    (async () => {
+      try {
+        const response = await handleGetFoodCategory();
+        setFoodCategory(response);
+      } catch (error) {
+        console.error("Error while fetching food category", error);
+      }
+    })();
+  }, []);
+
+  console.log(foodCategory)
 
   const handleProfilePress = () => {
     setShowProfileDropdown(!showProfileDropdown)
@@ -89,15 +86,18 @@ export default function CustomerHomeScreen() {
             </TouchableOpacity>
           </View>
           <View style={styles.categoriesGrid}>
-            {categories.map((category) => (
+            {foodCategory.map((category) => (
               <TouchableOpacity
                 key={category.id}
                 style={styles.categoryCard}
-                onPress={() => handleCategoryPress(category.id)}
+                onPress={() => Alert.alert("Coming soon!")}
               >
-                <View style={[styles.categoryImage, category.imageStyle]} />
+                <Image
+                  source={{ uri: category.image }}
+                  style={styles.categoryImage}
+                  resizeMode="cover"
+                />
                 <Text style={styles.categoryName}>{category.name}</Text>
-                <Text style={styles.categoryCount}>{category.count}</Text>
               </TouchableOpacity>
             ))}
           </View>
