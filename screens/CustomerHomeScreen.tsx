@@ -156,13 +156,13 @@ export default function CustomerHomeScreen() {
             <View style={styles.chefHeader}>
               <View style={styles.chefAvatar}>
                 <Image
-                  source={{uri: chefImage}}
+                  source={{ uri: chefImage }}
                   style={styles.categoryImage}
                   resizeMode="cover"
                 />
               </View>
               <View style={styles.chefInfo}>
-                <Text style={styles.chefName}>{activeChef?.first_name}{" "}{activeChef.last_name}</Text>
+                <Text style={styles.chefName}>{activeChef?.first_name} {activeChef?.last_name}</Text>
                 <View style={styles.chefBadge}>
                   <Text style={styles.chefBadgeText}>✓ Verified Chef</Text>
                 </View>
@@ -172,6 +172,16 @@ export default function CustomerHomeScreen() {
                   <Text style={styles.stat}>📍 Italian Cuisine</Text>
                 </View>
               </View>
+            </View>
+
+            {/* Navigation Buttons */}
+            <View style={styles.chefNavButtons}>
+              <TouchableOpacity onPress={() => handleChefNav("previous")} style={styles.navButton}>
+                <Text style={styles.navButtonText}>← Previous</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleChefNav("next")} style={styles.navButton}>
+                <Text style={styles.navButtonText}>Next →</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -427,5 +437,26 @@ const styles = StyleSheet.create({
   featuredButtonText: {
     color: "#ffffff",
     fontWeight: "700",
+  },
+  chefNavButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+  },
+  navButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    backgroundColor: "#f3f4f6",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  navButtonText: {
+    fontSize: width * 0.035,
+    fontWeight: "600",
+    color: "#1f2937",
   },
 })
