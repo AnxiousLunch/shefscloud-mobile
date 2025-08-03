@@ -7,7 +7,8 @@ import { SafeAreaView } from "react-native-safe-area-context"
 import ProfileDropdown from "../components/ProfileDropdown"
 import { useAuth } from "../contexts/AuthContext"
 import { Alert, Image } from "react-native"
-import {handleGetFoodCategory} from '../services/get_methods'
+import {handleGetFoodCategory, handleGetPopularChefWithDishes} from '../services/get_methods'
+import AsyncStorage from "@react-native-async-storage/async-storage"
 
 const { width, height } = Dimensions.get("window")
 
@@ -20,15 +21,23 @@ interface FoodCategory {
   deleted_at: string | null;
 }
 
+function isValidURL(string: string) {
+  try {
+    new URL(string);
+    return true;
+  } catch (_) {
+    return false;  
+  }
+}
 
 export default function CustomerHomeScreen() {
   const { user } = useAuth()
   const navigation = useNavigation()
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
   const [foodCategory, setFoodCategory] = useState<FoodCategory[]>([{id: null, name: "", image: "", created_at: "", updated_at: null, deleted_at: null}]);
+  const [mostLoveChef, setMostLovedChef] = useState([]);
+  const [activeChefIndex, setActiveChefIndex] = useState(0);
 
-
-  // GET Food category - API
   useEffect(() => {
     (async () => {
       try {
@@ -40,7 +49,39 @@ export default function CustomerHomeScreen() {
     })();
   }, []);
 
-  console.log(foodCategory)
+  useEffect(() => {
+  (async () => {
+    try {
+      // Replace localStorage.getItem with AsyncStorage.getItem
+      const cityData = await AsyncStorage.getItem("region");
+      if (!cityData) return;
+      
+      const city = JSON.parse(cityData);
+      if (!city?.id) return;
+      
+      const lovedChef = await handleGetPopularChefWithDishes(city.id);
+      setMostLovedChef(lovedChef);
+    } catch (error) {
+      console.error(error);
+    }
+  })();
+}, []);
+
+  const handleChefNav = (direction: string) => {
+    if (direction === "next") {
+      setActiveChefIndex((prev) => (prev + 1) % mostLoveChef.length);
+    } else {
+      setActiveChefIndex((prev) => (prev - 1 + mostLoveChef.length) % mostLoveChef.length);
+    }
+  };
+
+  if (mostLoveChef.length < 1) return null;
+
+  const activeChef = mostLoveChef[activeChefIndex];
+  const chefImage = activeChef?.profile_pic && isValidURL(activeChef.profile_pic)
+    ? activeChef.profile_pic
+    : "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
+
 
   const handleProfilePress = () => {
     setShowProfileDropdown(!showProfileDropdown)
@@ -114,10 +155,14 @@ export default function CustomerHomeScreen() {
           <View style={styles.chefCard}>
             <View style={styles.chefHeader}>
               <View style={styles.chefAvatar}>
-                <Text style={styles.chefAvatarText}>👨‍🍳</Text>
+                <Image
+                  source={{uri: chefImage}}
+                  style={styles.categoryImage}
+                  resizeMode="cover"
+                />
               </View>
               <View style={styles.chefInfo}>
-                <Text style={styles.chefName}>Chef Marco Rossi</Text>
+                <Text style={styles.chefName}>{activeChef?.first_name}{" "}{activeChef.last_name}</Text>
                 <View style={styles.chefBadge}>
                   <Text style={styles.chefBadgeText}>✓ Verified Chef</Text>
                 </View>

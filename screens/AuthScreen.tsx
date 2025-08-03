@@ -54,15 +54,13 @@ export default function AuthScreen() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
 
-  // Load user data from AsyncStorage when component mounts
   useEffect(() => {
     dispatch(loadUserFromStorage());
   }, [dispatch]);
 
-  // Navigate to appropriate screen once user data is loaded and user is authenticated
   useEffect(() => {
     if (isInitialized && userInfo) {
-      router.replace('/(customer)');
+      router.replace('/(region)');
     }
   }, [userInfo, isInitialized, router]);
 
@@ -112,7 +110,7 @@ export default function AuthScreen() {
   }
 
   const navigateToSignUp = () => {
-    router.push('/signup');
+    router.push('/(signup)');
   };
 
   return (
