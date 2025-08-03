@@ -10,12 +10,14 @@ export default function App() {
 
   useEffect(() => {
     if (!isLoading) {
-      if (!user) {
+      if (!user || !user.role) {
         router.replace("/(auth)")
       } else if (user.role === "customer") {
         router.replace("/(customer)")
-      } else {
+      } else if (user.role === "chef") {
         router.replace("/(chef)")
+      } else {
+        router.replace("/(auth)");
       }
     }
   }, [user, isLoading, router])
