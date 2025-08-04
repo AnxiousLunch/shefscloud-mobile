@@ -5,12 +5,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { handleGetAllDishesOfCity } from "@/services/get_methods";
-import type { DishList, Dish } from "@/types/types";
+import type { DishList, Dish, RootStackParamList } from "@/types/types";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useRouter } from "expo-router";
 
 
 
 export default function FoodListScreen() {
-  const navigation = useNavigation();
+  const router = useRouter();
   const { width: screenWidth } = useWindowDimensions();
   const cardWidth = (screenWidth - 70) / 2;
   const responsiveScale = Math.min(screenWidth / 400, 1);
@@ -21,9 +23,9 @@ export default function FoodListScreen() {
   const [isFetching, setIsFetching] = useState(false);
   
 
-  const handleFoodPress = (foodId: string) => {
-    navigation.navigate("FoodDetail", { foodId });
-  };
+  const handleFoodPress = (foodId: number) => {
+    router.push(`/(foodDetails)/${foodId}`)
+  }
 
   useEffect(() => {
     const fetchAllDishes = async () => {
@@ -53,7 +55,7 @@ export default function FoodListScreen() {
   }, []);
 
   const handleBackPress = () => {
-    navigation.goBack();
+    router.back();
   };
 
 
@@ -179,17 +181,17 @@ export default function FoodListScreen() {
             <TouchableOpacity key={item.id} style={styles.foodCard} onPress={() => handleFoodPress(item.id)}>
               <View>
               </View>
-              {item.logo ? (
-                <Image
-                  source={{ uri: item.logo }}
-                  style={styles.foodImage}
-                  resizeMode="cover"
-                />
-              ) : (
-                <View style={[styles.foodImage, { backgroundColor: "#f3f4f6", justifyContent: "center", alignItems: "center" }]}>
-                  <Ionicons name="image-outline" size={40} color="#9ca3af" />
-                </View>
-              )}
+                {item.logo ? (
+                  <Image
+                    source={{ uri: item.logo }}
+                    style={styles.foodImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View style={[styles.foodImage, { backgroundColor: "#f3f4f6", justifyContent: "center", alignItems: "center" }]}>
+                    <Ionicons name="image-outline" size={40} color="#9ca3af" />
+                  </View>
+                )}
               <View style={styles.foodInfo}>
                 <Text
                   style={[styles.foodName, { fontSize: nameFontSize }]}

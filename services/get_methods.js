@@ -89,7 +89,7 @@ export const handleGetChefWithDishes = async (chefId, cityId) => {
 // Get Single Dish (dish-detail-single page)
 export const handleGetSingleDish = async ( dishId) => {
   try {
-    const { data } = await api.get(`/api/single_menu/${dishId}`);
+    const { data } = await api.get(`/api/single_menu/${dishId.id}`);
     return data;
   } catch (error) {
     console.log(error);
@@ -115,5 +115,16 @@ export const handleGetCitites = async () => {
     return data;
   } catch (error) {
     console.error("Error While fetching cities\n", error);
+  }
+};
+
+
+// Availability Time slot
+export const handleGetAvailabilityTimeSlot = async () => {
+  try {
+    const { data } = await api.get("/api/availability_time_slots");
+    return data;
+  } catch (error) {
+    throw new Error(error.message);
   }
 };

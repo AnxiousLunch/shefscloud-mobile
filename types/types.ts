@@ -1,7 +1,6 @@
 export type RootStackParamList = {
   Home: undefined;
-  FoodDetail: { foodId: string };
-  // Add other screens as needed
+  FoodDetail: { foodId: number };
 };
 
 export type Dish = {
@@ -71,5 +70,26 @@ export type Dish = {
   user_id: number;
 };
 
+
+export type Chef = {
+  bio: string | null;
+  contract_signed: string | null;
+  cover_pic: string;
+  created_at: string;
+  deleted_at: string | null;
+  email: string;
+  email_verified_at: string;
+  first_name: string;
+  food_handle_certificate: string | null;
+  id: number;
+  is_active: number;
+  is_admin: number;
+  is_chef: number;
+  last_name: string;
+  order_capacity: number | null;
+  phone: string;
+  profile_pic: string;
+  updated_at: string;
+}
 
 export type DishList = Dish[];

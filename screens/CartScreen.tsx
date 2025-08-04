@@ -1,6 +1,19 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from "react-native"
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  Image,
+  Dimensions,
+} from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import { useCart } from "../contexts/CartContext"
+import { Ionicons } from "@expo/vector-icons"
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window")
+const scaleFont = (size: number) => Math.min(size * (SCREEN_WIDTH / 375), size * 1.2) // More conservative scaling
 
 export default function CartScreen() {
   const { items, updateQuantity, getTotalPrice } = useCart()
@@ -29,7 +42,9 @@ export default function CartScreen() {
         <View style={styles.emptyState}>
           <Text style={styles.emptyIcon}>🛒</Text>
           <Text style={styles.emptyTitle}>Your cart is empty</Text>
-          <Text style={styles.emptySubtitle}>Add some delicious dishes from our talented chefs</Text>
+          <Text style={styles.emptySubtitle}>
+            Add some delicious dishes from our talented chefs
+          </Text>
         </View>
       </SafeAreaView>
     )
@@ -41,15 +56,40 @@ export default function CartScreen() {
         <Text style={styles.headerTitle}>My Cart</Text>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.content} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
         {items.map((item) => (
           <View key={item.id} style={styles.cartItem}>
-            <View style={styles.itemImage}>
-              <Text style={styles.itemIcon}>{item.image}</Text>
-            </View>
+            {item.image ? (
+              <Image
+                source={{ uri: item.image }}
+                style={styles.itemImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <View
+                style={[
+                  styles.itemImage,
+                  {
+                    backgroundColor: "#f3f4f6",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  },
+                ]}
+              >
+                <Ionicons name="image-outline" size={40} color="#9ca3af" />
+              </View>
+            )}
             <View style={styles.itemInfo}>
-              <Text style={styles.itemName}>{item.name}</Text>
-              <Text style={styles.itemChef}>{item.chef}</Text>
+              <Text style={styles.itemName} numberOfLines={1} ellipsizeMode="tail">
+                {item.name}
+              </Text>
+              <Text style={styles.itemChef} numberOfLines={1} ellipsizeMode="tail">
+                {item.chef}
+              </Text>
               <Text style={styles.itemPrice}>${item.price}</Text>
             </View>
             <View style={styles.quantityControls}>
@@ -104,153 +144,148 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: "#ffffff",
     paddingHorizontal: 25,
-    paddingVertical: 25,
+    paddingVertical: 20,
     alignItems: "center",
     borderBottomWidth: 1,
     borderBottomColor: "#f1f5f9",
   },
   headerTitle: {
-    fontSize: 22,
+    fontSize: scaleFont(20),
     fontWeight: "800",
     color: "#1f2937",
   },
   content: {
     flex: 1,
+  },
+  scrollContent: {
     paddingTop: 15,
+    paddingBottom: 20,
   },
   cartItem: {
     backgroundColor: "#ffffff",
-    marginHorizontal: 25,
+    marginHorizontal: 15,
     marginBottom: 15,
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 16,
+    padding: 16,
     flexDirection: "row",
     alignItems: "center",
-    gap: 15,
+    gap: 12,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
-    shadowRadius: 20,
-    elevation: 4,
+    shadowRadius: 12,
+    elevation: 3,
   },
   itemImage: {
-    width: 70,
-    height: 70,
+    width: 60,
+    height: 60,
+    borderRadius: 12,
     backgroundColor: "#f59e0b",
-    borderRadius: 15,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  itemIcon: {
-    fontSize: 28,
-    color: "#ffffff",
   },
   itemInfo: {
     flex: 1,
+    minWidth: 120, // Ensure minimum width for text
+    maxWidth: SCREEN_WIDTH * 0.45, // More space for text
   },
   itemName: {
+    fontSize: scaleFont(15),
     fontWeight: "700",
-    marginBottom: 5,
+    marginBottom: 4,
     color: "#1f2937",
   },
   itemChef: {
-    fontSize: 13,
+    fontSize: scaleFont(12),
     color: "#6b7280",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   itemPrice: {
+    fontSize: scaleFont(14),
     fontWeight: "800",
     color: "#dc2626",
-    fontSize: 16,
   },
   quantityControls: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
+    gap: 4,
+    marginLeft: -8,
   },
   quantityButton: {
-    width: 35,
-    height: 35,
+    width: 32,
+    height: 32,
     borderWidth: 1,
     borderColor: "#e5e7eb",
     backgroundColor: "#ffffff",
-    borderRadius: 10,
+    borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
   },
   quantityButtonText: {
     fontWeight: "600",
-    fontSize: 16,
+    fontSize: scaleFont(16),
   },
   quantityText: {
     fontWeight: "600",
     minWidth: 20,
     textAlign: "center",
+    fontSize: scaleFont(14),
   },
   totalCard: {
     backgroundColor: "#ffffff",
-    marginHorizontal: 25,
+    marginHorizontal: 15,
     marginTop: 20,
-    marginBottom: 25,
-    padding: 25,
-    borderRadius: 20,
+    marginBottom: 15,
+    padding: 20,
+    borderRadius: 16,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
-    shadowRadius: 20,
-    elevation: 4,
+    shadowRadius: 12,
+    elevation: 3,
   },
   totalRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 12,
+    marginBottom: 10,
   },
   totalLabel: {
+    fontSize: scaleFont(14),
     color: "#6b7280",
   },
   totalValue: {
+    fontSize: scaleFont(14),
     fontWeight: "600",
   },
   finalTotal: {
     borderTopWidth: 1,
     borderTopColor: "#e5e7eb",
-    paddingTop: 15,
-    marginBottom: 25,
-    marginTop: 15,
+    paddingTop: 12,
+    marginBottom: 20,
+    marginTop: 12,
   },
   finalTotalLabel: {
+    fontSize: scaleFont(16),
     fontWeight: "800",
-    fontSize: 20,
     color: "#1f2937",
   },
   finalTotalValue: {
+    fontSize: scaleFont(16),
     fontWeight: "800",
-    fontSize: 20,
     color: "#dc2626",
   },
   checkoutButton: {
     backgroundColor: "#dc2626",
-    paddingVertical: 20,
-    borderRadius: 15,
+    paddingVertical: 16,
+    borderRadius: 12,
     alignItems: "center",
     shadowColor: "#dc2626",
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
-    shadowRadius: 25,
-    elevation: 8,
+    shadowRadius: 20,
+    elevation: 6,
   },
   checkoutButtonText: {
     color: "#ffffff",
-    fontSize: 18,
+    fontSize: scaleFont(15),
     fontWeight: "700",
   },
   emptyState: {
@@ -265,7 +300,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   emptyTitle: {
-    fontSize: 20,
+    fontSize: scaleFont(18),
     fontWeight: "700",
     marginBottom: 10,
     color: "#374151",
@@ -274,5 +309,6 @@ const styles = StyleSheet.create({
     color: "#6b7280",
     textAlign: "center",
     lineHeight: 22,
+    fontSize: scaleFont(14),
   },
 })

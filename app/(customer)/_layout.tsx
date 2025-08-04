@@ -1,4 +1,4 @@
-import { Tabs } from "expo-router";
+import { Tabs, Stack } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 import { useCart } from "../../contexts/CartContext";
 import { Ionicons } from '@expo/vector-icons';
