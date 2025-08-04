@@ -9,6 +9,7 @@ import { useAuth } from "../contexts/AuthContext"
 import { Alert, Image } from "react-native"
 import {handleGetFoodCategory, handleGetPopularChefWithDishes} from '../services/get_methods'
 import AsyncStorage from "@react-native-async-storage/async-storage"
+import { Feather } from "@expo/vector-icons"
 
 const { width, height } = Dimensions.get("window")
 
@@ -37,6 +38,7 @@ export default function CustomerHomeScreen() {
   const [foodCategory, setFoodCategory] = useState<FoodCategory[]>([{id: null, name: "", image: "", created_at: "", updated_at: null, deleted_at: null}]);
   const [mostLoveChef, setMostLovedChef] = useState([]);
   const [activeChefIndex, setActiveChefIndex] = useState(0);
+  const [city, setCity] = useState();
 
   useEffect(() => {
     (async () => {
@@ -57,6 +59,7 @@ export default function CustomerHomeScreen() {
       if (!cityData) return;
       
       const city = JSON.parse(cityData);
+      setCity(city);
       if (!city?.id) return;
       
       const lovedChef = await handleGetPopularChefWithDishes(city.id);
@@ -97,7 +100,7 @@ export default function CustomerHomeScreen() {
               <Text style={styles.greeting}>Good Evening, {user?.name?.split(" ")[0]}!</Text>
               <View style={styles.location}>
                 <Text style={styles.locationIcon}>📍</Text>
-                <Text style={styles.locationText}>Manhattan, New York</Text>
+                <Text style={styles.locationText}>{city?.name}, {city?.countries.name}</Text>
               </View>
             </View>
             <TouchableOpacity style={styles.profileAvatar} onPress={handleProfilePress}>
@@ -109,12 +112,18 @@ export default function CustomerHomeScreen() {
         {/* Search Section */}
         <View style={styles.searchSection}>
           <View style={styles.searchContainer}>
+            <Feather
+              name="search"
+              size={width * 0.05}
+              color="#6b7280"
+              style={styles.searchIcon}
+            />
             <TextInput
               style={styles.searchInput}
               placeholder="Search cuisines, chefs, or dishes..."
               placeholderTextColor="#6b7280"
+              numberOfLines={1}
             />
-            <Text style={styles.searchIcon}>🔍</Text>
           </View>
         </View>
 
@@ -265,25 +274,25 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
   },
   searchContainer: {
-    position: "relative",
-  },
-  searchInput: {
-    paddingVertical: height * 0.022,
-    paddingLeft: width * 0.06,
-    paddingRight: width * 0.14,
-    fontSize: width * 0.04,
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#f8fafc",
     borderRadius: 25,
     borderWidth: 2,
     borderColor: "#f1f5f9",
+    paddingHorizontal: width * 0.04,
+    paddingVertical: height * 0.015,
   },
   searchIcon: {
-    position: "absolute",
-    right: 20,
-    top: "50%",
-    transform: [{ translateY: -10 }],
-    fontSize: 20,
+    marginRight: width * 0.025,
   },
+  searchInput: {
+    flex: 1,
+    fontSize: width * 0.04,
+    color: "#1f2937",
+    paddingVertical: 0, // Prevents vertical overflow
+  },
+
   section: {
     paddingHorizontal: width * 0.06,
     marginBottom: height * 0.03,
