@@ -55,7 +55,6 @@ export default function AuthScreen() {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
 
-
  useEffect(() => {
     dispatch(loadUserFromStorage());
   }, [dispatch]);
@@ -103,14 +102,20 @@ export default function AuthScreen() {
     });
     return await res.json();
   };
-  
 
   // Show loading screen while checking for existing user data
   if (!isInitialized || reduxLoading) {
     return (
-      <View style={[styles.container, styles.loadingContainer]}>
-        <ActivityIndicator size="large" color="#b30000" />
-        <Text style={styles.loadingText}>Loading...</Text>
+      <View style={[styles.container, styles.centeredContent]}>
+        <LinearGradient
+          colors={["#fef7f0", "#fdeae1", "#f9dcc4"]}
+          style={styles.loadingGradient}
+        >
+          <View style={styles.loadingSpinner}>
+            <ActivityIndicator size="large" color="#b30000" />
+          </View>
+          <Text style={styles.loadingText}>Initializing...</Text>
+        </LinearGradient>
       </View>
     );
   }
@@ -121,6 +126,11 @@ export default function AuthScreen() {
 
   return (
     <View style={styles.container}>
+      <LinearGradient
+        colors={["#ffffff", "#fef7f0", "#fdeae1", "#f9dcc4"]}
+        style={styles.backgroundGradient}
+      />
+      
       <SafeAreaView style={styles.safeArea}>
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardView}>
           <ScrollView
@@ -128,132 +138,225 @@ export default function AuthScreen() {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            {/* Gradient background */}
-            <LinearGradient
-              colors={["#5a0000", "#8b0000", "#b30000", "#e40c0c"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.modernBackground}
-            />
-            {/* Header */}
+            {/* Decorative Elements */}
+            <View style={styles.decorativeElement1} />
+            <View style={styles.decorativeElement2} />
+            <View style={styles.decorativeElement3} />
+            <View style={styles.decorativeElement4} />
+            
+            {/* Header Section */}
             <View style={styles.authHeader}>
-              <LinearGradient colors={["#b30000", "#ff0000"]} style={styles.logoGradient}>
-                <Text style={styles.logoText}>SC</Text>
-              </LinearGradient>
+              <View style={styles.logoContainer}>
+                <LinearGradient 
+                  colors={["#b30000", "#d42c2c", "#ff4444"]} 
+                  style={styles.logoGradient}
+                >
+                  <View style={styles.logoInner}>
+                    <Text style={styles.logoText}>SC</Text>
+                  </View>
+                  <View style={styles.logoShine} />
+                </LinearGradient>
+                <View style={styles.logoShadow} />
+              </View>
+              
               <Text style={styles.title}>Shefs Cloud</Text>
+              <View style={styles.titleAccent}>
+                <View style={styles.titleDot} />
+                <View style={styles.titleLine} />
+                <View style={styles.titleDot} />
+              </View>
               <Text style={styles.subtitle}>
                 Discover exceptional culinary experiences from verified professional chefs
               </Text>
             </View>
-            {/* Form */}
-            <View style={styles.formContainer}>
-              <View style={styles.glassMorphism} />
+
+            {/* Main Form Card */}
+            <View style={styles.formCard}>
+              <View style={styles.cardShadow} />
+              
+              {/* Welcome Text */}
+              <View style={styles.welcomeSection}>
+                <Text style={styles.welcomeTitle}>Welcome Back!</Text>
+                <Text style={styles.welcomeSubtitle}>Sign in to continue your culinary journey</Text>
+              </View>
+
               {/* Role Selector */}
-              <View style={styles.roleSelector}>
-                {["customer", "chef"].map((role) => (
-                  <TouchableOpacity
-                    key={role}
-                    style={[styles.roleButton, selectedRole === role && styles.roleButtonActive]}
-                    onPress={() => setSelectedRole(role as "customer" | "chef")}
-                  >
-                    <View style={[styles.roleIconContainer, selectedRole === role && styles.roleIconActive]}>
-                      <Ionicons
-                        name={role === "customer" ? "restaurant-outline" : "storefront-outline"}
-                        size={isTablet ? 24 : 20}
-                        color={selectedRole === role ? "#b10707ff" : "#cc0000"}
+              <View style={styles.roleSelectorContainer}>
+                <Text style={styles.sectionLabel}>I am a</Text>
+                <View style={styles.roleSelector}>
+                  <View style={styles.roleSelectorBackground} />
+                  {["customer", "chef"].map((role) => (
+                    <TouchableOpacity
+                      key={role}
+                      style={[
+                        styles.roleButton, 
+                        selectedRole === role && styles.roleButtonActive
+                      ]}
+                      onPress={() => setSelectedRole(role as "customer" | "chef")}
+                      activeOpacity={0.7}
+                    >
+                      {selectedRole === role && (
+                        <LinearGradient
+                          colors={["#b30000", "#d42c2c"]}
+                          style={styles.roleActiveBackground}
+                        />
+                      )}
+                      <View style={styles.roleContent}>
+                        <View style={[
+                          styles.roleIconContainer, 
+                          selectedRole === role && styles.roleIconActive
+                        ]}>
+                          <Ionicons
+                            name={role === "customer" ? "restaurant" : "storefront"}
+                            size={isTablet ? 20 : 18}
+                            color={selectedRole === role ? "#fff" : "#b30000"}
+                          />
+                        </View>
+                        <Text style={[
+                          styles.roleText, 
+                          selectedRole === role && styles.roleTextActive
+                        ]}>
+                          {role === "customer" ? "Food Lover" : "Professional Chef"}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Input Fields */}
+              <View style={styles.inputSection}>
+                {/* Email Field */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Email Address</Text>
+                  <View style={styles.inputWrapper}>
+                    <View style={[styles.inputContainer, email && styles.inputContainerActive]}>
+                      <Ionicons name="mail" size={20} color="#b30000" style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Enter your email"
+                        placeholderTextColor="#999"
+                        value={email}
+                        onChangeText={setEmail}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
                       />
                     </View>
-                    <Text style={[styles.roleText, selectedRole === role && styles.roleTextActive]}>
-                      {role === "customer" ? "Food Lover" : "Chef"}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-              {/* Email Field */}
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Email Address</Text>
-                <View style={styles.inputContainer}>
-                  <Ionicons name="mail-outline" size={isTablet ? 24 : 20} color="#530202" style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter your email"
-                    placeholderTextColor="#7a7979ff"
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
+                  </View>
                 </View>
-              </View>
-              {/* Password Field */}
-              <View style={styles.formGroup}>
-                <Text style={styles.label}>Password</Text>
-                <View style={styles.inputContainer}>
-                  <Ionicons
-                    name="lock-closed-outline"
-                    size={isTablet ? 24 : 20}
-                    color="#530202"
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter your password"
-                    placeholderTextColor="#7a7979ff"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry={!showPassword}
-                  />
-                  <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-                    <Ionicons
-                      name={showPassword ? "eye-outline" : "eye-off-outline"}
-                      size={isTablet ? 24 : 20}
-                      color="#530202"
-                    />
-                  </TouchableOpacity>
+
+                {/* Password Field */}
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>Password</Text>
+                  <View style={styles.inputWrapper}>
+                    <View style={[styles.inputContainer, password && styles.inputContainerActive]}>
+                      <Ionicons name="lock-closed" size={20} color="#b30000" style={styles.inputIcon} />
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Enter your password"
+                        placeholderTextColor="#999"
+                        value={password}
+                        onChangeText={setPassword}
+                        secureTextEntry={!showPassword}
+                      />
+                      <TouchableOpacity 
+                        onPress={() => setShowPassword(!showPassword)} 
+                        style={styles.eyeIcon}
+                        activeOpacity={0.7}
+                      >
+                        <Ionicons
+                          name={showPassword ? "eye" : "eye-off"}
+                          size={20}
+                          color="#666"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
                 </View>
+
+                {/* Forgot Password */}
+                <TouchableOpacity style={styles.forgotPassword}>
+                  <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                </TouchableOpacity>
               </View>
-              {/* Login Button */}
-<TouchableOpacity
-      style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
-      onPress={handleLogin}
-      disabled={isLoading}
-    >
-      <LinearGradient
-        colors={["#b30000", "#e40c0c"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={styles.gradientButton}
-      >
-        {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <View style={styles.loadingDot} />
-            <View style={[styles.loadingDot, styles.loadingDot2]} />
-            <View style={[styles.loadingDot, styles.loadingDot3]} />
-          </View>
-        ) : (
-          <Text style={styles.primaryButtonText}>Sign In</Text>
-        )}
-      </LinearGradient>
-    </TouchableOpacity>
-              {/* Google Sign-In */}
-              <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
-                <Ionicons name="logo-google" size={isTablet ? 22 : 18} color="#fff" />
-                <Text style={styles.googleButtonText}>Sign in with Google</Text>
-              </TouchableOpacity>
-              {/* Create Account */}
+
+              {/* Action Buttons */}
+              <View style={styles.buttonSection}>
+                {/* Login Button */}
+                <TouchableOpacity
+                  style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
+                  onPress={handleLogin}
+                  disabled={isLoading}
+                  activeOpacity={0.8}
+                >
+                  <LinearGradient
+                    colors={["#b30000", "#d42c2c", "#ff4444"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.primaryButtonGradient}
+                  >
+                    <View style={styles.buttonContent}>
+                      {isLoading ? (
+                        <>
+                          <ActivityIndicator size="small" color="#fff" />
+                          <Text style={styles.primaryButtonText}>Signing In...</Text>
+                        </>
+                      ) : (
+                        <>
+                          <Text style={styles.primaryButtonText}>Sign In</Text>
+                          <Ionicons name="arrow-forward" size={18} color="#fff" />
+                        </>
+                      )}
+                    </View>
+                  </LinearGradient>
+                  <View style={styles.buttonHighlight} />
+                </TouchableOpacity>
+
+                {/* Divider */}
+                <View style={styles.dividerContainer}>
+                  <View style={styles.dividerLine} />
+                  <View style={styles.dividerTextContainer}>
+                    <Text style={styles.dividerText}>or continue with</Text>
+                  </View>
+                  <View style={styles.dividerLine} />
+                </View>
+
+                {/* Google Sign-In */}
+                <TouchableOpacity 
+                  style={styles.googleButton} 
+                  onPress={handleGoogleLogin}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.googleButtonContent}>
+                    <View style={styles.googleIconContainer}>
+                      <Ionicons name="logo-google" size={20} color="#4285f4" />
+                    </View>
+                    <Text style={styles.googleButtonText}>Google</Text>
+                  </View>
+                  <View style={styles.googleButtonBorder} />
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Sign Up Section */}
+            <View style={styles.signupSection}>
+              <Text style={styles.signupText}>Don't have an account?</Text>
               <TouchableOpacity
-                style={styles.tertiaryButton}
                 onPress={navigateToSignUp}
+                activeOpacity={0.7}
               >
-                <Text style={styles.tertiaryButtonText}>Create New Account</Text>
-                <Ionicons name="arrow-forward" size={isTablet ? 20 : 16} color="#cf0c0c" />
+                <Text style={styles.signupLink}>Create Account</Text>
               </TouchableOpacity>
             </View>
-            <Text style={styles.termsText}>
-              By continuing, you agree to our{"\n"}
-              <Text style={styles.termsLink}>Terms of Service</Text> &{" "}
-              <Text style={styles.termsLink}>Privacy Policy</Text>
-            </Text>
+
+            {/* Footer */}
+            <View style={styles.footer}>
+              <Text style={styles.termsText}>
+                By continuing, you agree to our{" "}
+                <Text style={styles.termsLink}>Terms of Service</Text> and{" "}
+                <Text style={styles.termsLink}>Privacy Policy</Text>
+              </Text>
+            </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -261,216 +364,492 @@ export default function AuthScreen() {
   )
 }
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#ffffff",
   },
-  loadingContainer: {
+  backgroundGradient: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  centeredContent: {
     justifyContent: 'center',
     alignItems: 'center',
   },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#b30000',
+  loadingGradient: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
   },
-  safeArea: { flex: 1 },
-  keyboardView: { flex: 1 },
+  loadingSpinner: {
+    marginBottom: 20,
+    backgroundColor: "#fff",
+    borderRadius: 50,
+    padding: 20,
+    elevation: 8,
+    shadowColor: "#b30000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+  },
+  loadingText: {
+    fontSize: responsiveFontSize(16),
+    color: '#b30000',
+    fontWeight: '600',
+  },
+  safeArea: { 
+    flex: 1 
+  },
+  keyboardView: { 
+    flex: 1 
+  },
   scrollContent: {
-    paddingBottom: responsiveHeight(5),
-    paddingHorizontal: Math.min(responsiveWidth(5), 40),
+    paddingBottom: responsiveHeight(3),
+    paddingHorizontal: Math.min(responsiveWidth(5), 24),
     alignItems: "center",
     minHeight: height,
   },
-  modernBackground: {
+  
+  // Decorative Elements
+  decorativeElement1: {
     position: "absolute",
-    top: 0,
-    width: width,
-    height: Math.max(responsiveHeight(40), 300),
-    borderBottomLeftRadius: isTablet ? 60 : 50,
-    borderBottomRightRadius: isTablet ? 60 : 50,
-    zIndex: -1,
+    top: responsiveHeight(15),
+    right: responsiveWidth(10),
+    width: 80,
+    height: 80,
+    backgroundColor: "rgba(179, 0, 0, 0.05)",
+    borderRadius: 40,
+    borderWidth: 2,
+    borderColor: "rgba(179, 0, 0, 0.1)",
   },
+  decorativeElement2: {
+    position: "absolute",
+    top: responsiveHeight(25),
+    left: responsiveWidth(5),
+    width: 60,
+    height: 60,
+    backgroundColor: "rgba(255, 68, 68, 0.08)",
+    borderRadius: 30,
+    transform: [{ rotate: '45deg' }],
+  },
+  decorativeElement3: {
+    position: "absolute",
+    top: responsiveHeight(45),
+    right: responsiveWidth(8),
+    width: 40,
+    height: 40,
+    backgroundColor: "rgba(179, 0, 0, 0.06)",
+    borderRadius: 20,
+  },
+  decorativeElement4: {
+    position: "absolute",
+    top: responsiveHeight(35),
+    left: responsiveWidth(12),
+    width: 100,
+    height: 100,
+    backgroundColor: "rgba(255, 68, 68, 0.03)",
+    borderRadius: 50,
+    borderWidth: 1,
+    borderColor: "rgba(179, 0, 0, 0.08)",
+  },
+
+  // Header
   authHeader: {
     alignItems: "center",
-    marginTop: Math.max(responsiveHeight(8), 60),
-    marginBottom: isTablet ? 40 : 30,
+    marginTop: Math.max(responsiveHeight(6), 40),
+    marginBottom: isTablet ? 40 : 32,
     paddingHorizontal: responsiveWidth(5),
   },
+  logoContainer: {
+    position: "relative",
+    marginBottom: isTablet ? 20 : 16,
+  },
   logoGradient: {
-    width: isTablet ? 100 : isSmallPhone ? 70 : 80,
-    height: isTablet ? 100 : isSmallPhone ? 70 : 80,
-    borderRadius: isTablet ? 25 : 20,
+    width: isTablet ? 85 : isSmallPhone ? 70 : 75,
+    height: isTablet ? 85 : isSmallPhone ? 70 : 75,
+    borderRadius: isTablet ? 20 : 16,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: isTablet ? 20 : 15,
+    elevation: 12,
+    shadowColor: "#b30000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+  },
+  logoInner: {
+    width: "88%",
+    height: "88%",
+    borderRadius: isTablet ? 16 : 12,
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1.5,
+    borderColor: "rgba(255, 255, 255, 0.3)",
+  },
+  logoShine: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    width: "30%",
+    height: "30%",
+    backgroundColor: "rgba(255, 255, 255, 0.4)",
+    borderRadius: 8,
+  },
+  logoShadow: {
+    position: "absolute",
+    top: 4,
+    left: 0,
+    right: 0,
+    bottom: -4,
+    backgroundColor: "rgba(179, 0, 0, 0.15)",
+    borderRadius: isTablet ? 20 : 16,
+    zIndex: -1,
   },
   logoText: {
     fontSize: responsiveFontSize(28),
     fontWeight: "900",
     color: "#fff",
+    textShadowColor: "rgba(0, 0, 0, 0.2)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
   title: {
-    fontSize: responsiveFontSize(28),
+    fontSize: responsiveFontSize(30),
     fontWeight: "800",
-    color: "#fff",
+    color: "#2d2d2d",
     marginBottom: 8,
     textAlign: "center",
+    letterSpacing: 0.5,
+  },
+  titleAccent: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  titleDot: {
+    width: 6,
+    height: 6,
+    backgroundColor: "#b30000",
+    borderRadius: 3,
+  },
+  titleLine: {
+    width: 40,
+    height: 2,
+    backgroundColor: "#b30000",
+    marginHorizontal: 8,
   },
   subtitle: {
-    fontSize: responsiveFontSize(15),
-    color: "#f8f8f8",
+    fontSize: responsiveFontSize(14),
+    color: "#666",
     textAlign: "center",
-    lineHeight: responsiveFontSize(22),
-    maxWidth: isTablet ? 400 : 300,
+    lineHeight: responsiveFontSize(20),
+    maxWidth: isTablet ? 400 : 280,
+    fontWeight: "400",
   },
-  formContainer: {
+
+  // Form Card
+  formCard: {
     width: "100%",
-    maxWidth: isTablet ? 500 : 400,
-    backgroundColor: "rgba(255,255,255,0.1)",
-    padding: isTablet ? 30 : 20,
-    borderRadius: isTablet ? 25 : 20,
-    marginBottom: 20,
+    maxWidth: isTablet ? 480 : 380,
+    backgroundColor: "#ffffff",
+    padding: isTablet ? 28 : 22,
+    borderRadius: isTablet ? 20 : 16,
+    marginBottom: 24,
+    position: "relative",
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(179, 0, 0, 0.08)",
   },
-  glassMorphism: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(255,255,255,0.25)",
-    borderRadius: isTablet ? 25 : 20,
+  cardShadow: {
+    position: "absolute",
+    top: -1,
+    left: -1,
+    right: -1,
+    bottom: -1,
+    backgroundColor: "rgba(179, 0, 0, 0.03)",
+    borderRadius: isTablet ? 21 : 17,
+    zIndex: -1,
+  },
+
+  // Welcome Section
+  welcomeSection: {
+    marginBottom: isTablet ? 28 : 24,
+    alignItems: "center",
+  },
+  welcomeTitle: {
+    fontSize: responsiveFontSize(22),
+    fontWeight: "700",
+    color: "#2d2d2d",
+    marginBottom: 4,
+  },
+  welcomeSubtitle: {
+    fontSize: responsiveFontSize(14),
+    color: "#666",
+    textAlign: "center",
+  },
+
+  // Role Selector
+  roleSelectorContainer: {
+    marginBottom: isTablet ? 24 : 20,
+  },
+  sectionLabel: {
+    fontSize: responsiveFontSize(14),
+    fontWeight: "600",
+    color: "#444",
+    marginBottom: 12,
+    textAlign: "center",
   },
   roleSelector: {
+    position: "relative",
     flexDirection: "row",
-    backgroundColor: "rgba(255,255,255,0.2)",
-    borderRadius: isTablet ? 18 : 15,
+    borderRadius: isTablet ? 14 : 12,
     overflow: "hidden",
-    marginBottom: isTablet ? 30 : 25,
+    backgroundColor: "#f8f9fa",
+    padding: 4,
+  },
+  roleSelectorBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "#f1f3f4",
+    borderRadius: isTablet ? 14 : 12,
   },
   roleButton: {
     flex: 1,
-    paddingVertical: isTablet ? 18 : 14,
+    position: "relative",
+    overflow: "hidden",
+    borderRadius: isTablet ? 12 : 10,
+  },
+  roleActiveBackground: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: isTablet ? 12 : 10,
+  },
+  roleContent: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-  },
-  roleButtonActive: {
-    backgroundColor: "#cc0000",
+    paddingVertical: isTablet ? 14 : 12,
+    paddingHorizontal: 8,
   },
   roleIconContainer: {
-    marginRight: isTablet ? 12 : 8,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    padding: isTablet ? 8 : 6,
-    borderRadius: isTablet ? 10 : 8,
+    marginRight: isTablet ? 8 : 6,
+    backgroundColor: "rgba(179, 0, 0, 0.1)",
+    padding: isTablet ? 6 : 5,
+    borderRadius: isTablet ? 6 : 5,
   },
   roleIconActive: {
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
   },
   roleText: {
-    fontSize: responsiveFontSize(14),
+    fontSize: responsiveFontSize(13),
     fontWeight: "600",
-    color: "#cc0000",
+    color: "#b30000",
   },
   roleTextActive: {
     color: "#fff",
   },
-  formGroup: {
-    marginBottom: isTablet ? 22 : 18,
+
+  // Input Section
+  inputSection: {
+    marginBottom: isTablet ? 24 : 20,
   },
-  label: {
+  inputGroup: {
+    marginBottom: isTablet ? 18 : 16,
+  },
+  inputLabel: {
     fontSize: responsiveFontSize(14),
     fontWeight: "600",
-    color: "#1f2937",
-    marginBottom: isTablet ? 8 : 6,
+    color: "#444",
+    marginBottom: 8,
+    marginLeft: 2,
+  },
+  inputWrapper: {
+    position: "relative",
   },
   inputContainer: {
-    position: "relative",
     flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "#f8f9fa",
+    borderRadius: isTablet ? 12 : 10,
+    borderWidth: 1.5,
+    borderColor: "#e9ecef",
+    paddingVertical: isTablet ? 14 : 12,
+    paddingHorizontal: isTablet ? 16 : 14,
+    transition: "all 0.2s ease",
+  },
+  inputContainerActive: {
+    borderColor: "#b30000",
+    backgroundColor: "#fff",
+  },
+  inputIcon: {
+    marginRight: isTablet ? 12 : 10,
   },
   input: {
     flex: 1,
-    paddingVertical: isTablet ? 18 : 14,
-    paddingLeft: isTablet ? 56 : 48,
-    paddingRight: isTablet ? 56 : 48,
-    backgroundColor: "rgba(224, 8, 8, 0.3)",
-    borderRadius: isTablet ? 15 : 12,
-    color: "#610303ff",
-    fontSize: responsiveFontSize(14),
-  },
-  inputIcon: {
-    position: "absolute",
-    left: isTablet ? 20 : 16,
-    zIndex: 1,
+    color: "#2d2d2d",
+    fontSize: responsiveFontSize(15),
+    fontWeight: "500",
   },
   eyeIcon: {
-    position: "absolute",
-    right: isTablet ? 20 : 16,
-    zIndex: 1,
+    padding: 4,
+  },
+  forgotPassword: {
+    alignSelf: "flex-end",
+    marginTop: 8,
+  },
+  forgotPasswordText: {
+    fontSize: responsiveFontSize(13),
+    color: "#b30000",
+    fontWeight: "600",
+  },
+
+  // Button Section
+  buttonSection: {
+    gap: isTablet ? 16 : 14,
   },
   primaryButton: {
-    borderRadius: isTablet ? 18 : 14,
+    borderRadius: isTablet ? 14 : 12,
     overflow: "hidden",
-    marginBottom: isTablet ? 20 : 16,
+    elevation: 6,
+    shadowColor: "#b30000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    position: "relative",
   },
-  gradientButton: {
-    paddingVertical: isTablet ? 20 : 16,
+  primaryButtonGradient: {
+    paddingVertical: isTablet ? 16 : 14,
+    paddingHorizontal: isTablet ? 20 : 18,
+  },
+  buttonContent: {
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap: isTablet ? 8 : 6,
   },
   primaryButtonText: {
     color: "#fff",
     fontSize: responsiveFontSize(16),
     fontWeight: "700",
   },
-  loadingDot: {
-    width: isTablet ? 10 : 8,
-    height: isTablet ? 10 : 8,
-    backgroundColor: "#fff",
-    borderRadius: isTablet ? 5 : 4,
-  },
-  loadingDot2: { opacity: 0.6 },
-  loadingDot3: { opacity: 0.9 },
-  googleButton: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#1f2937",
-    borderRadius: isTablet ? 18 : 14,
-    paddingVertical: isTablet ? 20 : 16,
-    marginBottom: isTablet ? 20 : 16,
-    gap: isTablet ? 10 : 8,
-  },
-  googleButtonText: {
-    color: "#fff",
-    fontSize: responsiveFontSize(15),
-    fontWeight: "600",
-  },
-  tertiaryButton: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: isTablet ? 18 : 14,
-    paddingVertical: isTablet ? 20 : 16,
-    borderColor: "#cc0000",
-    borderWidth: 1.2,
-    backgroundColor: "transparent",
-    gap: isTablet ? 8 : 6,
-  },
-  tertiaryButtonText: {
-    color: "#b30000",
-    fontWeight: "600",
-    fontSize: responsiveFontSize(15),
+  buttonHighlight: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: "50%",
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
   buttonDisabled: {
     opacity: 0.6,
   },
+  
+  // Divider
+  dividerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 4,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#e9ecef",
+  },
+  dividerTextContainer: {
+    backgroundColor: "#fff",
+    paddingHorizontal: 16,
+  },
+  dividerText: {
+    color: "#999",
+    fontSize: responsiveFontSize(12),
+    fontWeight: "500",
+  },
+
+  // Google Button
+  googleButton: {
+    backgroundColor: "#fff",
+    borderRadius: isTablet ? 14 : 12,
+    borderWidth: 1.5,
+    borderColor: "#e9ecef",
+    paddingVertical: isTablet ? 14 : 12,
+    position: "relative",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  },
+  googleButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: isTablet ? 10 : 8,
+  },
+  googleIconContainer: {
+    backgroundColor: "#f8f9fa",
+    padding: 6,
+    borderRadius: 6,
+  },
+  googleButtonText: {
+    color: "#444",
+    fontSize: responsiveFontSize(15),
+    fontWeight: "600",
+  },
+  googleButtonBorder: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 1,
+    backgroundColor: "rgba(179, 0, 0, 0.1)",
+  },
+
+  // Signup Section
+  signupSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+    gap: 6,
+  },
+  signupText: {
+    fontSize: responsiveFontSize(14),
+    color: "#666",
+    fontWeight: "500",
+  },
+  signupLink: {
+    fontSize: responsiveFontSize(14),
+    color: "#b30000",
+    fontWeight: "700",
+  },
+
+  // Footer
+  footer: {
+    alignItems: "center",
+    paddingHorizontal: responsiveWidth(5),
+    marginBottom: isTablet ? 30 : 24,
+  },
   termsText: {
     textAlign: "center",
-    fontSize: responsiveFontSize(12),
-    color: "#6b7280",
-    marginBottom: isTablet ? 40 : 30,
-    paddingHorizontal: responsiveWidth(5),
-    maxWidth: isTablet ? 400 : 300,
+    fontSize: responsiveFontSize(11),
+    color: "#999",
+    lineHeight: responsiveFontSize(16),
+    maxWidth: isTablet ? 350 : 280,
   },
   termsLink: {
     fontWeight: "600",
