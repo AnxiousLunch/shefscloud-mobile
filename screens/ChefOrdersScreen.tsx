@@ -1,26 +1,39 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, RefreshControl, Modal, TextInput as RNTextInput } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
 import { useEffect, useState } from "react";
-import { handleGetChefOrders, handleUpdateOrderStatus, handleGetPendingOrdersCount } from "@/services/get_methods";
+import { handleGetChefOrders, handleUpdateOrderStatus, handleGetPendingOrdersCount, handleGetDefaultSetting } from "@/services/get_methods";
 import { Order } from "@/types/types";
 import moment from "moment";
 import { Picker } from "@react-native-picker/picker";
-import { TextInput } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
+import { TextInput } from "react-native-paper";
 
 export default function ChefOrdersScreen() {
+  useEffect(() => {
+  const fetchOrders = async () => {
+    try {
+      const ordersData = await handleGetChefOrders(user.id, authToken);
+      console.log("API Response:", JSON.stringify(ordersData, null, 2)); // Add this line
+      setOrders(ordersData || []);
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+    }
+  };
+  fetchOrders();
+}, [user?.id, authToken]);
   const { user } = useAuth();
   const { authToken } = useAppSelector((state) => state.user);
   const dispatch = useAppDispatch();
   
   const [orders, setOrders] = useState<Order[]>([]);
-  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
+  const [filteredOrders, setFilteredOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const [defaultSettings, setDefaultSettings] = useState<any>(null);
   
   // Filters
   const [filterSearch, setFilterSearch] = useState("");
@@ -28,6 +41,7 @@ export default function ChefOrdersScreen() {
   const [filterBy, setFilterBy] = useState("delivery_date_time");
   const [groupBy, setGroupBy] = useState("delivery_address");
   const [currentTab, setCurrentTab] = useState("all_orders");
+  const [showFilters, setShowFilters] = useState(false);
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -46,6 +60,10 @@ export default function ChefOrdersScreen() {
       // Fetch pending count
       const pendingData = await handleGetPendingOrdersCount(user.id, authToken);
       setPendingCount(pendingData?.count || 0);
+      
+      // Fetch default settings
+      const settings = await handleGetDefaultSetting(authToken);
+      setDefaultSettings(settings || {});
       
     } catch (error) {
       console.error("Error fetching orders:", error);
@@ -70,7 +88,9 @@ export default function ChefOrdersScreen() {
         order.order_code?.toLowerCase().includes(filterSearch.toLowerCase()) ||
         order.items?.some(item => 
           item.name.toLowerCase().includes(filterSearch.toLowerCase())
-        )
+        ) ||
+        order.name?.toLowerCase().includes(filterSearch.toLowerCase()) ||
+        order.order_delivery_address.home_street_address.toLowerCase().includes(filterSearch.toLowerCase())
       );
     }
     
@@ -91,10 +111,8 @@ export default function ChefOrdersScreen() {
     // Sort orders
     processedOrders = sortOrders(processedOrders, filterBy);
     
-    // Group orders (simplified for mobile)
-    if (groupBy !== "none") {
-      processedOrders = groupOrders(processedOrders, groupBy);
-    }
+    // Group orders
+    processedOrders = groupOrders(processedOrders, groupBy);
     
     setFilteredOrders(processedOrders);
     setCurrentPage(1); // Reset to first page when filters change
@@ -113,8 +131,10 @@ export default function ChefOrdersScreen() {
       // Secondary sort: by selected field
       switch (sortBy) {
         case "delivery_date_time":
-          const dateA = a.delivery_date_time ? moment(a.delivery_date_time) : moment.invalid();
-          const dateB = b.delivery_date_time ? moment(b.delivery_date_time) : moment.invalid();
+          const dateA = a.delivery_date_time ? moment(a.delivery_date_time) : 
+                       (a.delivery_date && a.delivery_time ? moment(`${a.delivery_date} ${a.delivery_time}`) : moment.invalid());
+          const dateB = b.delivery_date_time ? moment(b.delivery_date_time) : 
+                       (b.delivery_date && b.delivery_time ? moment(`${b.delivery_date} ${b.delivery_time}`) : moment.invalid());
           if (!dateA.isValid()) return 1;
           if (!dateB.isValid()) return -1;
           return dateA.diff(dateB);
@@ -126,7 +146,7 @@ export default function ChefOrdersScreen() {
           return (a.total_price || 0) - (b.total_price || 0);
           
         case "customer_name":
-          return (a.customer?.name || "").localeCompare(b.customer?.name || "");
+          return (a.name || "").localeCompare(b.name || "");
           
         default:
           return 0;
@@ -137,23 +157,23 @@ export default function ChefOrdersScreen() {
   const groupOrders = (ordersToGroup, groupByOption) => {
     if (groupByOption === "none") return ordersToGroup;
     
-    // Simplified grouping for mobile - we'll just add section headers
     const grouped = {};
     
     ordersToGroup.forEach(order => {
       let key;
       switch (groupByOption) {
         case "delivery_address":
-          key = extractAreaFromAddress(order.delivery_address);
+          key = extractAreaFromAddress(order.order_delivery_address.home_street_address);
           break;
         case "status":
           key = order.status || "Unknown";
           break;
         case "delivery_date":
-          key = order.delivery_date ? moment(order.delivery_date).format("LL") : "No Date";
+          key = order.delivery_date ? moment(order.delivery_date).format("LL") : 
+               (order.delivery_date_time ? moment(order.delivery_date_time).format("LL") : "No Date");
           break;
         case "customer":
-          key = order.customer?.name || "Unknown Customer";
+          key = order.name || "Unknown Customer";
           break;
         default:
           key = "all";
@@ -173,11 +193,30 @@ export default function ChefOrdersScreen() {
     return result;
   };
 
-  const extractAreaFromAddress = (address) => {
-    if (!address) return "Unknown Area";
-    // Simplified version for mobile
-    const parts = address.split(",");
-    return parts.length > 1 ? parts[1].trim() : parts[0].trim();
+  const extractAreaFromAddress = (fullAddress) => {
+    if (!fullAddress || typeof fullAddress !== 'string') return "Unknown Area";
+    
+    const addressParts = fullAddress.toLowerCase().split(/[,\s]+/);
+    const areaKeywords = ['area', 'block', 'sector', 'phase', 'town', 'colony', 'nagar'];
+    
+    let areaFound = "";
+    for (let i = 0; i < addressParts.length; i++) {
+      if (areaKeywords.some(keyword => addressParts[i].includes(keyword))) {
+        const prevPart = i > 0 ? addressParts[i - 1] : "";
+        areaFound = `${prevPart} ${addressParts[i]}`.trim();
+        const nextPart = i < addressParts.length - 1 ? addressParts[i + 1] : "";
+        if (!isNaN(nextPart)) { 
+          areaFound = `${areaFound} ${nextPart}`;
+        }
+        break;
+      }
+    }
+    
+    if (!areaFound) {
+      areaFound = addressParts.slice(0, 3).join(" ");
+    }
+    
+    return areaFound.charAt(0).toUpperCase() + areaFound.slice(1);
   };
 
   const handleStatusChange = async (orderId, newStatus) => {
@@ -197,6 +236,10 @@ export default function ChefOrdersScreen() {
     return orders.filter(order => order.status === status).length;
   };
 
+  const getActualOrdersCount = () => {
+    return filteredOrders.filter(item => !item.isHeader).length;
+  };
+
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
   const indexOfLastOrder = currentPage * itemsPerPage;
   const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
@@ -209,6 +252,7 @@ export default function ChefOrdersScreen() {
     setFilterBy("delivery_date_time");
     setGroupBy("delivery_address");
     setCurrentTab("all_orders");
+    setShowFilters(false);
   };
 
   const renderStatusBadge = (status) => {
@@ -258,6 +302,30 @@ export default function ChefOrdersScreen() {
     );
   };
 
+  const canCancelOrder = (order) => {
+    if (!defaultSettings) return false;
+    
+    const orderCreatedTime = moment(order.created_at);
+    const currentTime = moment();
+    const timeSinceCreation = moment.duration(
+      currentTime.diff(orderCreatedTime)
+    );
+
+    return timeSinceCreation.asMinutes() <= defaultSettings?.cancellation_time_span;
+  };
+
+  const canConfirmOrder = (order) => {
+    if (!defaultSettings) return false;
+    
+    const orderCreatedTime = moment(order.created_at);
+    const currentTime = moment();
+    const timeSinceCreation = moment.duration(
+      currentTime.diff(orderCreatedTime)
+    );
+
+    return timeSinceCreation.asMinutes() <= defaultSettings?.confirmation_time_span;
+  };
+
   const renderOrderItem = (item) => {
     if (item.isHeader) {
       return (
@@ -268,10 +336,16 @@ export default function ChefOrdersScreen() {
     }
     
     const order = item as Order;
-    const deliveryDateTime = order.delivery_date_time 
-      ? moment(order.delivery_date_time).format("MMM D, YYYY h:mm A")
-      : "Not specified";
+    const deliveryDateTime = order.delivery_time 
+  ? moment(order.delivery_time).format("MMM D, YYYY h:mm A")
+  : "Not specified";
     
+  const deliveryAddress = order.order_delivery_address 
+  ? `${order.order_delivery_address.home_house_no || ''} ${order.order_delivery_address.home_street_address || ''}, ${order.order_delivery_address.home_city || ''}`
+  : "Address not specified";
+
+  const orderItems = order.order_details || [];
+
     return (
       <View key={order.id} style={styles.orderCard}>
         <View style={styles.orderHeader}>
@@ -280,25 +354,34 @@ export default function ChefOrdersScreen() {
         </View>
         
         <View style={styles.orderDetails}>
-          <Text style={styles.customerName}>
-            {order.customer?.name || "Unknown Customer"}
-          </Text>
+          <View style={styles.infoRow}>
+            <Ionicons name="person" size={16} color="#6b7280" />
+            <Text style={styles.customerName}>
+              {order.name || "Unknown Customer"}
+            </Text>
+          </View>
           
-          <View style={styles.contactInfo}>
-            <Text>📞 {order.customer?.phone || "N/A"}</Text>
-            <Text>📍 {order.delivery_address || "N/A"}</Text>
-            <Text>⏰ {deliveryDateTime}</Text>
+          <View style={styles.infoRow}>
+            <Ionicons name="location" size={16} color="#6b7280" />
+            <Text style={styles.addressText}>
+              {deliveryAddress || "Address not specified"}
+            </Text>
+          </View>
+          
+          <View style={styles.infoRow}>
+            <Ionicons name="time" size={16} color="#6b7280" />
+            <Text style={styles.timeText}>{deliveryDateTime}</Text>
           </View>
           
           <View style={styles.itemsContainer}>
             <Text style={styles.itemsTitle}>Order Items:</Text>
-            {order.items?.map((item, index) => (
+            {orderItems.map((item, index) => (
               <View key={index} style={styles.orderItem}>
                 <Text style={styles.itemText}>
                   {item.quantity}x {item.name}
                 </Text>
                 <Text style={styles.itemPrice}>
-                  {item.price.toLocaleString("en-PK", {
+                  {(item.unit_price || 0).toLocaleString("en-PK", {
                     style: "currency",
                     currency: "PKR",
                   })}
@@ -308,41 +391,78 @@ export default function ChefOrdersScreen() {
           </View>
         </View>
         
-        <View style={styles.orderTotal}>
-          <Text style={styles.totalLabel}>Total</Text>
-          <Text style={styles.totalValue}>
-            {order.total_price?.toLocaleString("en-PK", {
-              style: "currency",
-              currency: "PKR",
-            }) || "N/A"}
-          </Text>
+        <View style={styles.financialRow}>
+          <View style={styles.financialItem}>
+            <Text style={styles.financialLabel}>Chef Earning:</Text>
+            <Text style={styles.financialValue}>
+              {(order.chef_earning_price || 0).toLocaleString("en-PK", {
+                style: "currency",
+                currency: "PKR",
+              })}
+            </Text>
+          </View>
+          
+          <View style={styles.financialItem}>
+            <Text style={styles.financialLabel}>Total Price:</Text>
+            <Text style={styles.financialValue}>
+              {(order.total_price || 0).toLocaleString("en-PK", {
+                style: "currency",
+                currency: "PKR",
+              })}
+            </Text>
+          </View>
         </View>
         
-        {order.status === 'preparing' && (
-          <TouchableOpacity 
-            style={styles.completeButton} 
-            onPress={() => handleStatusChange(order.id, 'delivering')}
-          >
-            <Text style={styles.completeButtonText}>Mark as Ready for Delivery</Text>
-          </TouchableOpacity>
-        )}
-        
-        {order.status === 'pending' && (
-          <View style={styles.actionRow}>
+        <View style={styles.actionContainer}>
+          {order.status === 'pending' && (
+            <>
+              {canConfirmOrder(order) && (
+                <TouchableOpacity 
+                  style={[styles.actionButton, styles.acceptButton]}
+                  onPress={() => handleStatusChange(order.id, 'accepted')}
+                >
+                  <Text style={styles.actionButtonText}>Accept</Text>
+                </TouchableOpacity>
+              )}
+              
+              {canCancelOrder(order) && (
+                <TouchableOpacity 
+                  style={[styles.actionButton, styles.rejectButton]}
+                  onPress={() => handleStatusChange(order.id, 'canceled')}
+                >
+                  <Text style={styles.actionButtonText}>Reject</Text>
+                </TouchableOpacity>
+              )}
+            </>
+          )}
+          
+          {order.status === 'accepted' && (
             <TouchableOpacity 
-              style={[styles.actionButton, styles.acceptButton]}
-              onPress={() => handleStatusChange(order.id, 'accepted')}
+              style={[styles.actionButton, styles.processButton]}
+              onPress={() => handleStatusChange(order.id, 'preparing')}
             >
-              <Text style={styles.actionButtonText}>Accept</Text>
+              <Text style={styles.actionButtonText}>Start Preparing</Text>
             </TouchableOpacity>
+          )}
+          
+          {order.status === 'preparing' && (
             <TouchableOpacity 
-              style={[styles.actionButton, styles.rejectButton]}
-              onPress={() => handleStatusChange(order.id, 'canceled')}
+              style={[styles.actionButton, styles.readyButton]}
+              onPress={() => handleStatusChange(order.id, 'delivering')}
             >
-              <Text style={styles.actionButtonText}>Reject</Text>
+              <Text style={styles.actionButtonText}>Mark as Ready</Text>
             </TouchableOpacity>
-          </View>
-        )}
+          )}
+          
+          {order.status === 'delivering' && (
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.deliverButton]}
+              onPress={() => handleStatusChange(order.id, 'delivered')}
+            >
+              <Text style={styles.actionButtonText}>Mark as Delivered</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
     );
   };
@@ -382,67 +502,14 @@ export default function ChefOrdersScreen() {
           />
         }
       >
-        {/* Filters Section */}
-        <View style={styles.filtersCard}>
-          <View style={styles.filterRow}>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search orders..."
-              value={filterSearch}
-              onChangeText={setFilterSearch}
-            />
-            <TouchableOpacity 
-              style={styles.filterIcon}
-              onPress={() => {}} // Could implement advanced filter modal
-            >
-              <Ionicons name="filter" size={20} color="#6b7280" />
-            </TouchableOpacity>
-          </View>
-          
-          <View style={styles.filterRow}>
-            <TextInput
-              style={styles.dateInput}
-              placeholder="Select date"
-              value={filterDate}
-              onChangeText={setFilterDate}
-            />
-            <TouchableOpacity 
-              style={styles.resetButton}
-              onPress={resetFilters}
-            >
-              <Text style={styles.resetButtonText}>Reset</Text>
-            </TouchableOpacity>
-          </View>
-          
-          <View style={styles.pickerContainer}>
-            <Text style={styles.pickerLabel}>Sort By:</Text>
-            <Picker
-              selectedValue={filterBy}
-              style={styles.picker}
-              onValueChange={setFilterBy}
-            >
-              <Picker.Item label="Delivery Date" value="delivery_date_time" />
-              <Picker.Item label="Order Date" value="created_at" />
-              <Picker.Item label="Total Price" value="total_price" />
-              <Picker.Item label="Customer Name" value="customer_name" />
-            </Picker>
-          </View>
-          
-          <View style={styles.pickerContainer}>
-            <Text style={styles.pickerLabel}>Group By:</Text>
-            <Picker
-              selectedValue={groupBy}
-              style={styles.picker}
-              onValueChange={setGroupBy}
-            >
-              <Picker.Item label="Delivery Area" value="delivery_address" />
-              <Picker.Item label="Status" value="status" />
-              <Picker.Item label="Delivery Date" value="delivery_date" />
-              <Picker.Item label="Customer" value="customer" />
-              <Picker.Item label="None" value="none" />
-            </Picker>
-          </View>
-        </View>
+        {/* Filter Button */}
+        <TouchableOpacity 
+          style={styles.filterButton}
+          onPress={() => setShowFilters(true)}
+        >
+          <Ionicons name="filter" size={20} color="#fff" />
+          <Text style={styles.filterButtonText}>Filters</Text>
+        </TouchableOpacity>
 
         {/* Status Tabs */}
         <ScrollView 
@@ -462,7 +529,7 @@ export default function ChefOrdersScreen() {
               styles.tabText,
               currentTab === "all_orders" && styles.activeTabText
             ]}>
-              All ({filteredOrders.length})
+              All ({getActualOrdersCount()})
             </Text>
           </TouchableOpacity>
           
@@ -565,23 +632,25 @@ export default function ChefOrdersScreen() {
             {/* Pagination */}
             {totalPages > 1 && (
               <View style={styles.pagination}>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <TouchableOpacity
-                    key={page}
-                    style={[
-                      styles.pageButton,
-                      currentPage === page && styles.activePageButton
-                    ]}
-                    onPress={() => paginate(page)}
-                  >
-                    <Text style={[
-                      styles.pageText,
-                      currentPage === page && styles.activePageText
-                    ]}>
-                      {page}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                <TouchableOpacity
+                  style={styles.pageNavButton}
+                  onPress={() => paginate(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <Ionicons name="chevron-back" size={20} color={currentPage === 1 ? "#9ca3af" : "#dc2626"} />
+                </TouchableOpacity>
+                
+                <Text style={styles.pageText}>
+                  Page {currentPage} of {totalPages}
+                </Text>
+                
+                <TouchableOpacity
+                  style={styles.pageNavButton}
+                  onPress={() => paginate(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  <Ionicons name="chevron-forward" size={20} color={currentPage === totalPages ? "#9ca3af" : "#dc2626"} />
+                </TouchableOpacity>
               </View>
             )}
           </>
@@ -597,6 +666,81 @@ export default function ChefOrdersScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Filters Modal */}
+      <Modal
+        visible={showFilters}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowFilters(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Filter Orders</Text>
+            
+            <TextInput
+              label="Search orders"
+              value={filterSearch}
+              onChangeText={setFilterSearch}
+              style={styles.modalInput}
+              mode="outlined"
+              outlineColor="#e5e7eb"
+              activeOutlineColor="#dc2626"
+            />
+            
+            <TextInput
+              label="Date (YYYY-MM-DD)"
+              value={filterDate}
+              onChangeText={setFilterDate}
+              style={styles.modalInput}
+              mode="outlined"
+              outlineColor="#e5e7eb"
+              activeOutlineColor="#dc2626"
+            />
+            
+            <Text style={styles.modalLabel}>Sort By:</Text>
+            <Picker
+              selectedValue={filterBy}
+              style={styles.modalPicker}
+              onValueChange={setFilterBy}
+            >
+              <Picker.Item label="Delivery Date" value="delivery_date_time" />
+              <Picker.Item label="Order Date" value="created_at" />
+              <Picker.Item label="Total Price" value="total_price" />
+              <Picker.Item label="Customer Name" value="customer_name" />
+            </Picker>
+            
+            <Text style={styles.modalLabel}>Group By:</Text>
+            <Picker
+              selectedValue={groupBy}
+              style={styles.modalPicker}
+              onValueChange={setGroupBy}
+            >
+              <Picker.Item label="Delivery Area" value="delivery_address" />
+              <Picker.Item label="Status" value="status" />
+              <Picker.Item label="Delivery Date" value="delivery_date" />
+              <Picker.Item label="Customer" value="customer" />
+              <Picker.Item label="None" value="none" />
+            </Picker>
+            
+            <View style={styles.modalButtons}>
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.resetButton]}
+                onPress={resetFilters}
+              >
+                <Text style={styles.resetButtonText}>Reset Filters</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.modalButton, styles.applyButton]}
+                onPress={() => setShowFilters(false)}
+              >
+                <Text style={styles.applyButtonText}>Apply Filters</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -632,70 +776,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#ffffff",
   },
-  filtersCard: {
-    backgroundColor: "#ffffff",
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#dc2626',
+    paddingVertical: 12,
     marginHorizontal: 15,
+    borderRadius: 10,
     marginBottom: 15,
-    borderRadius: 15,
-    padding: 15,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
   },
-  filterRow: {
-    flexDirection: "row",
-    marginBottom: 10,
-  },
-  searchInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 10,
-    padding: 12,
-    backgroundColor: "#f9fafb",
-  },
-  filterIcon: {
-    marginLeft: 10,
-    justifyContent: "center",
-    padding: 10,
-  },
-  dateInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 10,
-    padding: 12,
-    backgroundColor: "#f9fafb",
-  },
-  resetButton: {
-    marginLeft: 10,
-    justifyContent: "center",
-    paddingHorizontal: 15,
-    backgroundColor: "#e5e7eb",
-    borderRadius: 10,
-  },
-  resetButtonText: {
-    fontWeight: "600",
-    color: "#4b5563",
-  },
-  pickerContainer: {
-    marginBottom: 10,
-  },
-  pickerLabel: {
-    marginBottom: 5,
-    fontWeight: "600",
-    color: "#4b5563",
-  },
-  picker: {
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 10,
-    backgroundColor: "#f9fafb",
+  filterButtonText: {
+    color: '#ffffff',
+    fontWeight: '600',
+    marginLeft: 8,
+    fontSize: 16,
   },
   tabsContainer: {
     marginHorizontal: 15,
@@ -752,6 +847,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e5e7eb",
+    paddingBottom: 10,
   },
   orderId: {
     fontWeight: "700",
@@ -770,23 +868,33 @@ const styles = StyleSheet.create({
   orderDetails: {
     marginBottom: 15,
   },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
   customerName: {
     fontWeight: "600",
     fontSize: 16,
-    marginBottom: 10,
+    marginLeft: 8,
     color: "#1f2937",
   },
-  contactInfo: {
+  addressText: {
     color: "#6b7280",
     fontSize: 14,
-    marginBottom: 15,
-    lineHeight: 20,
+    marginLeft: 8,
+    flexShrink: 1,
+  },
+  timeText: {
+    color: "#6b7280",
+    fontSize: 14,
+    marginLeft: 8,
   },
   itemsContainer: {
     backgroundColor: "#f8fafc",
     padding: 15,
     borderRadius: 10,
-    marginBottom: 15,
+    marginTop: 15,
   },
   itemsTitle: {
     fontWeight: "600",
@@ -800,42 +908,38 @@ const styles = StyleSheet.create({
   },
   itemText: {
     color: "#4b5563",
+    flex: 2,
   },
   itemPrice: {
     fontWeight: "600",
     color: "#1f2937",
+    flex: 1,
+    textAlign: 'right',
   },
-  orderTotal: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  financialRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     borderTopWidth: 1,
     borderTopColor: "#e5e7eb",
     paddingTop: 15,
-    marginBottom: 20,
+    marginBottom: 15,
   },
-  totalLabel: {
+  financialItem: {
+    flex: 1,
+  },
+  financialLabel: {
+    fontSize: 14,
+    color: "#6b7280",
+    fontWeight: '500',
+  },
+  financialValue: {
     fontWeight: "700",
     fontSize: 16,
     color: "#1f2937",
   },
-  totalValue: {
-    fontWeight: "700",
-    fontSize: 16,
-    color: "#dc2626",
-  },
-  completeButton: {
-    backgroundColor: "#dc2626",
-    paddingVertical: 15,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  completeButtonText: {
-    color: "#ffffff",
-    fontWeight: "600",
-  },
-  actionRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  actionContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginTop: 10,
   },
   actionButton: {
@@ -851,9 +955,19 @@ const styles = StyleSheet.create({
   rejectButton: {
     backgroundColor: "#ef4444",
   },
+  processButton: {
+    backgroundColor: "#3b82f6",
+  },
+  readyButton: {
+    backgroundColor: "#8b5cf6",
+  },
+  deliverButton: {
+    backgroundColor: "#06b6d4",
+  },
   actionButtonText: {
     color: "#ffffff",
     fontWeight: "600",
+    fontSize: 14,
   },
   emptyState: {
     flex: 1,
@@ -874,27 +988,78 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   pagination: {
-    flexDirection: "row",
-    justifyContent: "center",
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginVertical: 20,
   },
-  pageButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    marginHorizontal: 5,
-    backgroundColor: "#f3f4f6",
-  },
-  activePageButton: {
-    backgroundColor: "#dc2626",
+  pageNavButton: {
+    padding: 10,
   },
   pageText: {
     fontWeight: "600",
     color: "#6b7280",
+    marginHorizontal: 10,
   },
-  activePageText: {
-    color: "#ffffff",
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    width: '90%',
+    borderRadius: 15,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1f2937',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  modalInput: {
+    backgroundColor: '#fff',
+    marginBottom: 15,
+  },
+  modalLabel: {
+    fontWeight: '600',
+    color: '#4b5563',
+    marginBottom: 5,
+  },
+  modalPicker: {
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 10,
+    backgroundColor: '#f9fafb',
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginHorizontal: 5,
+  },
+  resetButton: {
+    backgroundColor: '#e5e7eb',
+  },
+  applyButton: {
+    backgroundColor: '#dc2626',
+  },
+  resetButtonText: {
+    fontWeight: '600',
+    color: '#4b5563',
+  },
+  applyButtonText: {
+    color: '#ffffff',
+    fontWeight: '600',
   },
 });
