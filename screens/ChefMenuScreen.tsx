@@ -20,10 +20,11 @@ import { RootState } from "@/store/store";
 import { handleGetAllDishes } from "@/services/get_methods";
 import { ChefDish } from "@/types/types";
 import { Ionicons } from '@expo/vector-icons';
-
 const { width } = Dimensions.get('window');
+// import { useRouter } from "expo-router";
 
 export default function ChefMenuScreen() {
+    //  const router = useRouter();
   const { authToken } = useSelector((state: RootState) => state.user);
   const [menuItems, setMenuItems] = useState<ChefDish[]>([]);
   const [filteredItems, setFilteredItems] = useState<ChefDish[]>([]);
@@ -35,6 +36,17 @@ export default function ChefMenuScreen() {
   const [showFoodTypeModal, setShowFoodTypeModal] = useState(false);
   const [showWeekdayModal, setShowWeekdayModal] = useState(false);
 
+
+  // const handleAddDish = () => {
+  //   navigation.navigate('AddDishScreen', { dishToEdit: null });
+  // };
+
+  // const handleEditDish = (dish: ChefDish) => {
+  //   navigation.navigate('AddDishScreen', { dishToEdit: dish });
+  // };
+  const handleAddDish = () => {
+    Alert.alert("Add Dish", "This feature is not implemented yet.");
+  };
   const foodTypes = [
     { id: "1", name: "Appetizers" },
     { id: "2", name: "Main Course" },
@@ -144,13 +156,7 @@ export default function ChefMenuScreen() {
     fetchMenuItems();
   }, [fetchMenuItems]);
 
-//   const handleAddDish = () => {
-//   Navigator.navigate('AddDish', { dishToEdit: null });
-// };
 
-//   const handleEditDish = (dish: ChefDish) => {
-//   navigation.navigate('AddDish', { dishToEdit: dish });
-// };
 
   const handleDeleteDish = (dishName: string) => {
     Alert.alert("Delete Dish", `Are you sure you want to delete ${dishName}?`, [
