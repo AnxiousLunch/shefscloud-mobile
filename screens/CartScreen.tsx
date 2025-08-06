@@ -1,314 +1,241 @@
+import React from 'react';
 import {
+  SafeAreaView,
+  ScrollView,
   View,
   Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
   Image,
-  Dimensions,
-} from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { useCart } from "../contexts/CartContext"
-import { Ionicons } from "@expo/vector-icons"
+  TouchableOpacity,
+  StyleSheet,
+  FlatList,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { Svg, Path } from 'react-native-svg';
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window")
-const scaleFont = (size: number) => Math.min(size * (SCREEN_WIDTH / 375), size * 1.2) // More conservative scaling
+// Import the custom hook for the cart context
+import { useCart } from '@/contexts/CartContext';
+import isValidURL from '@/components/ValidateURL';
+import { useRouter } from 'expo-router';
 
-export default function CartScreen() {
-  const { items, updateQuantity, getTotalPrice } = useCart()
 
-  const handleQuantityChange = (id: string, currentQuantity: number, change: number) => {
-    const newQuantity = currentQuantity + change
-    updateQuantity(id, newQuantity)
+const convertTo12Hour = (time: string) => {
+  if (!time) return '';
+  let [hoursString, minutes] = time.split(':');
+  let hours = parseInt(hoursString, 10);
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12; // Handle midnight
+  return `${hours}:${minutes} ${ampm}`;
+};
+
+// --- SVG Icons (converted for react-native-svg) ---
+const EmptyBoxIcon = () => (
+  <Svg width="72" height="72" viewBox="0 0 24 24" fill="#dcdcdc">
+    <Path d="M4 4V2C4 1.44772 4.44772 1 5 1H19C19.5523 1 20 1.44772 20 2V4H22V6H20V20C20 20.5523 19.5523 21 19 21H5C4.44772 21 4 20.5523 4 20V6H2V4H4ZM6 6V19H18V6H6ZM6 3V4H18V3H6Z" />
+  </Svg>
+);
+
+const EmptyCartIcon = () => (
+  <Svg width="96" height="96" viewBox="0 0 24 24" fill="#dcdcdc">
+    <Path d="M6.50488 2H17.5049C17.8196 2 18.116 2.14819 18.3049 2.4L21.0049 6V21C21.0049 21.5523 20.5572 22 20.0049 22H4.00488C3.4526 22 3.00488 21.5523 3.00488 21V6L5.70488 2.4C5.89374 2.14819 6.19013 2 6.50488 2ZM19.0049 8H5.00488V20H19.0049V8ZM18.5049 6L17.0049 4H7.00488L5.50488 6H18.5049ZM9.00488 10V12C9.00488 13.6569 10.348 15 12.0049 15C13.6617 15 15.0049 13.6569 15.0049 12V10H17.0049V12C17.0049 14.7614 14.7663 17 12.0049 17C9.24346 17 7.00488 14.7614 7.00488 12V10H9.00488Z" />
+  </Svg>
+);
+
+const CheckoutIcon = () => (
+    <Svg width="18" height="18" viewBox="0 0 24 24" fill="rgba(255,255,255,1)">
+        <Path d="M4.00488 16V4H2.00488V2H5.00488C5.55717 2 6.00488 2.44772 6.00488 3V15H18.4433L20.4433 7H8.00488V5H21.7241C22.2764 5 22.7241 5.44772 22.7241 6C22.7241 6.08176 22.7141 6.16322 22.6942 6.24254L20.1942 16.2425C20.083 16.6877 19.683 17 19.2241 17H5.00488C4.4526 17 4.00488 16.5523 4.00488 16ZM6.00488 23C4.90031 23 4.00488 22.1046 4.00488 21C4.00488 19.8954 4.90031 19 6.00488 19C7.10945 19 8.00488 19.8954 8.00488 21C8.00488 22.1046 7.10945 23 6.00488 23ZM18.0049 23C16.9003 23 16.0049 22.1046 16.0049 21C16.0049 19.8954 16.9003 19 18.0049 19C19.1095 19 20.0049 19.8954 20.0049 21C20.0049 22.1046 19.1095 23 18.0049 23Z" />
+    </Svg>
+);
+
+// --- Mock Data for Chef Details (Workaround for data structure) ---
+// The provided CartContext does not include chef details in the cart group.
+// This mock data simulates fetching or having access to that info.
+const MOCK_CHEF_DATA = {
+  "chef-123": {
+    first_name: "John",
+    last_name: "Doe",
+    profile_pic: "https://i.pravatar.cc/150?u=chef123"
+  },
+  "chef-456": {
+    first_name: "Jane",
+    last_name: "Smith",
+    profile_pic: "https://i.pravatar.cc/150?u=chef456"
   }
+};
 
-  const handleCheckout = () => {
-    Alert.alert("Checkout", "Checkout functionality would redirect to payment processing", [{ text: "OK" }])
-  }
+export const CartScreen = () => {
+    const navigation = useNavigation();
+    const { cart, currentUserId } = useCart();
+    const router = useRouter();
 
-  const subtotal = getTotalPrice()
-  const deliveryFee = 2.99
-  const tax = subtotal * 0.08
-  const total = subtotal + deliveryFee + tax
+    // Show login prompt if user is not authenticated
+    if (!currentUserId) {
+        return (
+            <SafeAreaView style={styles.safeArea}>
+                <ScrollView contentContainerStyle={[styles.container, styles.centerContent]}>
+                    <View style={styles.titleContainer}>
+                        <Text style={styles.title}>Your cart</Text>
+                        <View style={styles.titleUnderline} />
+                    </View>
+                    <View style={styles.promptBox}>
+                        <EmptyBoxIcon />
+                        <Text style={styles.promptText}>
+                            Please log in to view your cart
+                        </Text>
+                        <TouchableOpacity
+                            style={styles.signInButton}
+                            onPress={() => router.push('/(auth)')}
+                        >
+                            <Text style={styles.signInButtonText}>Sign in</Text>
+                        </TouchableOpacity>
+                    </View>
+                </ScrollView>
+            </SafeAreaView>
+        );
+    }
+    
+    // Enrich cart data with chef details for rendering
+    const cartWithChefDetails = cart.map(group => {
+        const chefDetails = MOCK_CHEF_DATA[group.chefId] || {
+            first_name: "Unknown",
+            last_name: "Chef",
+            profile_pic: "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
+        };
+        return { ...group, ...chefDetails };
+    });
 
-  if (items.length === 0) {
+    const renderCartGroup = ({ item: group }) => (
+        <View style={styles.chefCard}>
+            <View style={styles.chefHeader}>
+                <Image
+                    source={{
+                        uri: isValidURL(group.profile_pic)
+                            ? group.profile_pic
+                            : "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png"
+                    }}
+                    style={styles.chefImage}
+                />
+                <View>
+                    <Text style={styles.chefName}>{`${group.first_name} ${group.last_name}`}</Text>
+                </View>
+            </View>
+
+            <View style={styles.itemsHeader}>
+                <Text style={styles.itemsHeaderText}>Items</Text>
+                <Text style={styles.itemsHeaderText}>Qty</Text>
+            </View>
+
+            {group.menu.map((menuItem, index) => (
+                <View key={`${menuItem.id}-${index}`} style={styles.menuItemContainer}>
+                    <View style={styles.menuItemInfo}>
+                        <Image
+                            source={{
+                                uri: menuItem.image && isValidURL(menuItem.image)
+                                    ? menuItem.image
+                                    : "https://t4.ftcdn.net/jpg/04/70/29/97/360_F_470299797_UD0eoVMMSUbHCcNJCdv2t8B2g1GVqYgs.jpg"
+                            }}
+                            style={styles.menuItemImage}
+                        />
+                        <View style={styles.menuItemDetails}>
+                            <Text style={styles.menuItemName}>{menuItem.name}</Text>
+                            <Text style={styles.menuItemSubText}>
+                                Date: {new Date(group.delivery_date).toDateString()}
+                            </Text>
+                            <Text style={styles.menuItemSlotText}>
+                                Slot: {convertTo12Hour(group.delivery_slot?.split("-")[0])} - {convertTo12Hour(group.delivery_slot?.split("-")[1])}
+                            </Text>
+                        </View>
+                    </View>
+                    <Text style={styles.menuItemQuantity}>{menuItem.quantity}x</Text>
+                </View>
+            ))}
+
+            <TouchableOpacity 
+                style={styles.checkoutButton}
+                onPress={() => navigation.navigate('Checkout', { // Navigate to checkout with group identifiers
+                    chefId: group.chefId,
+                    delivery_date: group.delivery_date,
+                    delivery_slot: group.delivery_slot
+                })}
+            >
+                <CheckoutIcon />
+                <Text style={styles.checkoutButtonText}>To Checkout</Text>
+            </TouchableOpacity>
+        </View>
+    );
+
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>My Cart</Text>
-        </View>
+        <SafeAreaView style={styles.safeArea}>
+            <View style={styles.container}>
+                <View style={[styles.titleContainer, { alignItems: 'flex-start' }]}>
+                    <Text style={styles.title}>Your cart</Text>
+                    <View style={styles.titleUnderline} />
+                </View>
 
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyIcon}>🛒</Text>
-          <Text style={styles.emptyTitle}>Your cart is empty</Text>
-          <Text style={styles.emptySubtitle}>
-            Add some delicious dishes from our talented chefs
-          </Text>
-        </View>
-      </SafeAreaView>
-    )
-  }
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Cart</Text>
-      </View>
-
-      <ScrollView 
-        style={styles.content} 
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {items.map((item) => (
-          <View key={item.id} style={styles.cartItem}>
-            {item.image ? (
-              <Image
-                source={{ uri: item.image }}
-                style={styles.itemImage}
-                resizeMode="cover"
-              />
-            ) : (
-              <View
-                style={[
-                  styles.itemImage,
-                  {
-                    backgroundColor: "#f3f4f6",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  },
-                ]}
-              >
-                <Ionicons name="image-outline" size={40} color="#9ca3af" />
-              </View>
-            )}
-            <View style={styles.itemInfo}>
-              <Text style={styles.itemName} numberOfLines={1} ellipsizeMode="tail">
-                {item.name}
-              </Text>
-              <Text style={styles.itemChef} numberOfLines={1} ellipsizeMode="tail">
-                {item.chef}
-              </Text>
-              <Text style={styles.itemPrice}>${item.price}</Text>
+                {cartWithChefDetails && cartWithChefDetails.length > 0 ? (
+                    <FlatList
+                        data={cartWithChefDetails}
+                        renderItem={renderCartGroup}
+                        keyExtractor={(item) => `${item.chefId}-${item.delivery_date}-${item.delivery_slot}`}
+                        showsVerticalScrollIndicator={false}
+                        contentContainerStyle={{ paddingBottom: 20 }}
+                    />
+                ) : (
+                    <View style={styles.emptyCartContainer}>
+                        <EmptyCartIcon />
+                        <Text style={styles.emptyCartText}>
+                            Your cart is empty {'\n'} Add items to get started
+                        </Text>
+                    </View>
+                )}
             </View>
-            <View style={styles.quantityControls}>
-              <TouchableOpacity
-                style={styles.quantityButton}
-                onPress={() => handleQuantityChange(item.id, item.quantity, -1)}
-              >
-                <Text style={styles.quantityButtonText}>-</Text>
-              </TouchableOpacity>
-              <Text style={styles.quantityText}>{item.quantity}</Text>
-              <TouchableOpacity
-                style={styles.quantityButton}
-                onPress={() => handleQuantityChange(item.id, item.quantity, 1)}
-              >
-                <Text style={styles.quantityButtonText}>+</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
+        </SafeAreaView>
+    );
+};
 
-        <View style={styles.totalCard}>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Subtotal</Text>
-            <Text style={styles.totalValue}>${subtotal.toFixed(2)}</Text>
-          </View>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Delivery Fee</Text>
-            <Text style={styles.totalValue}>${deliveryFee.toFixed(2)}</Text>
-          </View>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Tax</Text>
-            <Text style={styles.totalValue}>${tax.toFixed(2)}</Text>
-          </View>
-          <View style={[styles.totalRow, styles.finalTotal]}>
-            <Text style={styles.finalTotalLabel}>Total</Text>
-            <Text style={styles.finalTotalValue}>${total.toFixed(2)}</Text>
-          </View>
-          <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
-            <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  )
-}
+// --- Stylesheet ---
+const colors = {
+    primary: '#ff6347', // Example: Tomato
+    primaryLight: '#ffcccb',
+    secondary: '#333333',
+    white: '#ffffff',
+    lightGray: '#f7f7f7',
+    mediumGray: '#dcdcdc',
+    headGray: '#6c757d',
+    border: '#dee2e6',
+};
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-  },
-  header: {
-    backgroundColor: "#ffffff",
-    paddingHorizontal: 25,
-    paddingVertical: 20,
-    alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f1f5f9",
-  },
-  headerTitle: {
-    fontSize: scaleFont(20),
-    fontWeight: "800",
-    color: "#1f2937",
-  },
-  content: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingTop: 15,
-    paddingBottom: 20,
-  },
-  cartItem: {
-    backgroundColor: "#ffffff",
-    marginHorizontal: 15,
-    marginBottom: 15,
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
-  },
-  itemImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 12,
-    backgroundColor: "#f59e0b",
-  },
-  itemInfo: {
-    flex: 1,
-    minWidth: 120, // Ensure minimum width for text
-    maxWidth: SCREEN_WIDTH * 0.45, // More space for text
-  },
-  itemName: {
-    fontSize: scaleFont(15),
-    fontWeight: "700",
-    marginBottom: 4,
-    color: "#1f2937",
-  },
-  itemChef: {
-    fontSize: scaleFont(12),
-    color: "#6b7280",
-    marginBottom: 6,
-  },
-  itemPrice: {
-    fontSize: scaleFont(14),
-    fontWeight: "800",
-    color: "#dc2626",
-  },
-  quantityControls: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginLeft: -8,
-  },
-  quantityButton: {
-    width: 32,
-    height: 32,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#ffffff",
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  quantityButtonText: {
-    fontWeight: "600",
-    fontSize: scaleFont(16),
-  },
-  quantityText: {
-    fontWeight: "600",
-    minWidth: 20,
-    textAlign: "center",
-    fontSize: scaleFont(14),
-  },
-  totalCard: {
-    backgroundColor: "#ffffff",
-    marginHorizontal: 15,
-    marginTop: 20,
-    marginBottom: 15,
-    padding: 20,
-    borderRadius: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
-  },
-  totalRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  totalLabel: {
-    fontSize: scaleFont(14),
-    color: "#6b7280",
-  },
-  totalValue: {
-    fontSize: scaleFont(14),
-    fontWeight: "600",
-  },
-  finalTotal: {
-    borderTopWidth: 1,
-    borderTopColor: "#e5e7eb",
-    paddingTop: 12,
-    marginBottom: 20,
-    marginTop: 12,
-  },
-  finalTotalLabel: {
-    fontSize: scaleFont(16),
-    fontWeight: "800",
-    color: "#1f2937",
-  },
-  finalTotalValue: {
-    fontSize: scaleFont(16),
-    fontWeight: "800",
-    color: "#dc2626",
-  },
-  checkoutButton: {
-    backgroundColor: "#dc2626",
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: "center",
-    shadowColor: "#dc2626",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 6,
-  },
-  checkoutButtonText: {
-    color: "#ffffff",
-    fontSize: scaleFont(15),
-    fontWeight: "700",
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 25,
-  },
-  emptyIcon: {
-    fontSize: 64,
-    marginBottom: 25,
-    opacity: 0.5,
-  },
-  emptyTitle: {
-    fontSize: scaleFont(18),
-    fontWeight: "700",
-    marginBottom: 10,
-    color: "#374151",
-  },
-  emptySubtitle: {
-    color: "#6b7280",
-    textAlign: "center",
-    lineHeight: 22,
-    fontSize: scaleFont(14),
-  },
-})
+    safeArea: { flex: 1, backgroundColor: colors.white },
+    container: { flex: 1, padding: 16 },
+    centerContent: { justifyContent: 'center' },
+    headerPlaceholder: { height: 60, backgroundColor: colors.lightGray, justifyContent: 'center', alignItems: 'center' },
+    footerPlaceholder: { height: 60, backgroundColor: colors.lightGray, justifyContent: 'center', alignItems: 'center' },
+    titleContainer: { marginBottom: 24 },
+    title: { fontWeight: '600', fontSize: 28, textTransform: 'uppercase', color: colors.secondary, letterSpacing: 1.5 },
+    titleUnderline: { width: 60, height: 2, backgroundColor: colors.primary, marginTop: 12 },
+    promptBox: { width: '100%', backgroundColor: colors.lightGray, padding: 32, borderRadius: 8, alignItems: 'center', shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 3 },
+    promptText: { fontSize: 18, fontWeight: '500', color: colors.secondary, marginVertical: 16, textAlign: 'center' },
+    signInButton: { backgroundColor: colors.primary, paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8 },
+    signInButtonText: { color: colors.white, fontSize: 16, fontWeight: '600' },
+    emptyCartContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.lightGray, borderRadius: 8, paddingVertical: 48 },
+    emptyCartText: { fontSize: 18, textAlign: 'center', color: colors.secondary, marginTop: 12, lineHeight: 24 },
+    chefCard: { padding: 12, borderRadius: 8, borderWidth: 1, borderColor: colors.primaryLight, backgroundColor: colors.white, marginBottom: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.20, shadowRadius: 1.41, elevation: 2 },
+    chefHeader: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+    chefImage: { width: 80, height: 80, borderRadius: 8 },
+    chefName: { color: colors.secondary, fontSize: 24, fontWeight: '600' },
+    itemsHeader: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 24, paddingHorizontal: 12, marginBottom: 8 },
+    itemsHeaderText: { fontSize: 18, fontWeight: '600' },
+    menuItemContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: colors.primary, borderStyle: 'dashed', borderRadius: 8, padding: 8, marginTop: 8, gap: 8 },
+    menuItemInfo: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1 },
+    menuItemImage: { width: 70, height: 60, borderRadius: 8 },
+    menuItemDetails: { flex: 1 },
+    menuItemName: { fontSize: 18, fontWeight: '600', color: colors.secondary, marginBottom: 4 },
+    menuItemSubText: { fontSize: 12, color: colors.headGray, letterSpacing: 0.5 },
+    menuItemSlotText: { fontSize: 12, color: colors.headGray, letterSpacing: 0.5, marginTop: 2 },
+    menuItemQuantity: { fontSize: 18, fontWeight: '600', textAlign: 'right', paddingRight: 8, minWidth: 40 },
+    checkoutButton: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 12, backgroundColor: colors.primary, borderRadius: 8, paddingVertical: 12, marginTop: 32 },
+    checkoutButtonText: { color: colors.white, fontSize: 20, fontWeight: '600' },
+});
+
+export default CartScreen;
