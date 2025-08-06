@@ -389,6 +389,53 @@ export const handleGetQuickReport = async (
     );
   }
 };
+
+export const handleUpdateChefProfile = async (token, profileData) => {
+  try {
+    const formData = new FormData();
+
+    // Append text fields
+    formData.append("id", profileData.id);
+    formData.append("first_name", profileData.first_name);
+    formData.append("last_name", profileData.last_name);
+    formData.append("email", profileData.email);
+    formData.append("phone", profileData.phone);
+    formData.append("bio", profileData.bio);
+    formData.append("address", profileData.address);
+    formData.append("latitude", profileData.latitude || "");
+    formData.append("longitude", profileData.longitude || "");
+
+    // Append images only if they are newly picked (local file URIs)
+    if (profileData.profile_pic?.startsWith("file:")) {
+      formData.append("profile_pic", {
+        uri: profileData.profile_pic,
+        name: "profile.jpg",
+        type: "image/jpeg",
+      });
+    }
+
+    if (profileData.cover_pic?.startsWith("file:")) {
+      formData.append("cover_pic", {
+        uri: profileData.cover_pic,
+        name: "cover.jpg",
+        type: "image/jpeg",
+      });
+    }
+
+    const res = await axios.put("/api/chef/profile", formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return res; // let the screen decide how to handle it
+  } catch (error) {
+    console.error("Error updating chef profile:", error);
+    throw error;
+  }
+};
+
 //get chef address
 export const handleGetChefAddress = async (token, id) => {
   try {
