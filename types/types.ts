@@ -92,4 +92,58 @@ export type Chef = {
   updated_at: string;
 }
 
+export interface FoodCategory {
+  id: string;
+  name: string;
+  image: string;
+  created_at: string;
+  updated_at: string | null;
+  deleted_at: string | null;
+}
+
 export type DishList = Dish[];
+
+
+export type City = {
+  countries: {
+    id: number, 
+    name: string
+  },
+  country_id: number,
+  created_at: string, 
+  deleted_at: string | null, 
+  id: number, 
+  name: string, 
+  updated_at: string
+}
+
+export interface CartItem {
+  id: string
+  name: string
+  price: number
+  quantity: number
+  image: string
+  chefId: string
+  delivery_date: string
+  delivery_slot: string
+}
+
+export interface CartGroup {
+  chefId: string
+  delivery_date: string
+  delivery_slot: string
+  menu: CartItem[]
+}
+
+export interface CartContextType {
+  cart: CartGroup[]
+  currentUserId: string | null
+  setUserId: (id: string | null) => void
+  addItem: (item: Omit<CartItem, "quantity">, quantity?: number) => void
+  removeItem: (chefId: string, delivery_date: string, delivery_slot: string, itemId: string) => void
+  updateItem: (chefId: string, delivery_date: string, delivery_slot: string, itemId: string, changes: Partial<CartItem>) => void
+  onOrderSubmit: (chefId: string, delivery_date: string, delivery_slot: string) => void
+  clearCart: () => void
+  getTotalPrice: () => number
+  getItemCount: () => number
+}

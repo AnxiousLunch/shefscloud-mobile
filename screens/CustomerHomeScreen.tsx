@@ -10,17 +10,11 @@ import { Alert, Image } from "react-native"
 import {handleGetFoodCategory, handleGetPopularChefWithDishes} from '../services/get_methods'
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { Feather } from "@expo/vector-icons"
+import { useRouter } from "expo-router"
+import { Chef, City, FoodCategory } from "@/types/types"
 
 const { width, height } = Dimensions.get("window")
 
-interface FoodCategory {
-  id: number | null;
-  name: string;
-  image: string;
-  created_at: string;
-  updated_at: string | null;
-  deleted_at: string | null;
-}
 
 function isValidURL(string: string) {
   try {
@@ -35,10 +29,11 @@ export default function CustomerHomeScreen() {
   const { user } = useAuth()
   const navigation = useNavigation()
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
-  const [foodCategory, setFoodCategory] = useState<FoodCategory[]>([{id: null, name: "", image: "", created_at: "", updated_at: null, deleted_at: null}]);
-  const [mostLoveChef, setMostLovedChef] = useState([]);
+  const [foodCategory, setFoodCategory] = useState<FoodCategory[]>([{id: "", name: "", image: "", created_at: "", updated_at: null, deleted_at: null}]);
+  const [mostLoveChef, setMostLovedChef] = useState<Chef[]>([]);
   const [activeChefIndex, setActiveChefIndex] = useState(0);
-  const [city, setCity] = useState();
+  const [city, setCity] = useState<City>();
+  const router = useRouter();
 
   useEffect(() => {
     (async () => {
@@ -90,6 +85,12 @@ export default function CustomerHomeScreen() {
     setShowProfileDropdown(!showProfileDropdown)
   }
 
+  const handleFoodCategoryPress = (categoryId: string) => {
+    console.log(categoryId);
+    router.push(`/(foodCategory)/${categoryId}`);
+  }
+
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 30 }}>
@@ -140,7 +141,7 @@ export default function CustomerHomeScreen() {
               <TouchableOpacity
                 key={category.id}
                 style={styles.categoryCard}
-                onPress={() => Alert.alert("Coming soon!")}
+                onPress={() => handleFoodCategoryPress(category.id)}
               >
                 <Image
                   source={{ uri: category.image }}
