@@ -93,3 +93,53 @@ export type Chef = {
 }
 
 export type DishList = Dish[];
+
+export type OrderItem = {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  chef_earning: number;
+  // add other item properties as needed
+};
+
+export type Order = {
+  id: string;
+  order_number: string;
+  order_code: string;
+  customer: {
+    name: string;
+    phone: string;
+  };
+  delivery_address: string;
+  delivery_date: string;
+  delivery_time: string;
+  delivery_date_time: string;
+  created_at: string;
+  items: OrderItem[];
+  total_price: number;
+  status: 'pending' | 'accepted' | 'preparing' | 'delivering' | 'delivered' | 'canceled';
+  // add other order properties as needed
+};
+
+export type ChefDish = {
+  id: string;
+  name: string;
+  description: string;
+  tags: string;
+  chef_earning_fee: number;
+  platform_price: number;
+  delivery_price: number;
+  average_rating: number;
+  total_reviews: number;
+  logo: string;
+  is_live: boolean;
+  is_monday: number;
+  is_tuesday: number;
+  is_wednesday: number;
+  is_thursday: number;
+  is_friday: number;
+  is_saturday: number;
+  is_sunday: number;
+  
+};

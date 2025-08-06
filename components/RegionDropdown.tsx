@@ -16,6 +16,8 @@ import { useRouter } from "expo-router";
 
 const RegionDropdown = ({ OnSelectRegion, isHome = false }) => {
   const [selected, setSelected] = useState({ id: "", name: "" });
+  const [selectedRole, setSelectedRole] = useState("customer");
+  const [roleLoaded, setRoleLoaded] = useState(false); // NEW
   const [cities, setCities] = useState([]);
   const [filteredCities, setFilteredCities] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -24,31 +26,100 @@ const RegionDropdown = ({ OnSelectRegion, isHome = false }) => {
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
   const hasRequestedLocation = useRef(false);
-  const hasAutoNavigated = useRef(false); // New ref to track auto navigation
-
+  const hasAutoNavigated = useRef(false);
   const router = useRouter();
 
-  // Function to handle city selection
+  // Load role first
+  useEffect(() => {
+    (async () => {
+      const role = await AsyncStorage.getItem("selectedRole");
+      if (role) {
+        setSelectedRole(role);
+        console.log("Loaded role from storage:", role);
+      }
+      setRoleLoaded(true); // Mark as loaded
+    })();
+  }, []);
+
+  // Handle city selection
   const onCitySelect = async (city, isAuto = false) => {
     setSelected(city);
     try {
       await AsyncStorage.setItem("region", JSON.stringify(city));
       setIsModalVisible(false);
       setSearchText("");
-      
+
       if (isHome) {
         OnSelectRegion();
       } else if (!isAuto || !hasAutoNavigated.current) {
-        // Only navigate if not auto-detected or if we haven't auto-navigated yet
-        hasAutoNavigated.current = isAuto; // Mark as auto-navigated if this is auto
-        router.replace("/(customer)");
+        hasAutoNavigated.current = isAuto;
+        console.log("Navigating to:", selectedRole);
+        if (selectedRole === "chef") {
+          router.replace("/(chef)");
+        } else {
+          router.replace("/(customer)");
+        }
       }
     } catch (error) {
-      console.error("Error saving region to AsyncStorage:", error);
+      console.error("Error saving region:", error);
     }
   };
 
-  // Function to handle search input change
+  // Fetch cities
+  const fetchCities = async () => {
+    if (isFetching) return;
+    setIsFetching(true);
+    try {
+      const response = await handleGetCitites();
+      const sortedData = response.sort((a, b) => a.name.localeCompare(b.name));
+      setCities(sortedData);
+      setFilteredCities(sortedData);
+    } catch (error) {
+      console.error("Error fetching cities:", error);
+    } finally {
+      setIsFetching(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCities();
+  }, []);
+
+  // Only run initialization if role is loaded
+  useEffect(() => {
+    if (!roleLoaded || cities.length === 0) return;
+
+    const initializeRegion = async () => {
+      try {
+        const storedRegion = await AsyncStorage.getItem("region");
+        if (storedRegion) {
+          const parsed = JSON.parse(storedRegion);
+          const selectedCity = cities.find(
+            (c) =>
+              c.id === parsed.id &&
+              c.name.toLowerCase() === parsed.name.toLowerCase()
+          );
+          if (selectedCity) {
+            setSelected(parsed);
+            if (!isHome && !hasAutoNavigated.current) {
+              hasAutoNavigated.current = true;
+              console.log("Auto navigating with role:", selectedRole);
+              if (selectedRole === "chef") {
+                router.replace("/(chef)");
+              } else {
+                router.replace("/(customer)");
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error initializing region:", error);
+      }
+    };
+
+    initializeRegion();
+  }, [cities, roleLoaded]); 
+    // Function to handle search input change
   const handleSearchChange = (text) => {
     setSearchText(text);
     if (text.trim() === "") {
@@ -61,23 +132,7 @@ const RegionDropdown = ({ OnSelectRegion, isHome = false }) => {
     }
   };
 
-  // Function to fetch cities from the backend
-  const fetchCities = async () => {
-    try {
-      if (isFetching) return;
-      setIsFetching(true);
-      const response = await handleGetCitites();
-      // Sort cities alphabetically
-      const sortedData = response.sort((a, b) => a.name.localeCompare(b.name));
-      setCities(sortedData);
-      setFilteredCities(sortedData);
-    } catch (error) {
-      console.error("Error fetching cities:", error);
-      Alert.alert("Error", "Failed to fetch cities. Please try again.");
-    } finally {
-      setIsFetching(false);
-    }
-  };
+
 
   // Function to get city from coordinates using reverse geocoding
   const getCityFromCoordinates = async (latitude, longitude) => {
