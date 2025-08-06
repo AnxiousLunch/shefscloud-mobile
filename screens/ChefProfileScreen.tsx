@@ -1,327 +1,483 @@
 "use client"
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from "react-native"
-import { SafeAreaView } from "react-native-safe-area-context"
-import { useAuth } from "../contexts/AuthContext"
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+  Image,
+  TextInput,
+  ActivityIndicator,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "../contexts/AuthContext";
+import * as ImagePicker from "expo-image-picker";
+import {
+  handleGetStats,
+  handleUpdateChefProfile,
+} from "../services/get_methods";
+
+
 
 export default function ChefProfileScreen() {
-  const { user, logout } = useAuth()
+  
+  const { user, logout, updateUser } = useAuth();
+  const [stats, setStats] = useState({
+    earning: 0,
+    dishes_sold: 0,
+    success_review: 0,
+  });
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [profileData, setProfileData] = useState({
+    id: "",
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone: "",
+    bio: "",
+    profile_pic: "",
+    cover_pic: "",
+    address: "",
+    latitude: null,
+    longitude: null,
+  });
+
+  useEffect(() => {
+    if (user?.access_token && user?.id) {
+      setProfileData({
+        id: user.id || "",
+        first_name: user.first_name || "",
+        last_name: user.last_name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+        bio: user.bio || "",
+        profile_pic: user.profile_pic || "",
+        cover_pic: user.cover_pic || "",
+        address: user.chef_addresses?.[0]?.address || "",
+        latitude: user.chef_addresses?.[0]?.latitude || null,
+        longitude: user.chef_addresses?.[0]?.longitude || null,
+      });
+
+      fetchStats(user.access_token, user.id);
+    }
+  }, [user]);
+
+  const fetchStats = async (token: string, chefId: number) => {
+    try {
+      const res = await handleGetStats(token, chefId);
+      if (res?.data) {
+        setStats(res.data);
+      } else {
+        console.warn("Unexpected stats response:", res);
+      }
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+      Alert.alert("Error", "Failed to load statistics");
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
       { text: "Cancel", style: "cancel" },
       { text: "Logout", style: "destructive", onPress: logout },
-    ])
-  }
+    ]);
+  };
 
-  const handleSettingPress = (setting: string) => {
-    Alert.alert("Settings", `${setting} functionality would be implemented here.`)
-  }
+  const handleImagePick = async (type: "profile" | "cover") => {
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-  const handleQuickAction = (action: string) => {
-    Alert.alert("Quick Action", `${action} functionality would be implemented here.`)
-  }
+    if (permissionResult.granted === false) {
+      Alert.alert(
+        "Permission required",
+        "Please allow access to your photos to upload images"
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: type === "profile" ? [1, 1] : [3, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets.length > 0) {
+      const uri = result.assets[0].uri;
+      setProfileData((prev) => ({
+        ...prev,
+        [type === "profile" ? "profile_pic" : "cover_pic"]: uri,
+      }));
+    }
+  };
+
+  const handleInputChange = (name: string, value: string) => {
+    setProfileData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    try {
+      const res = await handleUpdateChefProfile(user.access_token, profileData);
+      if (res?.data) {
+        updateUser(res.data);
+        Alert.alert("Success", "Profile updated successfully");
+        setIsEditing(false);
+      } else {
+        Alert.alert("Error", "Failed to update profile");
+      }
+    } catch (error) {
+      console.error("Update error:", error);
+      Alert.alert("Error", "Failed to update profile");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Chef Profile</Text>
+        <TouchableOpacity
+          onPress={() => (isEditing ? handleSubmit() : setIsEditing(true))}
+        >
+          <Text style={styles.editButton}>
+            {isEditing ? (isLoading ? "Saving..." : "Save") : "Edit"}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* Cover Photo */}
+        <TouchableOpacity
+          onPress={() => isEditing && handleImagePick("cover")}
+          disabled={!isEditing}
+        >
+          <View style={styles.coverContainer}>
+            {profileData.cover_pic ? (
+              <Image
+                source={{ uri: profileData.cover_pic }}
+                style={styles.coverImage}
+              />
+            ) : (
+              <View style={styles.coverPlaceholder}>
+                <Text style={styles.placeholderText}>
+                  Tap to add cover photo
+                </Text>
+              </View>
+            )}
+          </View>
+        </TouchableOpacity>
+
         {/* Profile Header */}
         <View style={styles.profileHeader}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>👨‍🍳</Text>
-          </View>
-          <Text style={styles.chefName}>{user?.name}</Text>
-          <Text style={styles.chefSpecialty}>Italian Cuisine Specialist</Text>
+          <TouchableOpacity
+            onPress={() => isEditing && handleImagePick("profile")}
+            disabled={!isEditing}
+          >
+            <View style={styles.avatar}>
+              {profileData.profile_pic ? (
+                <Image
+                  source={{ uri: profileData.profile_pic }}
+                  style={styles.profileImage}
+                />
+              ) : (
+                <Text style={styles.avatarText}>👨‍🍳</Text>
+              )}
+            </View>
+          </TouchableOpacity>
+
+          <Text style={styles.chefName}>
+            {profileData.first_name} {profileData.last_name}
+          </Text>
+          <Text style={styles.chefEmail}>{profileData.email}</Text>
+          <Text style={styles.chefPhone}>{profileData.phone}</Text>
 
           <View style={styles.statsContainer}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>4.9</Text>
-              <Text style={styles.statLabel}>Rating</Text>
+              <Text style={styles.statValue}>${stats.earning}</Text>
+              <Text style={styles.statLabel}>Earning</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>847</Text>
-              <Text style={styles.statLabel}>Orders</Text>
+              <Text style={styles.statValue}>{stats.dishes_sold}</Text>
+              <Text style={styles.statLabel}>Dishes</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>3</Text>
-              <Text style={styles.statLabel}>Years</Text>
+              <Text style={styles.statValue}>{stats.success_review}%</Text>
+              <Text style={styles.statLabel}>Success</Text>
             </View>
-          </View>
-
-          <View style={styles.verifiedBadge}>
-            <Text style={styles.verifiedText}>✓ Verified Professional Chef</Text>
           </View>
         </View>
 
-        {/* Profile Settings */}
-        <View style={styles.settingsCard}>
-          <Text style={styles.cardTitle}>Profile Settings</Text>
+        {/* Profile Form */}
+        <View style={styles.formCard}>
+          <Text style={styles.cardTitle}>Profile Information</Text>
 
-          <TouchableOpacity style={styles.settingItem} onPress={() => handleSettingPress("Personal Information")}>
-            <View>
-              <Text style={styles.settingTitle}>Personal Information</Text>
-              <Text style={styles.settingSubtitle}>Update your profile details</Text>
-            </View>
-            <Text style={styles.settingArrow}>→</Text>
-          </TouchableOpacity>
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>First Name</Text>
+            <TextInput
+              style={styles.input}
+              value={profileData.first_name}
+              onChangeText={(text) => handleInputChange("first_name", text)}
+              editable={isEditing}
+            />
+          </View>
 
-          <TouchableOpacity style={styles.settingItem} onPress={() => handleSettingPress("Kitchen Information")}>
-            <View>
-              <Text style={styles.settingTitle}>Kitchen Information</Text>
-              <Text style={styles.settingSubtitle}>Location, hours, capacity</Text>
-            </View>
-            <Text style={styles.settingArrow}>→</Text>
-          </TouchableOpacity>
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Last Name</Text>
+            <TextInput
+              style={styles.input}
+              value={profileData.last_name}
+              onChangeText={(text) => handleInputChange("last_name", text)}
+              editable={isEditing}
+            />
+          </View>
 
-          <TouchableOpacity style={styles.settingItem} onPress={() => handleSettingPress("Availability")}>
-            <View>
-              <Text style={styles.settingTitle}>Availability</Text>
-              <Text style={styles.settingSubtitle}>Set your working hours</Text>
-            </View>
-            <View style={styles.onlineBadge}>
-              <Text style={styles.onlineText}>Online</Text>
-            </View>
-          </TouchableOpacity>
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Email</Text>
+            <TextInput
+              style={[styles.input, styles.disabledInput]}
+              value={profileData.email}
+              editable={false}
+            />
+          </View>
 
-          <TouchableOpacity
-            style={[styles.settingItem, styles.lastSettingItem]}
-            onPress={() => handleSettingPress("Payment & Earnings")}
-          >
-            <View>
-              <Text style={styles.settingTitle}>Payment & Earnings</Text>
-              <Text style={styles.settingSubtitle}>Banking details and payouts</Text>
-            </View>
-            <Text style={styles.settingArrow}>→</Text>
-          </TouchableOpacity>
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Phone</Text>
+            <TextInput
+              style={styles.input}
+              value={profileData.phone}
+              onChangeText={(text) => handleInputChange("phone", text)}
+              keyboardType="phone-pad"
+              editable={isEditing}
+              placeholder="03XXXXXXXXX"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Address</Text>
+            <TextInput
+              style={styles.input}
+              value={profileData.address}
+              onChangeText={(text) => handleInputChange("address", text)}
+              editable={isEditing}
+              multiline
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.inputLabel}>Bio</Text>
+            <TextInput
+              style={[styles.input, styles.bioInput]}
+              value={profileData.bio}
+              onChangeText={(text) => handleInputChange("bio", text)}
+              editable={isEditing}
+              multiline
+              numberOfLines={4}
+            />
+          </View>
         </View>
 
         {/* Quick Actions */}
         <View style={styles.actionsCard}>
           <Text style={styles.cardTitle}>Quick Actions</Text>
 
-          <View style={styles.actionsGrid}>
-            <TouchableOpacity
-              style={[styles.actionButton, styles.analyticsButton]}
-              onPress={() => handleQuickAction("View Analytics")}
-            >
-              <Text style={styles.actionButtonText}>📊 View Analytics</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionButton, styles.reviewsButton]}
-              onPress={() => handleQuickAction("Customer Reviews")}
-            >
-              <Text style={styles.actionButtonText}>💬 Customer Reviews</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionButton, styles.promoteButton]}
-              onPress={() => handleQuickAction("Promote Dishes")}
-            >
-              <Text style={styles.actionButtonText}>🎯 Promote Dishes</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={[styles.actionButton, styles.logoutButton]} onPress={handleLogout}>
-              <Text style={styles.actionButtonText}>🚪 Logout</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.logoutButton]}
+            onPress={handleLogout}
+          >
+            <Text style={styles.actionButtonText}>Logout</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }
+
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f8f9fa",
   },
   header: {
-    backgroundColor: "#ffffff",
-    paddingHorizontal: 25,
-    paddingVertical: 25,
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
+    padding: 16,
+    backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: "#f1f5f9",
+    borderBottomColor: "#e9ecef",
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#1f2937",
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#212529",
+  },
+  editButton: {
+    fontSize: 16,
+    color: "#dc3545",
+    fontWeight: "600",
   },
   content: {
     flex: 1,
-    padding: 25,
+    padding: 16,
   },
-  profileHeader: {
-    backgroundColor: "#ffffff",
-    borderRadius: 25,
-    padding: 30,
-    marginBottom: 25,
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    elevation: 4,
+  coverContainer: {
+    height: 180,
+    borderRadius: 12,
+    overflow: "hidden",
+    marginBottom: 80,
   },
-  avatar: {
-    width: 100,
-    height: 100,
-    backgroundColor: "#dc2626",
-    borderRadius: 25,
+  coverImage: {
+    width: "100%",
+    height: "100%",
+  },
+  coverPlaceholder: {
+    flex: 1,
+    backgroundColor: "#e9ecef",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 20,
+  },
+  placeholderText: {
+    color: "#6c757d",
+    fontSize: 16,
+  },
+  profileHeader: {
+    alignItems: "center",
+    marginTop: -70,
+    marginBottom: 24,
+  },
+  avatar: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "#e9ecef",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 3,
+    borderColor: "#fff",
+  },
+  profileImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 60,
   },
   avatarText: {
-    fontSize: 40,
-    color: "#ffffff",
+    fontSize: 60,
   },
   chefName: {
     fontSize: 24,
-    fontWeight: "800",
-    color: "#1f2937",
-    marginBottom: 8,
+    fontWeight: "bold",
+    marginTop: 16,
+    color: "#212529",
   },
-  chefSpecialty: {
-    color: "#6b7280",
-    marginBottom: 15,
+  chefEmail: {
+    fontSize: 16,
+    color: "#6c757d",
+    marginTop: 4,
+  },
+  chefPhone: {
+    fontSize: 16,
+    color: "#6c757d",
+    marginBottom: 16,
   },
   statsContainer: {
     flexDirection: "row",
-    justifyContent: "center",
-    gap: 20,
-    marginBottom: 20,
+    justifyContent: "space-around",
+    width: "100%",
+    padding: 16,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 2,
   },
   statItem: {
     alignItems: "center",
   },
   statValue: {
     fontSize: 20,
-    fontWeight: "800",
-    color: "#dc2626",
+    fontWeight: "bold",
+    color: "#dc3545",
   },
   statLabel: {
-    fontSize: 12,
-    color: "#6b7280",
-  },
-  verifiedBadge: {
-    backgroundColor: "#d1fae5",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  verifiedText: {
-    color: "#059669",
     fontSize: 14,
-    fontWeight: "600",
+    color: "#6c757d",
   },
-  settingsCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 20,
-    padding: 25,
-    marginBottom: 20,
+  formCard: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 2,
   },
   cardTitle: {
-    fontWeight: "700",
-    marginBottom: 20,
-    color: "#1f2937",
     fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 16,
+    color: "#212529",
   },
-  settingItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f1f5f9",
+  inputGroup: {
+    marginBottom: 16,
   },
-  lastSettingItem: {
-    borderBottomWidth: 0,
-  },
-  settingTitle: {
-    fontWeight: "600",
-    marginBottom: 4,
-  },
-  settingSubtitle: {
-    color: "#6b7280",
+  inputLabel: {
     fontSize: 14,
-  },
-  settingArrow: {
-    color: "#dc2626",
-    fontSize: 16,
-  },
-  onlineBadge: {
-    backgroundColor: "#d1fae5",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  onlineText: {
-    color: "#059669",
-    fontSize: 12,
     fontWeight: "600",
+    marginBottom: 8,
+    color: "#495057",
+  },
+  input: {
+    backgroundColor: "#f8f9fa",
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: "#212529",
+  },
+  disabledInput: {
+    backgroundColor: "#e9ecef",
+    color: "#6c757d",
+  },
+  bioInput: {
+    height: 100,
+    textAlignVertical: "top",
   },
   actionsCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 20,
-    padding: 25,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    elevation: 4,
-  },
-  actionsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 15,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 2,
   },
   actionButton: {
-    flex: 1,
-    minWidth: "45%",
-    paddingVertical: 15,
-    paddingHorizontal: 15,
-    borderRadius: 15,
+    padding: 16,
+    borderRadius: 8,
     alignItems: "center",
-    borderWidth: 1,
-  },
-  analyticsButton: {
-    backgroundColor: "#fef2f2",
-    borderColor: "#fecaca",
-  },
-  reviewsButton: {
-    backgroundColor: "#f0f9ff",
-    borderColor: "#bae6fd",
-  },
-  promoteButton: {
-    backgroundColor: "#f0fdf4",
-    borderColor: "#bbf7d0",
+    justifyContent: "center",
   },
   logoutButton: {
-    backgroundColor: "#fefbeb",
-    borderColor: "#fed7aa",
+    backgroundColor: "#f8d7da",
+    borderWidth: 1,
+    borderColor: "#f5c6cb",
   },
   actionButtonText: {
+    fontSize: 16,
     fontWeight: "600",
-    fontSize: 14,
+    color: "#721c24",
   },
-})
+});

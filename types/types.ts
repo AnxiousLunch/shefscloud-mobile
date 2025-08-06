@@ -147,3 +147,98 @@ export interface CartContextType {
   getTotalPrice: () => number
   getItemCount: () => number
 }
+
+
+export type City = {
+  countries: {
+    id: number, 
+    name: string
+  },
+  country_id: number,
+  created_at: string, 
+  deleted_at: string | null, 
+  id: number, 
+  name: string, 
+  updated_at: string
+}
+
+export interface CartItem {
+  id: string
+  name: string
+  price: number
+  quantity: number
+  image: string
+  chefId: string
+  delivery_date: string
+  delivery_slot: string
+}
+
+export interface CartGroup {
+  chefId: string
+  delivery_date: string
+  delivery_slot: string
+  menu: CartItem[]
+}
+
+export interface CartContextType {
+  cart: CartGroup[]
+  currentUserId: string | null
+  setUserId: (id: string | null) => void
+  addItem: (item: Omit<CartItem, "quantity">, quantity?: number) => void
+  removeItem: (chefId: string, delivery_date: string, delivery_slot: string, itemId: string) => void
+  updateItem: (chefId: string, delivery_date: string, delivery_slot: string, itemId: string, changes: Partial<CartItem>) => void
+  onOrderSubmit: (chefId: string, delivery_date: string, delivery_slot: string) => void
+  clearCart: () => void
+  getTotalPrice: () => number
+  getItemCount: () => number
+}
+
+export type OrderItem = {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  chef_earning: number;
+  // add other item properties as needed
+};
+
+export type Order = {
+  id: string;
+  order_number: string;
+  order_code: string;
+  customer: {
+    name: string;
+    phone: string;
+  };
+  delivery_address: string;
+  delivery_date: string;
+  delivery_time: string;
+  delivery_date_time: string;
+  created_at: string;
+  items: OrderItem[];
+  total_price: number;
+  status: 'pending' | 'accepted' | 'preparing' | 'delivering' | 'delivered' | 'canceled';
+  // add other order properties as needed
+};
+
+export type ChefDish = {
+  id: string;
+  name: string;
+  description: string;
+  tags: string;
+  chef_earning_fee: number;
+  platform_price: number;
+  delivery_price: number;
+  average_rating: number;
+  total_reviews: number;
+  logo: string;
+  is_live: boolean;
+  is_monday: number;
+  is_tuesday: number;
+  is_wednesday: number;
+  is_thursday: number;
+  is_friday: number;
+  is_saturday: number;
+  is_sunday: number;
+  
+};

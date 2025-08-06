@@ -25,6 +25,7 @@ import { AppDispatch } from "../store/store";
 import { useAppSelector } from "@/hooks/hooks";
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width, height } = Dimensions.get("window");
 WebBrowser.maybeCompleteAuthSession();
@@ -41,7 +42,7 @@ const responsiveFontSize = (size: number) => {
 }
 
 export default function AuthScreen() {
-  const [selectedRole, setSelectedRole] = useState("customer");
+  const [selectedRole, setSelectedRole] = useState<"customer" | "chef">("customer");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -50,34 +51,39 @@ export default function AuthScreen() {
     clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
   });
   
-  const { userInfo, isLoading: reduxLoading, isInitialized } = useAppSelector((state) => state.user);
+ const { userInfo, isLoading: reduxLoading, isInitialized } = useAppSelector((state) => state.user);
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
 
-  useEffect(() => {
+
+ useEffect(() => {
     dispatch(loadUserFromStorage());
   }, [dispatch]);
 
-  useEffect(() => {
-    if (isInitialized && userInfo) {
-      router.replace('/(region)');
-    }
-  }, [userInfo, isInitialized, router]);
-
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Error", "Please fill in all fields")
-      return
+      Alert.alert("Error", "Please fill in all fields");
+      return;
     }
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       const res = await handleUserLogin({ email, password });
+      
+      // Save role in storage
+      await AsyncStorage.setItem("selectedRole", selectedRole);
+
+      // Save user in Redux
       dispatch(loginAndSaveUser(res));
+
       Alert.alert("Successfully Logged In");
+
+      // Go to region selection after login
+      router.replace("/(region)");
+
     } catch (error) {
-      Alert.alert("Error", "Login failed. Please try again.")
+      Alert.alert("Error", "Login failed. Please try again.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   };
 
@@ -207,28 +213,28 @@ export default function AuthScreen() {
                 </View>
               </View>
               {/* Login Button */}
-              <TouchableOpacity
-                style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
-                onPress={handleLogin}
-                disabled={isLoading}
-              >
-                <LinearGradient
-                  colors={["#b30000", "#e40c0c"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                  style={styles.gradientButton}
-                >
-                  {isLoading ? (
-                    <View style={styles.loadingContainer}>
-                      <View style={styles.loadingDot} />
-                      <View style={[styles.loadingDot, styles.loadingDot2]} />
-                      <View style={[styles.loadingDot, styles.loadingDot3]} />
-                    </View>
-                  ) : (
-                    <Text onPress={navigateToSignUp} style={styles.primaryButtonText}>Sign In</Text>
-                  )}
-                </LinearGradient>
-              </TouchableOpacity>
+<TouchableOpacity
+      style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
+      onPress={handleLogin}
+      disabled={isLoading}
+    >
+      <LinearGradient
+        colors={["#b30000", "#e40c0c"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.gradientButton}
+      >
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <View style={styles.loadingDot} />
+            <View style={[styles.loadingDot, styles.loadingDot2]} />
+            <View style={[styles.loadingDot, styles.loadingDot3]} />
+          </View>
+        ) : (
+          <Text style={styles.primaryButtonText}>Sign In</Text>
+        )}
+      </LinearGradient>
+    </TouchableOpacity>
               {/* Google Sign-In */}
               <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin}>
                 <Ionicons name="logo-google" size={isTablet ? 22 : 18} color="#fff" />
