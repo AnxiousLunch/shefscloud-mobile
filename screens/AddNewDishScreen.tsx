@@ -1,3 +1,10 @@
+import { handleGetAllDishes } from '@/services/get_methods'; // adjust path as needed
+
+
+
+
+
+import {handleGetAvailabilityTimeSlot} from '@/services/shef'; // Corrected import
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal, Image, TextInput, Alert, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -20,34 +27,49 @@ import * as ImagePicker from 'expo-image-picker';
 import { chefMenuInitialState } from '@/constants/initialStates';
 import { MultiSelect } from 'react-native-element-dropdown';
 import { formatDateForInput } from '@/utils/helpers';
-import {handleAvailabilityTimeSlot} from '@/services/shef'
+
+const formatDate = (date) => {
+  const d = new Date(date);
+  return d.toISOString().split("T")[0]; // "YYYY-MM-DD"
+};
+
 
 const AddNewDishScreen = () => {
+const authToken = useSelector((state) => state.user.userInfo?.access_token);
+
   const params = useLocalSearchParams();
-  const { authToken } = useSelector((state: RootState) => state.user);
+  // const { authToken } = useSelector((state: RootState) => state.user);
   const router = useRouter();
   
   // Safely parse dishToEdit from params
-  const dishToEdit = params.dishToEdit ? JSON.parse(params.dishToEdit as string) : null;
+  let parsedDishToEdit = null;
+  if (params.dishToEdit) {
+    try {
+      parsedDishToEdit = JSON.parse(params.dishToEdit as string);
+    } catch (error) {
+      console.error("Error parsing dishToEdit:", error);
+    }
+  }
+  const dishToEdit = parsedDishToEdit;
   
   const [chefMenu, setChefMenu] = useState(chefMenuInitialState);
   const [currentStep, setCurrentStep] = useState(0);
   const [isUpdateDish, setIsUpdateDish] = useState(false);
   
-  // Data for dropdowns
-  const [foodType, setFoodType] = useState([]);
-  const [spiceLevel, setSpiceLevel] = useState([]);
-  const [tagOptions, setTagOptions] = useState([]);
-  const [portionTypes, setPortionTypes] = useState([]);
-  const [heatInstruction, setHeatInstruction] = useState([]);
-  const [ingredientOptions, setIngredientOptions] = useState([]);
-  const [timeSlot, setTimeSlot] = useState([]);
+  // Data for dropdowns with proper initialization
+  const [foodType, setFoodType] = useState<any[]>([]);
+  const [spiceLevel, setSpiceLevel] = useState<any[]>([]);
+  const [tagOptions, setTagOptions] = useState<any[]>([]);
+  const [portionTypes, setPortionTypes] = useState<any[]>([]);
+  const [heatInstruction, setHeatInstruction] = useState<any[]>([]);
+  const [ingredientOptions, setIngredientOptions] = useState<any[]>([]);
+  const [timeSlot, setTimeSlot] = useState<any[]>([]);
   
   // Selected values for multi-select
-  const [cusineSelectedOptions, setCusineSelectedOptions] = useState([]);
-  const [selectedAvailabilitySlot, setSelectedAvailabilitySlot] = useState([]);
-  const [selectedIngredients, setSelectedIngredients] = useState([]);
-  const [selectedCities, setSelectedCities] = useState([]);
+  const [cusineSelectedOptions, setCusineSelectedOptions] = useState<any[]>([]);
+  const [selectedAvailabilitySlot, setSelectedAvailabilitySlot] = useState<any[]>([]);
+  const [selectedIngredients, setSelectedIngredients] = useState<any[]>([]);
+  const [selectedCities, setSelectedCities] = useState<any[]>([]);
 
   // Serving size states
   const [grams, setGrams] = useState('');
@@ -67,44 +89,39 @@ const AddNewDishScreen = () => {
     { title: "Photo", component: PhotoScreen },
   ];
 
-useEffect(() => {
-  const init = async () => {
-    if (dishToEdit) {
-      console.log("Loaded dish to edit:", dishToEdit);
-      setChefMenu(dishToEdit);
-      setIsUpdateDish(true);
+  useEffect(() => {
+    const init = async () => {
+      if (dishToEdit) {
+        console.log("Loaded dish to edit:", dishToEdit);
+        setChefMenu(dishToEdit);
+        setIsUpdateDish(true);
 
-      // Portion logic
-      if (dishToEdit.base_type_id === 1) {
-        setGrams(dishToEdit.portion_size || '');
-      } else if (dishToEdit.base_type_id === 2) {
-        setPieces(dishToEdit.portion_size || '');
-      } else if (dishToEdit.base_type_id === 3) {
-        setCustomPortion(dishToEdit.portion_size || '');
+        // Portion logic
+        if (dishToEdit.base_type_id === 1) {
+          setGrams(dishToEdit.portion_size || '');
+        } else if (dishToEdit.base_type_id === 2) {
+          setPieces(dishToEdit.portion_size || '');
+        } else if (dishToEdit.base_type_id === 3) {
+          setCustomPortion(dishToEdit.portion_size || '');
+        }
       }
 
-      // Optional: log after slight delay
-      setTimeout(() => {
-        console.log("chefMenu after setting:", dishToEdit);
-      }, 500);
-    }
+      await fetchInitialData();
+    };
 
-    await fetchInitialData();
-  };
+    init();
+  }, []);
 
-  init();
-}, []);
-
-
-  const fetchInitialData = async () => {
+const fetchInitialData = async () => {
   try {
     const [
-      foodTypeRes, 
-      spiceLevelRes, 
-      tagsRes, 
+      foodTypeRes,
+      spiceLevelRes,
+      tagsRes,
       portionTypesRes,
       heatInstructionRes,
       ingredientsRes,
+      timeSlotRes
     ] = await Promise.all([
       handleGetFoodType(authToken),
       handleGetSpiceLevel(authToken),
@@ -112,120 +129,111 @@ useEffect(() => {
       handleGetPortionType(authToken),
       handleGetHeatingInstruction(authToken),
       handleGetIngredients(authToken),
+      handleGetAvailabilityTimeSlot()
     ]);
 
-    // ⬇️ Add this after previous data
-    const timeSlotRes = await handleGetAvailabilityTimeSlot();
-    const formattedTimeSlots = timeSlotRes.map(slot => ({
+    const formattedTimeSlots = timeSlotRes.map((slot: any) => ({
       id: slot.id,
       label: `${slot.start_time} - ${slot.end_time}`,
     }));
     setTimeSlot(formattedTimeSlots);
 
-    // ⬇️ Selected availability slots if editing
     if (dishToEdit?.availability_time_slots?.length > 0) {
-      const selected = formattedTimeSlots.filter(slot =>
+      const selected = formattedTimeSlots.filter((slot: any) =>
         dishToEdit.availability_time_slots.includes(slot.id)
       );
       setSelectedAvailabilitySlot(selected);
     }
 
-      setFoodType(foodTypeRes);
-      setSpiceLevel(spiceLevelRes);
-      
-      // Format tags for multi-select
-      const formatedTags = tagsRes.map(tag => ({ 
-        id: tag.id, 
-        value: tag.name, 
-        label: tag.name 
-      }));
-      setTagOptions(formatedTags);
-      
-      setPortionTypes(portionTypesRes);
-      setHeatInstruction(heatInstructionRes);
-      
-      // Format ingredients for multi-select
-      const formatedIngredients = ingredientsRes.map(ing => ({
-        id: ing.id,
-        value: ing.name,
-        label: ing.name
-      }));
-      setIngredientOptions(formatedIngredients);
+    setFoodType(foodTypeRes);
+    setSpiceLevel(spiceLevelRes);
 
-      // If editing, set selected values
-      if (dishToEdit) {
-        // Set selected tags
-        if (dishToEdit.tags && dishToEdit.tags.length > 0) {
-          const temp = formatedTags.filter(item =>
-            dishToEdit.tags.split(", ").some(elem => elem === item.value)
-          );
-          setCusineSelectedOptions(temp);
-        }
-        
-        // Set selected ingredients
-        if (dishToEdit.ingredients && dishToEdit.ingredients.length > 0) {
-          const ingredientsArray = formatedIngredients.filter(item =>
-            dishToEdit.ingredients.some(id => id === item.id)
-          );
-          setSelectedIngredients(ingredientsArray);
-        }
+    const formatedTags = tagsRes.map((tag: any) => ({
+      id: tag.id,
+      value: tag.name,
+      label: tag.name,
+    }));
+    setTagOptions(formatedTags);
+
+    setPortionTypes(portionTypesRes);
+    setHeatInstruction(heatInstructionRes);
+
+    const formatedIngredients = ingredientsRes.map((ing: any) => ({
+      id: ing.id,
+      value: ing.name,
+      label: ing.name,
+    }));
+    setIngredientOptions(formatedIngredients);
+
+    if (dishToEdit) {
+      if (dishToEdit.tags && dishToEdit.tags.length > 0) {
+        const temp = formatedTags.filter((item: any) =>
+          dishToEdit.tags.split(", ").some((elem: any) => elem === item.value)
+        );
+        setCusineSelectedOptions(temp);
       }
-    } catch (error) {
-      console.error("Error fetching initial data:", error);
-      Alert.alert("Error", "Failed to load required data");
-    }
-  };
 
-  const updateFields = (fields) => {
-    setChefMenu(prev => ({ ...prev, ...fields }));
-  };
-
-  const onNext = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1);
+      if (dishToEdit.ingredients && dishToEdit.ingredients.length > 0) {
+        const ingredientsArray = formatedIngredients.filter((item: any) =>
+          dishToEdit.ingredients.some((id: any) => id === item.id)
+        );
+        setSelectedIngredients(ingredientsArray);
+      }
     }
-  };
+  } catch (error) {
+    console.error("❌ Error in fetchInitialData:", error);
+    Alert.alert("Error", "Failed to load required data. Please check your connection and try again.");
+  }
+};
 
-  const onBack = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
+const updateFields = (fields) => {
+  setChefMenu((prev) => ({ ...prev, ...fields }));
+};
+
+const onNext = () => {
+  if (currentStep < steps.length - 1) {
+    setCurrentStep(currentStep + 1);
+  }
+};
+
+const onBack = () => {
+  if (currentStep > 0) {
+    setCurrentStep(currentStep - 1);
+  }
+};
 
 const onSubmit = async () => {
   try {
     const formData = new FormData();
 
-    // Handle availability_time_slots
-   // ✅ Updated code block
-if (Array.isArray(selectedAvailabilitySlot)) {
-  selectedAvailabilitySlot
-    .filter(slot => slot?.id !== undefined && slot?.id !== null)
-    .forEach(slot => {
-      formData.append('availability_time_slots[]', String(slot.id));
-    });
-}
+    // ⏰ Availability Time Slots
+    if (Array.isArray(selectedAvailabilitySlot)) {
+      selectedAvailabilitySlot
+        .filter(slot => slot?.id !== undefined && slot?.id !== null)
+        .forEach(slot => {
+          formData.append('availability_time_slots[]', String(slot.id));
+        });
+    }
 
-
-    // Handle days of week
+    // 🗓️ Days of the week
     const days = [
       'is_monday', 'is_tuesday', 'is_wednesday',
       'is_thursday', 'is_friday', 'is_saturday', 'is_sunday'
     ];
-    
     days.forEach(day => {
       formData.append(day, chefMenu[day] ? '1' : '0');
     });
 
-    // Handle other fields
+    // ✍️ Other Fields
     const fieldsToInclude = [
       'name', 'description', 'food_type_id', 'side_item',
       'spice_level_id', 'base_type_id', 'portion_size',
       'portion_type_id', 'chef_earning_fee', 'platform_price',
       'delivery_price', 'heating_instruction_id', 'prep_time',
       'shelf_life', 'is_vegetarian', 'is_vegan', 'is_gluten_free',
-      'is_halal', 'item_limit', 'limit_item_availibility',
-      'limit_start', 'limit_end'
+      'is_halal', 'item_limit', 
+      // 'limit_item_availibility',
+      // 'limit_start', 'limit_end'
     ];
 
     fieldsToInclude.forEach(field => {
@@ -235,29 +243,82 @@ if (Array.isArray(selectedAvailabilitySlot)) {
       }
     });
 
-    // Handle tags
-    if (cusineSelectedOptions.length > 0) {
-      const tagsString = cusineSelectedOptions.map(opt => opt.label).join(', ');
-      formData.append('tags', tagsString);
+    // 🧠 Limit Item Availability Logic
+if (chefMenu.limit_item_availibility) {
+  formData.append("limit_item_availibility", "1");
+
+  if (chefMenu.limit_start) {
+    formData.append("limit_start", formatDate(chefMenu.limit_start));
+  }
+
+  if (chefMenu.limit_end) {
+    formData.append("limit_end", formatDate(chefMenu.limit_end));
+  }
+} else {
+  formData.append("limit_item_availibility", "0");
+}
+
+const expiryDays = chefMenu.shelf_life || 1;
+formData.append("expiry_days", expiryDays);
+
+formData.append("packaging", "Box"); 
+formData.append("tags", "pakistani");
+if (chefMenu.logo && chefMenu.logo.uri) {
+  formData.append("image", {
+    uri: chefMenu.logo.uri,
+    name: chefMenu.logo.fileName || "dish.jpg",
+    type: chefMenu.logo.type || "image/jpeg",
+  });
+}
+
+
+// or any valid default like "Tray", "Wrap", etc.
+
+    // 🏷️ Tags
+    // if (cusineSelectedOptions.length > 0) {
+    //   const tagsString = cusineSelectedOptions.map(opt => opt.label).join(', ');
+    //   formData.append('tags', tagsString);
+    // }
+  //   if (cusineSelectedOptions?.length > 0) {
+  // cusineSelectedOptions.forEach((opt, index) => {
+  //   if (opt?.label) {
+  //     formData.append(`tags[${index}]`, opt.label.trim());
+  //   }
+  // });
+// }
+   
+
+    // 🍅 Ingredients
+    const ingredientIds = selectedIngredients
+  .map(ing => ing?.id)
+  .filter(id => id !== undefined && id !== null);
+
+ingredientIds.forEach(id => {
+  formData.append('ingredients[]', String(id));
+});
+
+
+    // 🔍 Debug log formData
+    for (let pair of formData.entries()) {
+      console.log(`📦 ${pair[0]}: ${pair[1]}`);
     }
 
-    // Handle ingredients
-    const ingredientIds = selectedIngredients.map(ing => ing.id);
-    ingredientIds.forEach(id => {
-      formData.append('ingredients[]', String(id));
-    });
-
-    // Submit data
+    // 🚀 Submit
+    console.log("🚀 Submitting dish...");
     if (isUpdateDish) {
       await handleUpdateMenu(chefMenu.id, authToken, formData);
     } else {
+         for (let pair of formData.entries()) {
+      console.log(`📦 ${pair[0]}: ${pair[1]}`);
+    }
       await handleCreateMenu(authToken, formData);
     }
-    
+
+    console.log("✅ Submission successful");
     router.back();
   } catch (error) {
-    console.error("Error fetching initial data:", error);
-    Alert.alert("Error", "Failed to load required data");
+    console.error("❌ Error submitting dish:", error.response?.data || error.message || error);
+    Alert.alert("Error", "Failed to submit dish. Please try again.");
   }
 };
 
@@ -608,10 +669,12 @@ const DescriptionScreen = ({
     const fetchTimeSlots = async () => {
       try {
         const slots = await handleGetAvailabilityTimeSlot();
+        console.log("✅ Raw API availability slots:", slots);
         const formattedSlots = slots?.map((slot) => ({
-          id: slot.id,
-          label: slot.name,
-        })) || [];
+  id: slot.id,
+  label: `${slot.time_start} - ${slot.time_end}`, // ✅ fixed key
+})) || [];
+         console.log("✅ Formatted availability slots:", formattedSlots);
         setTimeSlot(formattedSlots);
       } catch (error) {
         console.error("Error fetching availability time slots:", error.message);
@@ -801,21 +864,20 @@ const MoreInfoScreen = ({
         <Text style={styles.inputLabel}>Heating Instructions</Text>
         <View style={styles.pickerContainer}>
           <Picker
-            selectedValue={heating_instruction_id || ""}
-            onValueChange={(value) =>
-              updateFields({ heating_instruction_id: value })
-            }
-            style={styles.picker}
-          >
-            <Picker.Item label="--- Select Heating Instruction ---" value="" />
-            {safeHeatInstruction.map((option) => (
-              <Picker.Item
-                key={option.id}
-                label={option.name}
-                value={option.id}
-              />
-            ))}
-          </Picker>
+  selectedValue={heating_instruction_id || ""}
+  onValueChange={(value) => updateFields({ heating_instruction_id: value })}
+  style={styles.picker}
+>
+  <Picker.Item label="--- Select Heating Instruction ---" value="" />
+  {safeHeatInstruction.map((option) => (
+    <Picker.Item
+      key={option.id}
+      label={option.title} // <-- Fix here
+      value={option.id}
+    />
+  ))}
+</Picker>
+
         </View>
       </View>
 
