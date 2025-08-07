@@ -17,7 +17,7 @@ import * as ImagePicker from "expo-image-picker";
 import {
   handleGetStats,
   handleUpdateChefProfile,
-} from "../services/get_methods";
+} from "../services/shef";
 
 
 

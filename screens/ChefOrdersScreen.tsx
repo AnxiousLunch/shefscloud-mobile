@@ -12,18 +12,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { TextInput } from "react-native-paper";
 
 export default function ChefOrdersScreen() {
-  useEffect(() => {
-  const fetchOrders = async () => {
-    try {
-      const ordersData = await handleGetChefOrders(user.id, authToken);
-      console.log("API Response:", JSON.stringify(ordersData, null, 2)); // Add this line
-      setOrders(ordersData || []);
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-    }
-  };
-  fetchOrders();
-}, [user?.id, authToken]);
   const { user } = useAuth();
   const { authToken } = useAppSelector((state) => state.user);
   const dispatch = useAppDispatch();
