@@ -137,7 +137,7 @@ export const CartScreen = () => {
                             
                             <TouchableOpacity
                                 style={styles.checkoutButton}
-                                onPress={() => router.push(`/(checkout)/${chef.id}/${chefIndex}`)}
+                                onPress={() => router.push(`/(customer)`)}
                             >
                                 <Text style={styles.checkoutText}>Checkout</Text>
                             </TouchableOpacity>

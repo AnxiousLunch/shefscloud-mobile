@@ -436,14 +436,14 @@ export const handleGetDistance = async (origin, destination) => {
 // get address from coordinates
 export const handleGetUserAddress = async (latitude, longitude) => {
   try {
+    if (!latitude || !longitude) {
+      throw new Error("Latitude and Longitude are required.");
+    }
+
     const GOOGLE_MAPS_API_KEY = "AIzaSyBiA5URXPErjPFP5LqtYlEjo62sbze_2SE";
     const apiUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_MAPS_API_KEY}`;
 
-    const { data } = await api.get(apiUrl, {
-      headers: {
-        // Authorization: `Bearer ${token}`, // Add your token if required by your app
-      },
-    });
+    const { data } = await api.get(apiUrl);
 
     if (data.status === "OK") {
       // const address = data.results[0]?.formatted_address;
@@ -459,6 +459,7 @@ export const handleGetUserAddress = async (latitude, longitude) => {
     );
   }
 };
+
 export const handleGetBykeaAuthorization = async (payload) => {
   try {
     const { data } = await axios.post(

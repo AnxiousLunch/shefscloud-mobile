@@ -24,7 +24,9 @@ export default function FoodListScreen() {
   
 
   const handleFoodPress = (foodId: number) => {
-    router.push(`/(foodDetails)/${foodId}`)
+    console.log("foodId is", foodId);
+
+    router.push(`/(foodDetails)/${foodId}`);
   }
 
   useEffect(() => {

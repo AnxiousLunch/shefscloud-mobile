@@ -1,9 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { useNavigation, useRoute } from "@react-navigation/native"
-import { useCart } from "@/contexts/CartContext"
-import { Dish, RootStackParamList, User, TimeSlot, CartState, AppDispatch } from "@/types/types"
-import { NativeStackNavigationProp } from "@react-navigation/native-stack"
+import { useRoute } from "@react-navigation/native"
 import { RouteProp } from "@react-navigation/native"
 import { useState, useEffect, useMemo } from "react"
 import { handleGetSingleDish, handleGetAllChefs, handleGetAvailabilityTimeSlot } from "@/services/get_methods"
@@ -15,7 +12,8 @@ import { addToCartThunk } from "@/store/cart"
 import { useDispatch, useSelector } from "react-redux"
 import { store } from "@/store/store"
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useRouter } from "expo-router"
+import { useLocalSearchParams, useRouter } from "expo-router"
+import { CartItemResponse, Dish, RootState, TimeSlot } from "@/types/types"
 
 
 
@@ -37,18 +35,20 @@ function convertTo12Hour(time24) {
 
 export default function FoodDetailScreen() {
   const route = useRoute();
-  const { addItem } = useCart()
-  const foodId = route.params;
-  const [foodItem, setFoodItem] = useState(null);
+  const {id: foodId} = useLocalSearchParams();
+  const [foodItem, setFoodItem] = useState<Dish | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedDeliverDateAndSlot, setSelectedDeliveryDateAndSlot] = useState({
+  const [selectedDeliverDateAndSlot, setSelectedDeliveryDateAndSlot] = useState<{
+    delivery_date: Date | null,
+    delivery_slot: string
+  }>({
     delivery_date: null, 
     delivery_slot: "",
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const {cart} = useSelector((state) => state.cart);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const {cart} = useSelector((state: RootState) => state.cart);
   const dispatch = useDispatch();
   const router = useRouter();
 
@@ -116,7 +116,7 @@ export default function FoodDetailScreen() {
         if (!regionString) throw new Error("Region not found in storage");
         const region = JSON.parse(regionString);
         // Fetch dish
-        const dish = await handleGetSingleDish(foodId);
+        const dish: Dish = await handleGetSingleDish(foodId);
         // Fetch all chefs in region
         const chefs = await handleGetAllChefs(region.id);
         const timeslotResponse = await handleGetAvailabilityTimeSlot();
@@ -127,7 +127,7 @@ export default function FoodDetailScreen() {
           dish.user = matchingChef;
         }
 
-        const formatedTimeSlotArray = timeslotResponse.map((time) => ({
+        const formatedTimeSlotArray = timeslotResponse.map((time: TimeSlot) => ({
           id: time.id,
           time_start: time.time_start.slice(0, 5),
           time_end: time.time_end.slice(0, 5),
@@ -135,7 +135,7 @@ export default function FoodDetailScreen() {
 
         if (dish.availability_time_slots?.length > 0) {
           dish.availability_time_slots = formatedTimeSlotArray.filter(
-            (time) =>
+            (time: TimeSlot) =>
               dish.availability_time_slots?.some(
                 (av_slot) => av_slot.availability_time_slots_id === time.id
               )
@@ -263,8 +263,10 @@ export default function FoodDetailScreen() {
   }
 
   const handleBackPress = () => {
-    router.back();
+    console.log('back');
   }
+
+  console.log("Hewooo");
 
 
   return (

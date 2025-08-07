@@ -1,24 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, ActivityIndicator, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Location from "expo-location";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState, AppDispatch, CartItemResponse } from "@/types/types";
 import { 
-  handleGetChefAddress, 
-  handleGetBykeaAuthorization,
-  handleGetUserAddress,
-  handleGetBykeaFare,
-} from "@/services/shef";
-
-import {handleCheckDiscount, handleCreateOrder} from "@/services/order"
+  handleCheckDiscount,
+  handleCreateOrder
+} from "@/services/order"
 import {handleGetDefaultSetting} from "@/services/default_setting"
 import { updateCartItem, removeFromCart, onOrderSubmit, removeFromCartThunk } from "@/store/cart";
 import { updateUser } from "@/store/user";
 import { ScrollView, TextInput, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { MaterialIcons, Feather } from "@expo/vector-icons";
 import convertTo12Hour from "@/components/convertTo12Hour";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useRoute } from "@react-navigation/native";
 
 const CheckoutLogic = () => {
@@ -38,14 +33,14 @@ const CheckoutLogic = () => {
     menus: [],
   });
   const [defaultSetting, setDefaultSetting] = useState<any>(null);
-  const [coordinates, setCoordinates] = useState({ lat: 0, lng: 0 });
+  const [coordinates, setCoordinates] = useState({ lat: 24.8607, lng: 67.0011 }); // Dummy Karachi coordinates
   const [addressPlace, setAddressPlace] = useState<"home" | "office" | "apartment">("home");
 
   const route = useRoute();
   // Redux state
   const { userInfo, authToken } = useSelector((state: RootState) => state.user);
-  const { cartItem } = useSelector((state: RootState) => state.cart);
-  const {chefId, chefIndex} = route.params;
+  const { cartItem: cart } = useSelector((state: RootState) => state.cart);
+  const {chefId, chefIndex} = useLocalSearchParams<{chefId: string, chefIndex: string}>();
 
   // Order state
   const [order, setOrder] = useState({
@@ -102,12 +97,12 @@ const CheckoutLogic = () => {
     apartment_city: "",
     apartment_addition_direction: "",
     line2: "",
-    latitude: 0,
-    longitude: 0,
+    latitude: 24.8607, // Dummy latitude
+    longitude: 67.0011, // Dummy longitude
     name: `${userInfo?.first_name} ${userInfo?.last_name}` || "",
     phone: userInfo?.phone || "",
     postal_code: "",
-    city: "",
+    city: "Karachi", // Dummy city
     state: "",
     delivery_instruction: "",
     delivery_notes: "",
@@ -135,80 +130,16 @@ const CheckoutLogic = () => {
     updateOrder({ tip_price: tip_amount });
   };
 
-  // Geolocation functions
-  const getGeolocation = async () => {
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      
-      if (status !== 'granted') {
-        setError("Location permission denied. Please enable in settings.");
-        setIsModalOpen(true);
-        setIsLoading(false);
-        return;
-      }
-
-      const location = await Location.getCurrentPositionAsync({});
-      const { latitude, longitude } = location.coords;
-      
-      setError(null);
-      setIsLoading(false);
-      setIsModalOpen(false);
-      
-      updateOrderDeliveryAddress({
-        latitude,
-        longitude
-      });
-      
-      setCoordinates({
-        lat: latitude,
-        lng: longitude
-      });
-      
-      // Fetch user address and bykea token
-      fetchUserAddress(latitude, longitude);
-      getBykeaToken();
-      
-    } catch (error) {
-      setIsLoading(false);
-      setIsModalOpen(true);
-      setError("Error getting location: " + error.message);
-    }
-  };
-
-  const fetchUserAddress = async (lat: number, lng: number) => {
-    try {
-      const result = await handleGetUserAddress(lat, lng);
-      // Process address result (similar to original)
-      // ... address processing logic
-    } catch (error) {
-      console.error("Error fetching user address:", error);
-    }
-  };
-
-  const getBykeaToken = async () => {
-    try {
-      const authorization = await handleGetBykeaAuthorization({
-        username: "923202024035",
-        password: "S7vN8TQpXbyCwWKsLHJjZh",
-      });
-      setBykeaToken(authorization.data.token);
-    } catch (error) {
-      console.error("Error fetching Bykea token:", error);
-    }
-  };
-
-  const fetchChefAddress = async () => {
-    if (!cartItem.length) return;
-    
-    try {
-      const chefAddress = await handleGetChefAddress(
-        authToken, 
-        cartItem[0].id
-      );
-      setChefAddress(chefAddress);
-    } catch (error) {
-      console.error("Error fetching chef address:", error);
-    }
+  // Dummy initialization instead of actual geocoding
+  const initDummyLocation = () => {
+    setBykeaToken("dummy_bykea_token");
+    setBykeaFare(150); // Fixed delivery fare
+    setChefAddress({ 
+      addresses: [{ 
+        latitude: "24.8607", 
+        longitude: "67.0011" 
+      }] 
+    });
   };
 
   const fetchDefaultSetting = async () => {
@@ -265,7 +196,7 @@ const CheckoutLogic = () => {
 
   // Calculate order details
   const calculateOrderDetails = async () => {
-    if (!defaultSetting || !cartItem.length) return;
+    if (!defaultSetting || !cart.length) return;
 
     // Initialize variables to store calculated sums
     let sub_total = 0;
@@ -277,25 +208,15 @@ const CheckoutLogic = () => {
     let deliverySlot = "";
 
     // Calculate the sub total, delivery price sum, and platform price sum
-    cartItem.forEach((chef: CartItemResponse, chefIndex: number) => {
-      if (chef.id === parseInt(chefId) && chefIndex === parseInt(chef_index)) {
+    cart.forEach((chef: CartItemResponse, chef_index: number) => {
+      if (chef.id === parseInt(chefId) && chef_index === parseInt(chefIndex)) {
         deliveryDate = chef.delivery_date;
         deliverySlot = chef.delivery_slot;
         chef.menu.forEach((menu) => {
           const chef_earning_fee = menu.chef_earning_fee || 0;
           const quantity = menu.quantity || 0;
-          // const delivery_price = menu.delivery_price || 0;
-          // const platform_price = menu.platform_price || 0;
 
-          // ---- Delivery Price
-          const deliveryPercentageFee =
-            (defaultSetting?.delivery_charge_percentage / 100) *
-            chef_earning_fee;
-
-          // const delivery_price =
-          //   deliveryPercentageFee > defaultSetting?.delivery_charge
-          //     ? deliveryPercentageFee
-          //     : defaultSetting?.delivery_charge;
+          // Use fixed delivery price instead of Bykea calculation
           const delivery_price = bykeaFare;
 
           // ---- Platform Price
@@ -315,7 +236,6 @@ const CheckoutLogic = () => {
           sub_total += chef_earning_fee * quantity;
 
           // Calculate delivery price sum for each item
-          // deliverPriceSum += delivery_price * quantity;
           deliverPriceSum = delivery_price;
 
           // Calculate platform price sum for each item -- teax & fee
@@ -325,8 +245,7 @@ const CheckoutLogic = () => {
     });
   }
 
-  // Handle order submission
-  const onSubmit = async () => {
+  const handleCreateOrderPress = async () => {
     try {
       setIsPending(true);
       
@@ -346,6 +265,7 @@ const CheckoutLogic = () => {
         },
       };
       
+      
       // Save to AsyncStorage
       await AsyncStorage.setItem("user", JSON.stringify(updatedUserInfo));
       dispatch(updateUser(updatedUserInfo));
@@ -358,6 +278,7 @@ const CheckoutLogic = () => {
           delivery_slot: order.delivery_slot,
         })
       );
+      dispatch(removeFromCart({ chefId: parseInt(chefId), chefIndex: parseInt(chefIndex) }));
       
       // Reset states
       setOrder({ ...order, tip_price: 0, discount_price: 0 });
@@ -371,7 +292,7 @@ const CheckoutLogic = () => {
     } finally {
       setIsPending(false);
     }
-  };
+  }
 
   // Initialization
   useEffect(() => {
@@ -380,11 +301,9 @@ const CheckoutLogic = () => {
         // Fetch default settings
         await fetchDefaultSetting();
         
-        // Get geolocation
-        await getGeolocation();
-        
-        // Fetch chef address
-        await fetchChefAddress();
+        // Initialize dummy location and Bykea values
+        initDummyLocation();
+        console.log("user info", userInfo);
         
         // Load last order address if exists
         if (userInfo?.last_order_address?.order_delivery_address) {
@@ -412,41 +331,12 @@ const CheckoutLogic = () => {
     init();
   }, []);
 
-  // Calculate Bykea fare
-  useEffect(() => {
-    const calculateFare = async () => {
-      if (!bykeaToken || !chefAddress || !coordinates.lat) return;
-      
-      try {
-        const data = {
-          service_code: 22,
-          customer: { phone: order.phone.replace("+", "") },
-          pickup: {
-            lat: parseFloat(chefAddress.addresses[0].latitude),
-            lng: parseFloat(chefAddress.addresses[0].longitude),
-          },
-          dropoff: {
-            lat: coordinates.lat,
-            lng: coordinates.lng,
-          },
-        };
-        
-        const fareResponse = await handleGetBykeaFare(data, bykeaToken);
-        setBykeaFare(fareResponse.data.fare_max);
-      } catch (error) {
-        console.error("Error calculating Bykea fare:", error);
-      }
-    };
-
-    calculateFare();
-  }, [bykeaToken, chefAddress, coordinates]);
-
   // Update order details when dependencies change
   useEffect(() => {
-    if (defaultSetting && cartItem.length && bykeaFare) {
+    if (defaultSetting && cart.length) {
       calculateOrderDetails();
     }
-  }, [defaultSetting, cartItem, bykeaFare, order.tip_price]);
+  }, [defaultSetting, cart, order.tip_price]);
 
   if (isLoading) {
     return (
@@ -456,11 +346,13 @@ const CheckoutLogic = () => {
     );
   }
 
+  console.log("Delivery date", order.delivery_time)
+
   return (
     <ScrollView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
+        <TouchableOpacity onPress={() => console.log('back')}>
           <Feather name="arrow-left" size={24} color="black" />
         </TouchableOpacity>
         <Text style={styles.title}>Checkout</Text>
@@ -613,15 +505,15 @@ const CheckoutLogic = () => {
             <View style={styles.halfInput}>
               <Text style={styles.label}>Delivery Date *</Text>
               <Text style={styles.valueText}>
-                {new Date(chef.delivery_date).toDateString()}
+                {order.delivery_time}
               </Text>
             </View>
 
             <View style={styles.halfInput}>
               <Text style={styles.label}>Delivery Time *</Text>
               <Text style={styles.valueText}>
-                {convertTo12Hour(chef.delivery_slot?.split("-")[0])} - 
-                {convertTo12Hour(chef.delivery_slot?.split("-")[1])}
+                {convertTo12Hour(order.delivery_slot?.split("-")[0])} - 
+                {convertTo12Hour(order.delivery_slot?.split("-")[1])}
               </Text>
             </View>
           </View>
@@ -710,47 +602,59 @@ const CheckoutLogic = () => {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Your Order</Text>
         
-        {/* Chef Info */}
-        <View style={styles.chefInfo}>
-          <Image
-            source={{ uri: chef.profile_pic || "https://via.placeholder.com/50" }}
-            style={styles.chefImage}
-          />
-          <Text style={styles.chefName}>
-            {chef.first_name} {chef.last_name}
-          </Text>
-        </View>
+        {cart.map((chef: CartItemResponse, chef_index: number) => {
+          if (
+            chef.id === parseInt(chefId) &&
+            chef_index === parseInt(chefIndex)
+          ) {
+            return (
+              <View key={chef.id}>
+                <View style={styles.chefInfo}>
+                  <Image
+                    source={{ uri: chef.profile_pic || "https://via.placeholder.com/50" }}
+                    style={styles.chefImage}
+                  />
+                  <Text style={styles.chefName}>
+                    {chef.first_name} {chef.last_name}
+                  </Text>
+                </View>
 
-        {/* Menu Items */}
-        {chef.menu.map((menuItem, menuIndex) => (
-          <View key={menuIndex} style={styles.menuItem}>
-            <View style={styles.menuInfo}>
-              <Image
-                source={{ uri: menuItem.logo || "https://via.placeholder.com/60" }}
-                style={styles.menuImage}
-              />
-              <View>
-                <Text style={styles.menuName}>{menuItem.name}</Text>
-                <Text style={styles.menuPrice}>
-                  {menuItem.quantity} x{" "}
-                  {menuItem.unit_price.toLocaleString("en-PK", {
-                    style: "currency",
-                    currency: "PKR",
-                  })}
-                </Text>
+                {chef.menu.map((menuItem, menuIndex) => (
+                  <View key={menuIndex} style={styles.menuItem}>
+                    <View style={styles.menuInfo}>
+                      <Image
+                        source={{ uri: menuItem.logo || "https://via.placeholder.com/60" }}
+                        style={styles.menuImage}
+                      />
+                      <View>
+                        <Text style={styles.menuName}>{menuItem.name}</Text>
+                        <Text style={styles.menuPrice}>
+                          {menuItem.quantity} x{" "}
+                          {menuItem.unit_price.toLocaleString("en-PK", {
+                            style: "currency",
+                            currency: "PKR",
+                          })}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.quantityControl}>
+                      <TouchableOpacity
+                        onPress={() => removeFromCartThunk({chefIndex: chef_index, menuIndex: menuIndex})}
+                        style={styles.removeButton}
+                      >
+                        <Feather name="trash-2" size={20} color="#E63946" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))}
               </View>
-            </View>
-            
-            <View style={styles.quantityControl}>
-              <TouchableOpacity 
-                onPress={() => removeFromCartThunk(menuIndex)}
-                style={styles.removeButton}
-              >
-                <Feather name="trash-2" size={20} color="#E63946" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        ))}
+            );
+          }
+
+          return null; // make sure something is returned from the map
+        })}
+        {/* Menu Items */}
 
         {/* Order Summary */}
         <View style={styles.summaryCard}>
@@ -827,7 +731,7 @@ const CheckoutLogic = () => {
       {/* Place Order Button */}
       <TouchableOpacity 
         style={styles.placeOrderButton}
-        onPress={handleCreateOrder}
+        onPress={() => handleCreateOrderPress()}
         disabled={isLoading}
       >
         {isLoading ? (
@@ -913,8 +817,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
   },
   addressTypeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     marginBottom: 16,
   },
   addressTypeButton: {
