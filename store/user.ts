@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AppDispatch } from "./store";
 import { PayloadAction } from "@reduxjs/toolkit";
+import { AppDispatch } from "@/types/types";
 
 export interface UserInfo {
   access_token: string;

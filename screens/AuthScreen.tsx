@@ -21,11 +21,12 @@ import { handleUserLogin } from "../auth_endpoints/AuthEndpoints";
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from "expo-router";
 import { loginAndSaveUser, loadUserFromStorage, saveUserToStorage } from '../store/user';
-import { AppDispatch } from "../store/store";
+import { AppDispatch } from "@/types/types";
 import { useAppSelector } from "@/hooks/hooks";
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { initializeUserCart } from "@/store/cart";
 
 const { width, height } = Dimensions.get("window");
 WebBrowser.maybeCompleteAuthSession();
@@ -74,6 +75,8 @@ export default function AuthScreen() {
 
       // Save user in Redux
       dispatch(loginAndSaveUser(res));
+      console.log(res);
+      await dispatch(initializeUserCart(res.data.id));
 
       Alert.alert("Successfully Logged In");
 
@@ -90,6 +93,10 @@ export default function AuthScreen() {
   const handleGoogleLogin = async () => {
     const result = await promptAsync();
     if (result.type === 'success') {
+      if (!result.authentication) {
+        Alert.alert("Failed to authenticate");
+        return;
+      }
       const user = await getUserInfo(result.authentication.accessToken);
       dispatch(loginAndSaveUser(user));
     } else {

@@ -16,6 +16,7 @@ import { useRouter } from "expo-router"
 import { AppDispatch } from "@/store/store"
 import { loadUserFromStorage } from "@/store/user"
 import { UserInfo } from "@/store/user"
+import { clearCurrentUser, emptyCartThunk } from "@/store/cart"
 
 interface ProfileDropdownProps {
   isVisible: boolean
@@ -85,6 +86,7 @@ export default function ProfileDropdown({ isVisible, onClose }: ProfileDropdownP
 
   const handleLogout = async () => {
     try {
+      await dispatch(emptyCartThunk());
       await dispatch(signOutUser())
       router.replace('/(auth)');
     } catch (error) {
