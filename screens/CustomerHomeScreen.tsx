@@ -11,7 +11,7 @@ import {handleGetFoodCategory, handleGetPopularChefWithDishes} from '../services
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { Feather } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
-import { Chef, City, FoodCategory } from "@/types/types"
+import { User, City, FoodCategory } from "@/types/types"
 
 const { width, height } = Dimensions.get("window")
 
@@ -30,7 +30,7 @@ export default function CustomerHomeScreen() {
   const navigation = useNavigation()
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
   const [foodCategory, setFoodCategory] = useState<FoodCategory[]>([{id: "", name: "", image: "", created_at: "", updated_at: null, deleted_at: null}]);
-  const [mostLoveChef, setMostLovedChef] = useState<Chef[]>([]);
+  const [mostLoveChef, setMostLovedChef] = useState<User[]>([]);
   const [activeChefIndex, setActiveChefIndex] = useState(0);
   const [city, setCity] = useState<City>();
   const router = useRouter();

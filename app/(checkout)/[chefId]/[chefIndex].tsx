@@ -1,9 +1,9 @@
 import { View } from "react-native";
-import Checkout from "@/screens/CheckoutScreen";
+import CheckoutLogic from "@/screens/CheckoutScreen";
 
 export default function CheckoutPage() {
 
     return (
-        <Checkout />
+        <CheckoutLogic />
     );
 }

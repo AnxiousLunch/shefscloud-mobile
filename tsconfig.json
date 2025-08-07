@@ -14,5 +14,5 @@
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
     "nativewind-env.d.ts"
-, "screens/FoodDetailScreen.tsx", "components/MapWithConditionalRendering.js"  ]
+, "screens/FoodDetailScreen.tsx", "components/MapWithConditionalRendering.js", "store/cart.ts", "app/(foodDetails)/[id].tsx"  ]
 }

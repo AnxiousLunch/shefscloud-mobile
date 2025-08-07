@@ -1,26 +1,26 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
-import { useNavigation, useRoute } from "@react-navigation/native"
-import { useCart } from "@/contexts/CartContext"
-import { Dish, RootStackParamList, Chef } from "@/types/types"
-import { NativeStackNavigationProp } from "@react-navigation/native-stack"
+import { useRoute } from "@react-navigation/native"
 import { RouteProp } from "@react-navigation/native"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { handleGetSingleDish, handleGetAllChefs, handleGetAvailabilityTimeSlot } from "@/services/get_methods"
 import { ActivityIndicator, Image } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import {Picker} from '@react-native-picker/picker'
+import { addToCartThunk } from "@/store/cart"
+import { useDispatch, useSelector } from "react-redux"
+import { store } from "@/store/store"
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useLocalSearchParams, useRouter } from "expo-router"
+import { CartItemResponse, Dish, RootState, TimeSlot } from "@/types/types"
 
-
-type FoodDetailScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'FoodDetail'>;
-type FoodDetailScreenRouteProp = RouteProp<RootStackParamList, 'FoodDetail'>;
 
 
 function convertTo12Hour(time24) {
     if (!time24) return;
-    let [hours, minutes] = time24.split(":");
-    hours = parseInt(hours);
+    let [hoursString, minutes] = time24.split(":");
+    let hours = parseInt(hoursString);
 
     // Handle the edge case for "24:00"
     if (hours === 24) {
@@ -34,17 +34,76 @@ function convertTo12Hour(time24) {
   }
 
 export default function FoodDetailScreen() {
-  const navigation = useNavigation<FoodDetailScreenNavigationProp>();
-  const route = useRoute<FoodDetailScreenRouteProp>();
-  const { addItem } = useCart()
-  const foodId = route.params;
+  const route = useRoute();
+  const {id: foodId} = useLocalSearchParams();
   const [foodItem, setFoodItem] = useState<Dish | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedDeliverDateAndSlot, setSelectedDeliveryDateAndSlot] = useState({
-    delivery_date: null, // Changed to null for better DatePicker handling
+  const [selectedDeliverDateAndSlot, setSelectedDeliveryDateAndSlot] = useState<{
+    delivery_date: Date | null,
+    delivery_slot: string
+  }>({
+    delivery_date: null, 
     delivery_slot: "",
   });
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const {cart} = useSelector((state: RootState) => state.cart);
+  const dispatch = useDispatch();
+  const router = useRouter();
+
+
+  const onDateChange = (event, date) => {
+    setShowDatePicker(false);
+    if (date) {
+      setSelectedDate(date);
+      setSelectedDeliveryDateAndSlot((prev) => ({
+        ...prev,
+        delivery_date: date,
+      }));
+    }
+  };
+
+  const existingCartQuantity = useMemo(() => {
+    if (!foodItem?.user?.id || !selectedDeliverDateAndSlot.delivery_date || !selectedDeliverDateAndSlot.delivery_slot) {
+      return 0;
+    }
+
+
+    const deliveryDateString = selectedDeliverDateAndSlot.delivery_date.toLocaleDateString();
+
+    const chefInCart = cart?.find(chef =>
+      chef.id === foodItem.user.id &&
+      chef.delivery_date === deliveryDateString &&
+      chef.delivery_slot === selectedDeliverDateAndSlot.delivery_slot
+    );
+
+    if (chefInCart) {
+      const menuInCart = chefInCart.menu?.find(menu => menu.id === foodItem.id);
+      return menuInCart?.quantity || 0;
+    }
+
+    return 0;
+  }, [cart, foodItem?.user?.id, foodItem?.id, selectedDeliverDateAndSlot.delivery_date, selectedDeliverDateAndSlot.delivery_slot]);
+
+  useEffect(() => {
+    if (existingCartQuantity > 0) {
+      setQuantity(existingCartQuantity);
+    } else {
+      setQuantity(1);
+    }
+  }, [existingCartQuantity]);
+
+  // Reset quantity when delivery date/slot changes to avoid confusion
+  useEffect(() => {
+    // When delivery details change, check if the new combination exists in the cart
+    if (existingCartQuantity > 0) {
+      setQuantity(existingCartQuantity);
+    } else {
+      // If not, reset quantity to 1
+      setQuantity(1);
+    }
+  }, [selectedDeliverDateAndSlot.delivery_date, selectedDeliverDateAndSlot.delivery_slot, existingCartQuantity]);
 
 
   useEffect(() => {
@@ -57,18 +116,18 @@ export default function FoodDetailScreen() {
         if (!regionString) throw new Error("Region not found in storage");
         const region = JSON.parse(regionString);
         // Fetch dish
-        const dish = await handleGetSingleDish(foodId);
+        const dish: Dish = await handleGetSingleDish(foodId);
         // Fetch all chefs in region
         const chefs = await handleGetAllChefs(region.id);
         const timeslotResponse = await handleGetAvailabilityTimeSlot();
 
         // Match user_id with chef.id
-        const matchingChef = chefs.find((chef: Chef) => chef.id === dish.user_id);
+        const matchingChef = chefs.find((chef) => chef.id === dish.user_id);
         if (matchingChef) {
           dish.user = matchingChef;
         }
 
-        const formatedTimeSlotArray = timeslotResponse.map((time) => ({
+        const formatedTimeSlotArray = timeslotResponse.map((time: TimeSlot) => ({
           id: time.id,
           time_start: time.time_start.slice(0, 5),
           time_end: time.time_end.slice(0, 5),
@@ -76,7 +135,7 @@ export default function FoodDetailScreen() {
 
         if (dish.availability_time_slots?.length > 0) {
           dish.availability_time_slots = formatedTimeSlotArray.filter(
-            (time: string) =>
+            (time: TimeSlot) =>
               dish.availability_time_slots?.some(
                 (av_slot) => av_slot.availability_time_slots_id === time.id
               )
@@ -99,31 +158,89 @@ export default function FoodDetailScreen() {
 
 
 
-  const handleAddToCart = () => {
-    if (!foodItem) return;
+  // const handleAddToCart = () => {
+  //   if (!foodItem) return;
 
     
-    addItem({
-      id: foodItem.id,
-      name: foodItem.name,
-      price: foodItem.platform_price + foodItem.chef_earning_fee + foodItem.delivery_price,
-      chef: [foodItem.user?.first_name, foodItem.user?.last_name].filter(Boolean).join(" "),
-      image: foodItem.logo || "🍗",
-    });
+  //   addItem({
+  //     id: foodItem.id,
+  //     name: foodItem.name,
+  //     price: foodItem.platform_price + foodItem.chef_earning_fee + foodItem.delivery_price,
+  //     chef: [foodItem.user?.first_name, foodItem.user?.last_name].filter(Boolean).join(" "),
+  //     image: foodItem.logo || "🍗",
+  //   });
 
-    for (let i = 1; i < quantity; i++) {
-      addItem({
-        id: foodItem.id,
-        name: foodItem.name,
-        price: foodItem.platform_price + foodItem.chef_earning_fee + foodItem.delivery_price,
-        chef: [foodItem.user?.first_name, foodItem.user?.last_name].filter(Boolean).join(" "),
-        image: foodItem.logo || "🍗",
-      });
+  //   for (let i = 1; i < quantity; i++) {
+  //     addItem({
+  //       id: foodItem.id,
+  //       name: foodItem.name,
+  //       price: foodItem.platform_price + foodItem.chef_earning_fee + foodItem.delivery_price,
+  //       chef: [foodItem.user?.first_name, foodItem.user?.last_name].filter(Boolean).join(" "),
+  //       image: foodItem.logo || "🍗",
+  //     });
+  //   }
+
+  //   Alert.alert("Added to Cart!", `${foodItem.name} x${quantity} has been added to your cart.`, [{ text: "OK" }]);
+  // };
+
+
+
+  const handleAddToCart = () => {
+    if (!foodItem) {
+      Alert.alert("Cart cannot be empty");
+      return;
+    }
+    // Validation
+    if (!selectedDeliverDateAndSlot.delivery_date) {
+      Alert.alert("Please pick the delivery date first.");
+      return;
     }
 
-    Alert.alert("Added to Cart!", `${foodItem.name} x${quantity} has been added to your cart.`, [{ text: "OK" }]);
-  };
+    if (!selectedDeliverDateAndSlot.delivery_slot) {
+      Alert.alert("Please pick the delivery slot first.");
+      return;
+    }
 
+    if (quantity <= 0) {
+      Alert.alert("Quantity must be at least 1");
+      return;
+    }
+
+    // Calculate unit price
+    const unit_price = parseFloat(
+      (foodItem.chef_earning_fee + foodItem.platform_price + foodItem.delivery_price).toFixed(2)
+    );
+
+    // Create chef object with delivery details
+    const chef = {
+      ...foodItem.user,
+      delivery_date: selectedDeliverDateAndSlot.delivery_date.toLocaleDateString(),
+      delivery_slot: selectedDeliverDateAndSlot.delivery_slot,
+    };
+
+    // Create payload for dispatch
+    const payload = {
+      ...foodItem,
+      quantity,
+      unit_price,
+      chef,
+    };
+
+    const state = store.getState().cart;
+    if (!state.currentUserId || !state.cartInitialized) {
+      console.error("Cannot add to cart");
+      Alert.alert("Cart not initialized or user not logged in" );
+      return;
+    }
+
+    try {
+      dispatch(addToCartThunk(payload));
+      Alert.alert(`${existingCartQuantity > 0 ? 'Updated' : 'Added to'} Cart`);
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      Alert.alert("Failed to add item to cart");
+    }
+  };
 
   if (isLoading) {
     return (
@@ -146,8 +263,10 @@ export default function FoodDetailScreen() {
   }
 
   const handleBackPress = () => {
-    navigation.goBack()
+    console.log('back');
   }
+
+  console.log("Hewooo");
 
 
   return (
@@ -208,11 +327,37 @@ export default function FoodDetailScreen() {
 
               {/* Spicy Level */}
               <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Spicy Level</Text>
-              <Text style={styles.sectionContent}>{foodItem.spicy_level || "Mild"}</Text>
+              <Text style={styles.sectionContent}>{foodItem.spice_level.name || "Mild"}</Text>
 
 
               <View>
+                
+                <View style={{ marginBottom: 20 }}>
+                  <Text style={styles.label}>
+                    Select Delivery Date <Text style={styles.required}>*</Text>
+                  </Text>
 
+                  <TouchableOpacity
+                    onPress={() => setShowDatePicker(true)}
+                    style={styles.datePickerButton}
+                  >
+                    <Text style={styles.datePickerText}>
+                      {selectedDate
+                        ? selectedDate.toLocaleDateString()
+                        : "Pick a delivery date"}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={selectedDate || new Date()}
+                      mode="date"
+                      display="default"
+                      minimumDate={new Date()}
+                      onChange={onDateChange}
+                    />
+                  )}
+                </View>
 
                 <Text style={styles.label}>
                   Select Delivery Time <Text style={styles.required}>*</Text>
@@ -503,6 +648,19 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     paddingHorizontal: 8,
     paddingVertical: 4,
+  },
+  datePickerButton: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 4,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    backgroundColor: '#f9fafb',
+    marginTop: 5,
+  },
+  datePickerText: {
+    fontSize: 15,
+    color: '#1f2937',
   },
 
 })

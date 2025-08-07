@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AppDispatch } from "./store";
 import { PayloadAction } from "@reduxjs/toolkit";
+import { AppDispatch } from "@/types/types";
 
 export interface UserInfo {
   access_token: string;
@@ -19,13 +19,55 @@ export interface UserInfo {
   is_admin: number;
   is_chef: number;
   last_name: string;
-  last_order_address: string | null;
+  last_order_address: {
+    order_delivery_address: Address;
+  };
   order_capacity: number | null;
   phone: string;
   profile_pic: string | null;
   updated_at: string;
   user_addresses: any[]; 
 }
+
+type Address = {
+  address_type: "home" | "apartment" | "office" | string; // string fallback for unexpected values
+
+  // Apartment fields
+  apartment_addition_direction: string;
+  apartment_apartment_no: string;
+  apartment_city: string;
+  apartment_floor: string;
+  apartment_name: string;
+  apartment_street_address: string;
+
+  // Home fields
+  home_addition_direction: string;
+  home_city: string;
+  home_house_no: string;
+  home_street_address: string;
+
+  // Office fields
+  office_addition_direction: string;
+  office_building_no: string;
+  office_city: string;
+  office_company: string;
+  office_department: string;
+  office_floor: string;
+  office_street_address: string;
+
+  // Common fields
+  city: string;
+  delivery_instruction: string;
+  delivery_notes: string;
+  latitude: number;
+  longitude: number;
+  line2: string;
+  name: string;
+  phone: string;
+  postal_code: string;
+  state: string;
+};
+
 
 export interface UserState {
   userInfo: UserInfo | null;
