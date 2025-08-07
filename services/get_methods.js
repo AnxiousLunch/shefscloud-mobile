@@ -183,7 +183,8 @@ export const handleCreateMenu = async (token, payload) => {
     const { data } = await api.post("/api/menu", payload, {
       headers: {
         Authorization: `Bearer ${token}`,
-        "Content-Type": "multipart/form-data",
+        // ❌ REMOVE this line completely
+        // "Content-Type": "multipart/form-data",
       },
     });
     return data;
@@ -337,6 +338,9 @@ export const handleGetStats = async (token, chefId) => {
     throw new Error(error.message || "Something is wrong while fetching stats");
   }
 };
+
+
+
 
 export const handleUpdateChefProfile = async (token, profileData) => {
   try {

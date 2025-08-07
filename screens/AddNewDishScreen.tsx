@@ -13,13 +13,14 @@ import {
   handleGetHeatingInstruction,
   handleGetIngredients,
   handleCreateMenu,
-  handleUpdateMenu
+  handleUpdateMenu,
 } from '@/services/get_methods';
 import { Picker } from '@react-native-picker/picker';
 import * as ImagePicker from 'expo-image-picker';
 import { chefMenuInitialState } from '@/constants/initialStates';
 import { MultiSelect } from 'react-native-element-dropdown';
 import { formatDateForInput } from '@/utils/helpers';
+import {handleAvailabilityTimeSlot} from '@/services/shef'
 
 const AddNewDishScreen = () => {
   const params = useLocalSearchParams();
@@ -66,12 +67,14 @@ const AddNewDishScreen = () => {
     { title: "Photo", component: PhotoScreen },
   ];
 
-  useEffect(() => {
+useEffect(() => {
+  const init = async () => {
     if (dishToEdit) {
+      console.log("Loaded dish to edit:", dishToEdit);
       setChefMenu(dishToEdit);
       setIsUpdateDish(true);
-      
-      // Set serving size based on base_type_id
+
+      // Portion logic
       if (dishToEdit.base_type_id === 1) {
         setGrams(dishToEdit.portion_size || '');
       } else if (dishToEdit.base_type_id === 2) {
@@ -79,29 +82,53 @@ const AddNewDishScreen = () => {
       } else if (dishToEdit.base_type_id === 3) {
         setCustomPortion(dishToEdit.portion_size || '');
       }
+
+      // Optional: log after slight delay
+      setTimeout(() => {
+        console.log("chefMenu after setting:", dishToEdit);
+      }, 500);
     }
-    
-    fetchInitialData();
-  }, []);
+
+    await fetchInitialData();
+  };
+
+  init();
+}, []);
+
 
   const fetchInitialData = async () => {
-    try {
-      // Fetch all required data
-      const [
-        foodTypeRes, 
-        spiceLevelRes, 
-        tagsRes, 
-        portionTypesRes,
-        heatInstructionRes,
-        ingredientsRes,
-      ] = await Promise.all([
-        handleGetFoodType(authToken),
-        handleGetSpiceLevel(authToken),
-        handleGetTags(authToken),
-        handleGetPortionType(authToken),
-        handleGetHeatingInstruction(authToken),
-        handleGetIngredients(authToken),
-      ]);
+  try {
+    const [
+      foodTypeRes, 
+      spiceLevelRes, 
+      tagsRes, 
+      portionTypesRes,
+      heatInstructionRes,
+      ingredientsRes,
+    ] = await Promise.all([
+      handleGetFoodType(authToken),
+      handleGetSpiceLevel(authToken),
+      handleGetTags(authToken),
+      handleGetPortionType(authToken),
+      handleGetHeatingInstruction(authToken),
+      handleGetIngredients(authToken),
+    ]);
+
+    // ⬇️ Add this after previous data
+    const timeSlotRes = await handleGetAvailabilityTimeSlot();
+    const formattedTimeSlots = timeSlotRes.map(slot => ({
+      id: slot.id,
+      label: `${slot.start_time} - ${slot.end_time}`,
+    }));
+    setTimeSlot(formattedTimeSlots);
+
+    // ⬇️ Selected availability slots if editing
+    if (dishToEdit?.availability_time_slots?.length > 0) {
+      const selected = formattedTimeSlots.filter(slot =>
+        dishToEdit.availability_time_slots.includes(slot.id)
+      );
+      setSelectedAvailabilitySlot(selected);
+    }
 
       setFoodType(foodTypeRes);
       setSpiceLevel(spiceLevelRes);
@@ -165,41 +192,75 @@ const AddNewDishScreen = () => {
     }
   };
 
-    const onSubmit = async () => {
-    try {
-      // Prepare form data
-      const formData = new FormData();
-      
-      // Append all fields
-      Object.keys(chefMenu).forEach(key => {
-        if (key === 'logo' && typeof chefMenu[key] !== 'string') {
-          formData.append('logo', {
-            uri: chefMenu.logo.uri,
-            name: chefMenu.logo.fileName || 'dish.jpg',
-            type: chefMenu.logo.type || 'image/jpeg'
-          });
-        } else if (Array.isArray(chefMenu[key])) {
-          chefMenu[key].forEach(item => formData.append(`${key}[]`, item));
-        } else {
-          formData.append(key, chefMenu[key]);
-        }
-      });
+const onSubmit = async () => {
+  try {
+    const formData = new FormData();
 
-      if (isUpdateDish) {
-        await handleUpdateMenu(chefMenu.id, authToken, formData);
-        Alert.alert("Success", "Dish updated successfully");
-      } else {
-        await handleCreateMenu(authToken, formData);
-        Alert.alert("Success", "Dish created successfully");
+    // Handle availability_time_slots
+   // ✅ Updated code block
+if (Array.isArray(selectedAvailabilitySlot)) {
+  selectedAvailabilitySlot
+    .filter(slot => slot?.id !== undefined && slot?.id !== null)
+    .forEach(slot => {
+      formData.append('availability_time_slots[]', String(slot.id));
+    });
+}
+
+
+    // Handle days of week
+    const days = [
+      'is_monday', 'is_tuesday', 'is_wednesday',
+      'is_thursday', 'is_friday', 'is_saturday', 'is_sunday'
+    ];
+    
+    days.forEach(day => {
+      formData.append(day, chefMenu[day] ? '1' : '0');
+    });
+
+    // Handle other fields
+    const fieldsToInclude = [
+      'name', 'description', 'food_type_id', 'side_item',
+      'spice_level_id', 'base_type_id', 'portion_size',
+      'portion_type_id', 'chef_earning_fee', 'platform_price',
+      'delivery_price', 'heating_instruction_id', 'prep_time',
+      'shelf_life', 'is_vegetarian', 'is_vegan', 'is_gluten_free',
+      'is_halal', 'item_limit', 'limit_item_availibility',
+      'limit_start', 'limit_end'
+    ];
+
+    fieldsToInclude.forEach(field => {
+      const value = chefMenu[field];
+      if (value !== undefined && value !== null) {
+        formData.append(field, String(value));
       }
-      
-      router.back();
-    } catch (error) {
-      console.error("Error submitting dish:", error);
-      Alert.alert("Error", error.message || "Failed to submit dish");
+    });
+
+    // Handle tags
+    if (cusineSelectedOptions.length > 0) {
+      const tagsString = cusineSelectedOptions.map(opt => opt.label).join(', ');
+      formData.append('tags', tagsString);
     }
-  };
-  
+
+    // Handle ingredients
+    const ingredientIds = selectedIngredients.map(ing => ing.id);
+    ingredientIds.forEach(id => {
+      formData.append('ingredients[]', String(id));
+    });
+
+    // Submit data
+    if (isUpdateDish) {
+      await handleUpdateMenu(chefMenu.id, authToken, formData);
+    } else {
+      await handleCreateMenu(authToken, formData);
+    }
+    
+    router.back();
+  } catch (error) {
+    console.error("Error fetching initial data:", error);
+    Alert.alert("Error", "Failed to load required data");
+  }
+};
+
   const CurrentStepComponent = steps[currentStep].component;
 
   return (
@@ -521,23 +582,200 @@ const DishDetailsScreen = ({
 };
 
 // Step 2: Description
-const DescriptionScreen = ({ description, updateFields }) => {
+// Updated DescriptionScreen component
+const DescriptionScreen = ({
+  description,
+  item_limit,
+  is_monday,
+  is_tuesday,
+  is_wednesday,
+  is_thursday,
+  is_friday,
+  is_saturday,
+  is_sunday,
+  availability_time_slots,
+  limit_item_availibility,
+  limit_start,
+  limit_end,
+  updateFields,
+  selectedAvailabilitySlot,
+  setSelectedAvailabilitySlot,
+}) => {
+  const [timeSlot, setTimeSlot] = useState([]);
+
+  // ✅ Fetch time slots on mount
+  useEffect(() => {
+    const fetchTimeSlots = async () => {
+      try {
+        const slots = await handleGetAvailabilityTimeSlot();
+        const formattedSlots = slots?.map((slot) => ({
+          id: slot.id,
+          label: slot.name,
+        })) || [];
+        setTimeSlot(formattedSlots);
+      } catch (error) {
+        console.error("Error fetching availability time slots:", error.message);
+      }
+    };
+    fetchTimeSlots();
+  }, []);
+
+  const handleAvailabilitySlotChange = (selectedIds) => {
+    const selectedItems = timeSlot.filter((slot) =>
+      selectedIds.includes(slot.id)
+    );
+    setSelectedAvailabilitySlot(selectedItems);
+    const ids = selectedItems.map((item) => item.id);
+    updateFields({ availability_time_slots: ids });
+  };
+
+  const handleLimitItemAvailabilityChange = (value) => {
+    updateFields({ limit_item_availibility: value });
+    if (!value) {
+      updateFields({ limit_start: "", limit_end: "" });
+    }
+  };
+
   return (
     <View>
-      <Text style={styles.sectionTitle}>Description</Text>
+      <Text style={styles.sectionTitle}>Description & Dish Availability</Text>
+
+      {/* Description */}
       <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Dish Description</Text>
-        <Text style={styles.inputSubLabel}>
-          Tell us about your dish. What makes it special? What are its key ingredients?
-        </Text>
+        <Text style={styles.inputLabel}>Description</Text>
         <TextInput
           style={[styles.input, styles.multilineInput]}
           value={description}
           onChangeText={(text) => updateFields({ description: text })}
-          placeholder="Describe your dish..."
+          placeholder="Description of Dish..."
           multiline
           numberOfLines={4}
+          maxLength={400}
         />
+        <Text style={styles.charCount}>{description?.length || 0} / 400</Text>
+      </View>
+
+      {/* Dish Order Limit */}
+      <View style={styles.divider} />
+      <View style={styles.inputGroup}>
+        <Text style={styles.inputLabel}>Dish Order Limit</Text>
+        <TextInput
+          style={styles.input}
+          value={item_limit ? String(item_limit) : ""}
+          onChangeText={(text) => {
+            const value = parseInt(text, 10);
+            updateFields({
+              item_limit: isNaN(value)
+                ? ""
+                : value > 0 && value <= 100
+                ? value
+                : item_limit,
+            });
+          }}
+          placeholder="1 / 100"
+          keyboardType="numeric"
+        />
+      </View>
+
+      {/* Day-based Availability */}
+      <View style={styles.divider} />
+      <Text style={styles.inputLabel}>Dish Availability (Days)</Text>
+      <View style={styles.daysContainer}>
+        {[
+          { id: "monday", label: "Mon", value: is_monday },
+          { id: "tuesday", label: "Tue", value: is_tuesday },
+          { id: "wednesday", label: "Wed", value: is_wednesday },
+          { id: "thursday", label: "Thu", value: is_thursday },
+          { id: "friday", label: "Fri", value: is_friday },
+          { id: "saturday", label: "Sat", value: is_saturday },
+          { id: "sunday", label: "Sun", value: is_sunday },
+        ].map((day) => (
+          <TouchableOpacity
+            key={day.id}
+            style={[
+              styles.dayButton,
+              day.value === 1 && styles.dayButtonActive,
+            ]}
+            onPress={() =>
+              updateFields({ [`is_${day.id}`]: day.value === 1 ? 0 : 1 })
+            }
+          >
+            <Text
+              style={[
+                styles.dayButtonText,
+                day.value === 1 && styles.dayButtonTextActive,
+              ]}
+            >
+              {day.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Availability Slot (MultiSelect) */}
+      <Text style={[styles.inputLabel, { marginTop: 20 }]}>Availability Slot</Text>
+      <View style={styles.multiSelectContainer}>
+        <MultiSelect
+          data={timeSlot}
+          labelField="label"
+          valueField="id"
+          placeholder="+ Select Availability Time"
+          value={selectedAvailabilitySlot.map((item) => item.id)}
+          onChange={handleAvailabilitySlotChange}
+          style={styles.multiSelect}
+          placeholderStyle={styles.multiSelectPlaceholder}
+          selectedTextStyle={styles.multiSelectSelectedText}
+          containerStyle={styles.multiSelectDropdown}
+          itemTextStyle={styles.multiSelectItemText}
+        />
+      </View>
+      <View style={styles.selectedTagsContainer}>
+        {selectedAvailabilitySlot.map((option) => (
+          <View key={option.id} style={styles.tag}>
+            <Text style={styles.tagText}>{option.label}</Text>
+          </View>
+        ))}
+      </View>
+
+      {/* Limit Item Availability */}
+      <View style={styles.divider} />
+      <Text style={styles.inputLabel}>Limit Item Availability</Text>
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={limit_item_availibility || ""}
+          onValueChange={handleLimitItemAvailabilityChange}
+          style={styles.picker}
+        >
+          <Picker.Item label="No Limit" value="" />
+          <Picker.Item label="Available On" value="Available On" />
+          <Picker.Item label="Unavailable On" value="Unavailable On" />
+          <Picker.Item label="Available During" value="Available During" />
+          <Picker.Item label="Unavailable During" value="Unavailable During" />
+        </Picker>
+      </View>
+
+      {/* Limit Date Range */}
+      <View style={styles.dateContainer}>
+        <View style={styles.dateInput}>
+          <Text style={styles.dateLabel}>Start Date</Text>
+          <TextInput
+            style={styles.input}
+            value={formatDateForInput(limit_start)}
+            onChangeText={(text) => updateFields({ limit_start: text })}
+            placeholder="YYYY-MM-DD"
+            editable={!!limit_item_availibility}
+          />
+        </View>
+        <View style={styles.dateInput}>
+          <Text style={styles.dateLabel}>End Date</Text>
+          <TextInput
+            style={styles.input}
+            value={formatDateForInput(limit_end)}
+            onChangeText={(text) => updateFields({ limit_end: text })}
+            placeholder="YYYY-MM-DD"
+            editable={!!limit_item_availibility}
+          />
+        </View>
       </View>
     </View>
   );
@@ -545,30 +783,36 @@ const DescriptionScreen = ({ description, updateFields }) => {
 
 // Step 3: More Information
 const MoreInfoScreen = ({
-  heating_instruction_id,
   prep_time,
   shelf_life,
+  heating_instruction_id,
   updateFields,
   heatInstruction
 }) => {
+  // Ensure heatInstruction is always an array
+  const safeHeatInstruction = heatInstruction || [];
+
   return (
     <View>
       <Text style={styles.sectionTitle}>More Information</Text>
-      
+
+      {/* Heating Instruction Picker */}
       <View style={styles.inputGroup}>
         <Text style={styles.inputLabel}>Heating Instructions</Text>
         <View style={styles.pickerContainer}>
           <Picker
-            selectedValue={heating_instruction_id}
-            onValueChange={(value) => updateFields({ heating_instruction_id: value })}
+            selectedValue={heating_instruction_id || ""}
+            onValueChange={(value) =>
+              updateFields({ heating_instruction_id: value })
+            }
             style={styles.picker}
           >
             <Picker.Item label="--- Select Heating Instruction ---" value="" />
-            {heatInstruction.map((option) => (
-              <Picker.Item 
-                key={option.id} 
-                label={option.name} 
-                value={option.id} 
+            {safeHeatInstruction.map((option) => (
+              <Picker.Item
+                key={option.id}
+                label={option.name}
+                value={option.id}
               />
             ))}
           </Picker>
@@ -577,12 +821,15 @@ const MoreInfoScreen = ({
 
       <View style={styles.divider} />
 
+      {/* Preparation Time */}
       <View style={styles.inputGroup}>
         <Text style={styles.inputLabel}>Preparation Time (minutes)</Text>
         <TextInput
           style={styles.input}
           value={prep_time ? String(prep_time) : ''}
-          onChangeText={(text) => updateFields({ prep_time: parseInt(text) || 0 })}
+          onChangeText={(text) =>
+            updateFields({ prep_time: parseInt(text) || 0 })
+          }
           placeholder="e.g. 30"
           keyboardType="numeric"
         />
@@ -590,12 +837,15 @@ const MoreInfoScreen = ({
 
       <View style={styles.divider} />
 
+      {/* Shelf Life */}
       <View style={styles.inputGroup}>
         <Text style={styles.inputLabel}>Shelf Life (days)</Text>
         <TextInput
           style={styles.input}
           value={shelf_life ? String(shelf_life) : ''}
-          onChangeText={(text) => updateFields({ shelf_life: parseInt(text) || 0 })}
+          onChangeText={(text) =>
+            updateFields({ shelf_life: parseInt(text) || 0 })
+          }
           placeholder="e.g. 3"
           keyboardType="numeric"
         />
@@ -1456,6 +1706,51 @@ const styles = StyleSheet.create({
     backgroundColor: '#dc2626',
     borderRadius: 8,
     marginBottom: 16,
+  },
+   daysContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  dayButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  dayButtonActive: {
+    backgroundColor: '#f0f0f0',
+    borderColor: '#ff8c00',
+  },
+  dayButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  dayButtonTextActive: {
+    color: '#ff8c00',
+  },
+  charCount: {
+    alignSelf: 'flex-end',
+    fontSize: 12,
+    color: '#888',
+  },
+  dateContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 15,
+  },
+  dateInput: {
+    width: '48%',
+  },
+  dateLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 5,
   },
   addPhotoButtonText: {
     color: '#fff',
