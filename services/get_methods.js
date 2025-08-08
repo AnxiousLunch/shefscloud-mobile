@@ -190,7 +190,7 @@ export const handleCreateMenu = async (token, payload) => {
   } catch (error) {
     console.log("Error while create menu ", error);
     let err;
-    if (error.response && error.response.data.errors) {
+    if (error.response) {
       err =
         error.response.data.errors[
           Object.keys(error.response.data.errors)[0]
@@ -301,17 +301,30 @@ export const handleGetPortionType = async (token) => {
 
 export const handleGetHeatingInstruction = async (token) => {
   try {
+    console.log("🔐 Using token:", token);
+    
     const { data } = await api.get("/api/instructions", {
       headers: { Authorization: `Bearer ${token}` },
     });
+
+    console.log("🔥 Heating instructions fetched:", data);
     return data;
   } catch (error) {
-    console.log(error);
+    console.log("🔥 Heating Instruction Error:");
+    if (error.response) {
+      console.log("📡 Response:", error.response.data);
+    } else if (error.request) {
+      console.log("📡 Request was made but no response:", error.request);
+    } else {
+      console.log("❌ Error Message:", error.message);
+    }
+
     throw new Error(
       error.message || "Something is wrong while fetching heating instruction"
     );
   }
 };
+
 
 export const handleGetTags = async (token) => {
   try {
@@ -337,6 +350,9 @@ export const handleGetStats = async (token, chefId) => {
     throw new Error(error.message || "Something is wrong while fetching stats");
   }
 };
+
+
+
 
 export const handleUpdateChefProfile = async (token, profileData) => {
   try {
