@@ -1,17 +1,16 @@
 "use client"
-import { useNavigation } from "@react-navigation/native"
 import { LinearGradient } from "expo-linear-gradient"
 import { useState, useEffect } from "react"
 import { Dimensions, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context"
 import ProfileDropdown from "../components/ProfileDropdown"
 import { useAuth } from "../contexts/AuthContext"
-import { Alert, Image } from "react-native"
+import { Image } from "react-native"
 import {handleGetFoodCategory, handleGetPopularChefWithDishes} from '../services/get_methods'
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { Feather } from "@expo/vector-icons"
-import { useRouter } from "expo-router"
 import { User, City, FoodCategory } from "@/types/types"
+import { useRouter } from "expo-router"
 
 const { width, height } = Dimensions.get("window")
 
@@ -27,7 +26,6 @@ function isValidURL(string: string) {
 
 export default function CustomerHomeScreen() {
   const { user } = useAuth()
-  const navigation = useNavigation()
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
   const [foodCategory, setFoodCategory] = useState<FoodCategory[]>([{id: "", name: "", image: "", created_at: "", updated_at: null, deleted_at: null}]);
   const [mostLoveChef, setMostLovedChef] = useState<User[]>([]);
@@ -86,8 +84,8 @@ export default function CustomerHomeScreen() {
   }
 
   const handleFoodCategoryPress = (categoryId: string) => {
-    console.log(categoryId);
-    router.push(`/(foodCategory)/${categoryId}`);
+    // navigation.navigate('foodCategoryScreen', { categoryId });
+    router.navigate(`/foodCategoryScreen/${categoryId}`);
   }
 
 

@@ -35,7 +35,8 @@ function convertTo12Hour(time24) {
 
 export default function FoodDetailScreen() {
   const route = useRoute();
-  const {id: foodId} = useLocalSearchParams();
+  const foodId = route.params;
+  console.log("foodID", foodId);
   const [foodItem, setFoodItem] = useState<Dish | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -263,7 +264,7 @@ export default function FoodDetailScreen() {
   }
 
   const handleBackPress = () => {
-    console.log('back');
+    router.back();
   }
 
   console.log("Hewooo");

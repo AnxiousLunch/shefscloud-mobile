@@ -35,7 +35,6 @@ const RegionDropdown = ({ OnSelectRegion, isHome = false }) => {
       const role = await AsyncStorage.getItem("selectedRole");
       if (role) {
         setSelectedRole(role);
-        console.log("Loaded role from storage:", role);
       }
       setRoleLoaded(true); // Mark as loaded
     })();
@@ -53,7 +52,6 @@ const RegionDropdown = ({ OnSelectRegion, isHome = false }) => {
         OnSelectRegion();
       } else if (!isAuto || !hasAutoNavigated.current) {
         hasAutoNavigated.current = isAuto;
-        console.log("Navigating to:", selectedRole);
         if (selectedRole === "chef") {
           router.replace("/(chef)");
         } else {
@@ -103,7 +101,6 @@ const RegionDropdown = ({ OnSelectRegion, isHome = false }) => {
             setSelected(parsed);
             if (!isHome && !hasAutoNavigated.current) {
               hasAutoNavigated.current = true;
-              console.log("Auto navigating with role:", selectedRole);
               if (selectedRole === "chef") {
                 router.replace("/(chef)");
               } else {

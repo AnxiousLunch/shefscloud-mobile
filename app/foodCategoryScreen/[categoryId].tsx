@@ -1,21 +1,24 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
 import { Text, Image, TouchableOpacity, Alert, View, ScrollView } from "react-native";
 import { handleGetCategorizeDishesOfCity } from "@/services/get_methods";
 import { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StyleSheet } from "react-native";
-import { Dish } from "@/types/types";
-import { useNavigation } from "expo-router";
+import { Dish, RootStackParamList } from "@/types/types";
 import isValidURL from '@/components/ValidateURL'
+import { useRoute, RouteProp } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 
+
+type FoodCategoryRouteProp = RouteProp<RootStackParamList, 'foodCategoryScreen'>;
 
 export default function FoodCategoryDetails() {
-  const router = useRouter();
-  const {categoryId} = useLocalSearchParams();
+  const route = useRoute<FoodCategoryRouteProp>();
+  const {categoryId} = route.params;
   console.log("Category ID", categoryId);
   console.log("Type of category id", typeof(categoryId));
   const [categoryDishes, setCategoryDishes] = useState<Dish[]>([]);
   const [isFetching, setIsFetching] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (categoryId) {
@@ -94,7 +97,7 @@ export default function FoodCategoryDetails() {
 
                 <View style={styles.cardContent}>
                   <TouchableOpacity
-                    onPress={() => router.push(`/(foodDetails)/${dish.id}`)}
+                    onPress={() => router.push(`/foodDetails/${dish.id}`)}
                   >
                     <Text style={styles.dishName}>{dish.name}</Text>
                   </TouchableOpacity>

@@ -14,8 +14,8 @@ export default function RootLayout() {
         <SafeAreaProvider>
           <AuthProvider>
             <CartProvider>
-              <Stack screenOptions={{ headerShown: false }} />
               <StatusBar style="auto" />
+              <Stack screenOptions={{ headerShown: false }} />
             </CartProvider>
           </AuthProvider>
         </SafeAreaProvider>

@@ -74,7 +74,6 @@ export default function AuthScreen() {
 
       // Save user in Redux
       dispatch(loginAndSaveUser(res));
-      console.log(res);
       await dispatch(initializeUserCart(res.data.id));
 
       Alert.alert("Successfully Logged In");

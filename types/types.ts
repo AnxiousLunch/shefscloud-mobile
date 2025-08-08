@@ -3,6 +3,7 @@ import { store } from "@/store/store";
 export type RootStackParamList = {
   Home: undefined;
   FoodDetail: { foodId: number };
+  foodCategoryScreen: {categoryId: string};
 };
 
 export type AppDispatch = typeof store.dispatch;
@@ -10,7 +11,7 @@ export type RootState = ReturnType<typeof store.getState>;
 
 export type Dish = {
   auto_applied_active_discounts: any[];
-  availability_time_slots: any[]; // Replace `any` with a proper type if structure is known
+  availability_time_slots: any[];
   average_rating: number | string;
   base_type_id: number;
   chef_earning_fee: number;
