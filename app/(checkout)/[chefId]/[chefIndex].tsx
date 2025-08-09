@@ -196,54 +196,51 @@ const CheckoutLogic = () => {
 
   // Calculate order details
   const calculateOrderDetails = async () => {
-    if (!defaultSetting || !cart.length) return;
+  if (!defaultSetting || !cart.length) return;
 
-    // Initialize variables to store calculated sums
-    let sub_total = 0;
-    let deliverPriceSum = 0;
-    let platformPriceSum = 0;
-    let chefEarningSum = 0;
-    // delivery date and time
-    let deliveryDate = "";
-    let deliverySlot = "";
+  let sub_total = 0;
+  let deliverPriceSum = 0;
+  let platformPriceSum = 0;
+  let chefEarningSum = 0;
+  let deliveryDate = "";
+  let deliverySlot = "";
 
-    // Calculate the sub total, delivery price sum, and platform price sum
-    cart.forEach((chef: CartItemResponse, chef_index: number) => {
-      if (chef.id === parseInt(chefId) && chef_index === parseInt(chefIndex)) {
-        deliveryDate = chef.delivery_date;
-        deliverySlot = chef.delivery_slot;
-        chef.menu.forEach((menu) => {
-          const chef_earning_fee = menu.chef_earning_fee || 0;
-          const quantity = menu.quantity || 0;
+  cart.forEach((chef: CartItemResponse, chef_index: number) => {
+    if (chef.id === parseInt(chefId) && chef_index === parseInt(chefIndex)) {
+      deliveryDate = chef.delivery_date;
+      deliverySlot = chef.delivery_slot;
+      chef.menu.forEach((menu) => {
+        const chef_earning_fee = menu.chef_earning_fee || 0;
+        const quantity = menu.quantity || 0;
+        const delivery_price = bykeaFare;
 
-          // Use fixed delivery price instead of Bykea calculation
-          const delivery_price = bykeaFare;
+        const platformPercentageFee =
+          (defaultSetting?.platform_charge_percentage / 100) *
+          chef_earning_fee;
 
-          // ---- Platform Price
-          const platformPercentageFee =
-            (defaultSetting?.platform_charge_percentage / 100) *
-            chef_earning_fee;
+        const platform_price =
+          platformPercentageFee > defaultSetting?.platform_charge
+            ? platformPercentageFee
+            : defaultSetting?.platform_charge;
 
-          const platform_price =
-            platformPercentageFee > defaultSetting?.platform_charge
-              ? platformPercentageFee
-              : defaultSetting?.platform_charge;
+        chefEarningSum += chef_earning_fee * quantity;
+        sub_total += chef_earning_fee * quantity;
+        deliverPriceSum = delivery_price;
+        platformPriceSum += platform_price * quantity;
+      });
+    }
+  });
 
-          // Calculate chef_earning_fee for each item
-          chefEarningSum += chef_earning_fee * quantity;
-
-          // Calculate sub total for each item
-          sub_total += chef_earning_fee * quantity;
-
-          // Calculate delivery price sum for each item
-          deliverPriceSum = delivery_price;
-
-          // Calculate platform price sum for each item -- teax & fee
-          platformPriceSum += platform_price * quantity;
-        });
-      }
-    });
-  }
+  updateOrder({
+    sub_total,
+    chef_earning_price: chefEarningSum,
+    delivery_price: deliverPriceSum,
+    service_fee: platformPriceSum,
+    delivery_time: deliveryDate,
+    delivery_slot: deliverySlot,
+    total_price: sub_total + deliverPriceSum + platformPriceSum - order.discount_price + order.tip_price,
+  });
+};
 
   const handleCreateOrderPress = async () => {
     try {
@@ -337,16 +334,6 @@ const CheckoutLogic = () => {
       calculateOrderDetails();
     }
   }, [defaultSetting, cart, order.tip_price]);
-
-  if (isLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
-
-  console.log("Delivery date", order)
 
   return (
     <ScrollView style={styles.container}>
@@ -512,7 +499,7 @@ const CheckoutLogic = () => {
             <View style={styles.halfInput}>
               <Text style={styles.label}>Delivery Time *</Text>
               <Text style={styles.valueText}>
-                {convertTo12Hour(order.delivery_slot?.split("-")[0])} - 
+                {(convertTo12Hour(order.delivery_slot?.split("-")[0]))} - 
                 {convertTo12Hour(order.delivery_slot?.split("-")[1])}
               </Text>
             </View>

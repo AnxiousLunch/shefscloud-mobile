@@ -7,6 +7,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useNavigation } from "@react-navigation/native";
 import { handleGetAllDishes, handlePostTransaction } from "@/services/shef";
 import { handleGetOrders, handleGetPendingOrdersForChef } from "@/services/order";
+import { useRouter } from "expo-router";
 
 const { width, height } = Dimensions.get("window");
 
@@ -49,10 +50,11 @@ const MenuItem = ({ dish, onPress }) => (
 );
 
 export default function ChefDashboardScreen() {
-  const navigation = useNavigation();
+  const router = useRouter();
+  // const navigation = useNavigation();
   const { user, authToken } = useAuth();
 
-  const token = authToken || user?.access_token; // ✅ fallback to user.access_token
+  const token = authToken || user?.access_token; 
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   
   const [dishes, setDishes] = useState([]);
@@ -240,12 +242,14 @@ const res = await handlePostTransaction(user?.access_token, user?.id, startDate,
     return () => clearInterval(intervalId);
   }, [token, user]);
 
+  
+  
   const handleAddDish = () => {
-    navigation.navigate("ChefMenuScreen", { dish: null });
+  router.push("/add-new-dish");
   };
-
+  
   const handleDishPress = (dish) => {
-    navigation.navigate("ChefMenuScreen", { dish });
+    router.push("/menu", { dish });
   };
 
   return (
@@ -409,7 +413,7 @@ const res = await handlePostTransaction(user?.access_token, user?.id, startDate,
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.manageButton}
-              onPress={() => navigation.navigate("ChefMenuScreen")}
+              onPress={() => router.push("/menu")}
             >
               <Text style={styles.manageButtonText}>Manage Menu</Text>
             </TouchableOpacity>
@@ -420,7 +424,7 @@ const res = await handlePostTransaction(user?.access_token, user?.id, startDate,
         <View style={styles.bottomSection}>
           <TouchableOpacity 
             style={styles.actionCard}
-            onPress={() => navigation.navigate("ChefProfileScreen")}
+            onPress={() => router.push("/profile")}
           >
             <View style={styles.cardIcon}>
               <Text style={styles.iconText}>👤</Text>
@@ -432,7 +436,7 @@ const res = await handlePostTransaction(user?.access_token, user?.id, startDate,
           
           <TouchableOpacity 
             style={styles.actionCard}
-            onPress={() => navigation.navigate("OrderReviewsScreen")}
+            onPress={() => router.push("/reviews")}
           >
             <View style={styles.cardIcon}>
               <Text style={styles.iconText}>📝</Text>

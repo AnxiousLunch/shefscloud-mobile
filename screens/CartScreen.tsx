@@ -123,7 +123,7 @@ export const CartScreen = () => {
                                         <View>
                                             <Text style={styles.menuName}>{menu.name}</Text>
                                             <Text style={styles.menuDetail}>
-                                                Date: {new Date(chef.delivery_date).toDateString()}
+                                                Date: {chef.delivery_date}
                                             </Text>
                                             <Text style={styles.menuDetail}>
                                                 Time: {convertTo12Hour(chef.delivery_slot?.split("-")[0])} - 

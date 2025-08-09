@@ -16,7 +16,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSelector } from "react-redux";
-import { RootState } from "@/store/store";
+import { RootState } from "@/types/types";
 import { handleGetAllDishes } from "@/services/get_methods";
 import { ChefDish } from "@/types/types";
 import { Ionicons } from '@expo/vector-icons';
