@@ -196,100 +196,182 @@ const CheckoutLogic = () => {
 
   // Calculate order details
   const calculateOrderDetails = async () => {
-  if (!defaultSetting || !cart.length) return;
+    if (!defaultSetting || !cart.length) return;
 
-  let sub_total = 0;
-  let deliverPriceSum = 0;
-  let platformPriceSum = 0;
-  let chefEarningSum = 0;
-  let deliveryDate = "";
-  let deliverySlot = "";
+    let sub_total = 0;
+    let deliverPriceSum = 0;
+    let platformPriceSum = 0;
+    let chefEarningSum = 0;
+    let deliveryDate = "";
+    let deliverySlot = "";
+    let newOrderDetails: typeof orderDetails = [];
 
-  cart.forEach((chef: CartItemResponse, chef_index: number) => {
-    if (chef.id === parseInt(chefId) && chef_index === parseInt(chefIndex)) {
-      deliveryDate = chef.delivery_date;
-      deliverySlot = chef.delivery_slot;
-      chef.menu.forEach((menu) => {
-        const chef_earning_fee = menu.chef_earning_fee || 0;
-        const quantity = menu.quantity || 0;
-        const delivery_price = bykeaFare;
+    cart.forEach((chef: CartItemResponse, chef_index: number) => {
+      if (chef.id === parseInt(chefId) && chef_index === parseInt(chefIndex)) {
+        deliveryDate = chef.delivery_date;
+        deliverySlot = chef.delivery_slot;
 
-        const platformPercentageFee =
-          (defaultSetting?.platform_charge_percentage / 100) *
-          chef_earning_fee;
+        chef.menu.forEach((menu) => {
+          const chef_earning_fee = menu.chef_earning_fee || 0;
+          const quantity = menu.quantity || 0;
+          const delivery_price = bykeaFare;
 
-        const platform_price =
-          platformPercentageFee > defaultSetting?.platform_charge
-            ? platformPercentageFee
-            : defaultSetting?.platform_charge;
+          const platformPercentageFee =
+            (defaultSetting?.platform_charge_percentage / 100) * chef_earning_fee;
 
-        chefEarningSum += chef_earning_fee * quantity;
-        sub_total += chef_earning_fee * quantity;
-        deliverPriceSum = delivery_price;
-        platformPriceSum += platform_price * quantity;
-      });
-    }
-  });
+          const platform_price =
+            platformPercentageFee > defaultSetting?.platform_charge
+              ? platformPercentageFee
+              : defaultSetting?.platform_charge;
 
-  updateOrder({
-    sub_total,
-    chef_earning_price: chefEarningSum,
-    delivery_price: deliverPriceSum,
-    service_fee: platformPriceSum,
-    delivery_time: deliveryDate,
-    delivery_slot: deliverySlot,
-    total_price: sub_total + deliverPriceSum + platformPriceSum - order.discount_price + order.tip_price,
-  });
-};
+          chefEarningSum += chef_earning_fee * quantity;
+          sub_total += chef_earning_fee * quantity;
+          deliverPriceSum = delivery_price;
+          platformPriceSum += platform_price * quantity;
+
+          // Push each menu as an order detail with proper name
+          newOrderDetails.push({
+            name: menu.name || "Unnamed Item",
+            user_menu_id: menu.id,
+            unit_price: chef_earning_fee,
+            quantity,
+            platform_percentage: defaultSetting?.platform_charge_percentage || 0,
+            platform_price,
+            delivery_percentage: 0,
+            delivery_price,
+            chef_price: chef_earning_fee,
+          });
+        });
+      }
+    });
+
+    setOrderDetails(newOrderDetails);
+
+    updateOrder({
+      sub_total,
+      chef_earning_price: chefEarningSum,
+      delivery_price: deliverPriceSum,
+      service_fee: platformPriceSum,
+      delivery_time: deliveryDate,
+      delivery_slot: deliverySlot,
+      total_price:
+        sub_total +
+        deliverPriceSum +
+        platformPriceSum -
+        order.discount_price +
+        order.tip_price,
+    });
+  };
 
   const handleCreateOrderPress = async () => {
-    try {
-      setIsPending(true);
-      
-      const payload = {
-        ...order,
-        orderDeliveryAddress,
-        orderDetails
-      };
-      
-      const response = await handleCreateOrder(authToken, payload);
-      
-      // Update user info
-      const updatedUserInfo = {
-        ...userInfo,
-        last_order_address: {
-          order_delivery_address: orderDeliveryAddress,
-        },
-      };
-      
-      
-      // Save to AsyncStorage
-      await AsyncStorage.setItem("user", JSON.stringify(updatedUserInfo));
-      dispatch(updateUser(updatedUserInfo));
-      
-      // Update cart
-      dispatch(
-        onOrderSubmit({
-          chefId: order.chef_id,
-          delivery_date: order.delivery_time,
-          delivery_slot: order.delivery_slot,
-        })
-      );
-      dispatch(removeFromCart({ chefId: parseInt(chefId), chefIndex: parseInt(chefIndex) }));
-      
-      // Reset states
-      setOrder({ ...order, tip_price: 0, discount_price: 0 });
-      setPromoCode({ code: "", order_total: 0, menus: [] });
-      
-      // Navigate to confirmation screen
-      Alert.alert("OrderConfirmation");
-      
-    } catch (error) {
-      Alert.alert("Order Error", "Failed to place order");
-    } finally {
-      setIsPending(false);
-    }
+  try {
+    setIsPending(true);
+
+    // Transform orderDeliveryAddress to match web payload
+    const transformedAddress = {
+      address_type: orderDeliveryAddress.address_type || "home",
+      apartment_addition_direction: orderDeliveryAddress.apartment_addition_direction || "",
+      apartment_apartment_no: orderDeliveryAddress.apartment_apartment_no || "",
+      apartment_city: orderDeliveryAddress.apartment_city || "",
+      apartment_floor: orderDeliveryAddress.apartment_floor || "",
+      apartment_name: orderDeliveryAddress.apartment_name || "",
+      apartment_street_address: orderDeliveryAddress.apartment_street_address || "",
+      city: orderDeliveryAddress.city || "Karachi",
+      delivery_instruction: orderDeliveryAddress.delivery_instruction || "",
+      delivery_notes: orderDeliveryAddress.delivery_notes || "",
+      home_addition_direction: orderDeliveryAddress.home_addition_direction || "",
+      home_city: orderDeliveryAddress.home_city || "Karachi",
+      home_house_no: orderDeliveryAddress.home_house_no || "",
+      home_street_address: orderDeliveryAddress.home_street_address || "",
+      latitude: orderDeliveryAddress.latitude || "",
+      line2: orderDeliveryAddress.line2 || "",
+      longitude: orderDeliveryAddress.longitude || "",
+      name: orderDeliveryAddress.name || "",
+      office_addition_direction: orderDeliveryAddress.office_addition_direction || "",
+      office_building_no: orderDeliveryAddress.office_building_no || "",
+      office_city: orderDeliveryAddress.office_city || "",
+      office_company: orderDeliveryAddress.office_company || "",
+      office_department: orderDeliveryAddress.office_department || "",
+      office_floor: orderDeliveryAddress.office_floor || "",
+      office_street_address: orderDeliveryAddress.office_street_address || "",
+      phone: orderDeliveryAddress.phone || "",
+      postal_code: orderDeliveryAddress.postal_code || "",
+      state: orderDeliveryAddress.state || "",
+    };
+
+    // Transform orderDetails to ensure required fields are filled
+    const transformedDetails = orderDetails.map(d => ({
+      chef_price: d.chef_price || 0,
+      delivery_percentage: d.delivery_percentage || "0.00",
+      delivery_price: d.delivery_price || 0,
+      name: d.name || "",
+      platform_percentage: d.platform_percentage || "0.00",
+      platform_price: d.platform_price || 0,
+      quantity: d.quantity || 1,
+      unit_price: d.unit_price || 0,
+      user_menu_id: d.user_menu_id,
+    }));
+
+    // Final payload structure
+    const payload = {
+      chef_availability_id: order.chef_availability_id,
+      chef_earning_price: order.chef_earning_price,
+      chef_id: order.chef_id,
+      city_id: order.city_id,
+      delivery_notes: order.delivery_notes || "",
+      delivery_percentage: order.delivery_percentage || "0.00",
+      delivery_price: order.delivery_price,
+      delivery_slot: order.delivery_slot,
+      delivery_time: order.delivery_time,
+      discount_price: order.discount_price,
+      email: order.email,
+      name: order.name,
+      orderDeliveryAddress: transformedAddress,
+      orderDetails: transformedDetails,
+      payment_mode: order.payment_mode,
+      phone: order.phone,
+      service_fee: order.service_fee,
+      status: order.status,
+      sub_total: order.sub_total,
+      tip_price: order.tip_price,
+      total_price: order.total_price,
+    };
+
+    console.log("Payload is", payload);
+
+    const response = await handleCreateOrder(authToken, payload);
+
+    // Update user info
+    const updatedUserInfo = {
+      ...userInfo,
+      last_order_address: {
+        order_delivery_address: transformedAddress,
+      },
+    };
+
+    await AsyncStorage.setItem("user", JSON.stringify(updatedUserInfo));
+    dispatch(updateUser(updatedUserInfo));
+
+    dispatch(
+      onOrderSubmit({
+        chefId: order.chef_id,
+        delivery_date: order.delivery_time,
+        delivery_slot: order.delivery_slot,
+      })
+    );
+    dispatch(removeFromCart({ chefId: parseInt(chefId), chefIndex: parseInt(chefIndex) }));
+
+    setOrder({ ...order, tip_price: 0, discount_price: 0 });
+    setPromoCode({ code: "", order_total: 0, menus: [] });
+
+    Alert.alert("OrderConfirmation");
+    router.push(`/(customer)`);
+  } catch (error) {
+    Alert.alert("Order Error", error.message || "Failed to place order");
+  } finally {
+    setIsPending(false);
   }
+};
 
   // Initialization
   useEffect(() => {
@@ -627,7 +709,7 @@ const CheckoutLogic = () => {
 
                     <View style={styles.quantityControl}>
                       <TouchableOpacity
-                        onPress={() => removeFromCartThunk({chefIndex: chef_index, menuIndex: menuIndex})}
+                        onPress={() => dispatch(removeFromCartThunk({chefIndex: chef_index, menuIndex: menuIndex}))}
                         style={styles.removeButton}
                       >
                         <Feather name="trash-2" size={20} color="#E63946" />
