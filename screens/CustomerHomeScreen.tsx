@@ -130,12 +130,15 @@ export default function CustomerHomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Browse by Cuisine</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => router.navigate({
+              pathname: '/allCategories/[categories]',
+              params: { categories: JSON.stringify(foodCategory) }
+            })}>
               <Text style={styles.seeAll}>See All</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.categoriesGrid}>
-            {foodCategory.map((category) => (
+            {foodCategory.slice(0, 4).map((category) => (
               <TouchableOpacity
                 key={category.id}
                 style={styles.categoryCard}
@@ -156,9 +159,10 @@ export default function CustomerHomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Featured Chefs</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/allChefs")}>
               <Text style={styles.seeAll}>View All</Text>
             </TouchableOpacity>
+
           </View>
           <View style={styles.chefCard}>
             <View style={styles.chefHeader}>

@@ -267,14 +267,13 @@ export default function FoodDetailScreen() {
     router.back();
   }
 
-  console.log("Hewooo");
 
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
-          <Text style={styles.backButtonText}>←</Text>
+          <Ionicons name="arrow-back" size={24} color="#dc2626" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{foodItem.name}</Text>
       </View>
@@ -416,29 +415,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
   },
   header: {
-    backgroundColor: "#ffffff",
-    paddingHorizontal: 25,
-    paddingVertical: 25,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
     borderBottomWidth: 1,
     borderBottomColor: "#f1f5f9",
+    backgroundColor: "#ffffff",
   },
   backButton: {
-    position: "absolute",
-    left: 25,
-    backgroundColor: "#f3f4f6",
-    width: 45,
-    height: 45,
+    width: 44,
+    height: 44,
     borderRadius: 22,
+    backgroundColor: "#fef2f2",
     justifyContent: "center",
     alignItems: "center",
-  },
-  backButtonText: {
-    color: "#374151",
-    fontSize: 20,
-    fontWeight: "600",
+    marginRight: 12,
   },
   headerTitle: {
     fontSize: 22,

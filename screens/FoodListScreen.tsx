@@ -22,6 +22,7 @@ export default function FoodListScreen() {
   const [dishes, setDishes] = useState<DishList>([]);
   const [isFetching, setIsFetching] = useState(false);
   
+  
 
   const handleFoodPress = (foodId: number) => {
     console.log("foodId is", foodId);

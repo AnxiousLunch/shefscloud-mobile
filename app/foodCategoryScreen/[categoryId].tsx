@@ -7,7 +7,8 @@ import { Dish, RootStackParamList } from "@/types/types";
 import isValidURL from '@/components/ValidateURL'
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 
 type FoodCategoryRouteProp = RouteProp<RootStackParamList, 'foodCategoryScreen'>;
 
@@ -61,8 +62,26 @@ export default function FoodCategoryDetails() {
     }
   }, [categoryId]);
 
+  if (categoryDishes.length === 0) {
     return (
-        <View style={styles.Container}>
+      <View style={styles.sorryContainer}>
+        <Text style={styles.sorryText}>Sorry, No dishes within this category</Text>
+      </View>
+    );
+  }
+  const handleBackPress = () => {
+    router.back();
+  };
+
+
+    return (
+        <SafeAreaView style={styles.Container}>
+          <View style={styles.header}>
+            <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+              <Ionicons name="arrow-back" size={24} color="#dc2626" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Categories</Text>
+          </View>
           <ScrollView>
             {categoryDishes.map((dish) => (
               <View key={dish.id} style={styles.card}>
@@ -77,7 +96,7 @@ export default function FoodCategoryDetails() {
                   />
                   <TouchableOpacity
                     style={styles.chefContainer}
-                    onPress={() => Alert.alert("Coming Soon!")}
+                    onPress={() => router.navigate(`/chefProfile/${dish.user?.id}`)}
                   >
                     <Image
                       source={{
@@ -148,13 +167,37 @@ export default function FoodCategoryDetails() {
               </View>
             ))}
           </ScrollView>
-        </View>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
   Container: {
-    marginTop: 16,
+    backgroundColor: '#ffffff',
+    flex: 1,
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f1f5f9",
+    backgroundColor: "#ffffff",
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#fef2f2",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: "800",
+    color: "#1f2937",
   },
   noDishesContainer: {
     padding: 16,
@@ -288,4 +331,15 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: 'white',
   },
+  sorryContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sorryText: {
+    fontSize: 16,
+    fontWeight: 800,
+    color: "#000000",
+    textAlign: 'center',
+  }
 });
