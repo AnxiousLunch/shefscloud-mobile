@@ -31,15 +31,19 @@ import { initializeUserCart } from "@/store/cart";
 const { width, height } = Dimensions.get("window");
 WebBrowser.maybeCompleteAuthSession();
 
-// Responsive helper functions
+// Enhanced responsive helper functions
 const isTablet = width >= 768
 const isSmallPhone = width < 375
+const responsiveValue = (phoneValue: number, tabletValue: number, smallPhoneValue?: number) => {
+  if (isTablet) return tabletValue;
+  if (isSmallPhone && smallPhoneValue !== undefined) return smallPhoneValue;
+  return phoneValue;
+}
 const responsiveWidth = (percentage: number) => width * (percentage / 100)
 const responsiveHeight = (percentage: number) => height * (percentage / 100)
 const responsiveFontSize = (size: number) => {
-  if (isTablet) return size * 1.2
-  if (isSmallPhone) return size * 0.9
-  return size
+  const baseSize = responsiveValue(size, size * 1.2, size * 0.85);
+  return Math.min(baseSize, size * 1.5); // Prevent oversized text on large devices
 }
 
 export default function AuthScreen() {
@@ -214,7 +218,7 @@ export default function AuthScreen() {
                         ]}>
                           <Ionicons
                             name={role === "customer" ? "restaurant" : "storefront"}
-                            size={isTablet ? 20 : 18}
+                            size={responsiveValue(18, 20, 16)}
                             color={selectedRole === role ? "#fff" : "#b30000"}
                           />
                         </View>
@@ -237,7 +241,7 @@ export default function AuthScreen() {
                   <Text style={styles.inputLabel}>Email Address</Text>
                   <View style={styles.inputWrapper}>
                     <View style={[styles.inputContainer, email && styles.inputContainerActive]}>
-                      <Ionicons name="mail" size={20} color="#b30000" style={styles.inputIcon} />
+                      <Ionicons name="mail" size={responsiveValue(18, 22, 16)} color="#b30000" style={styles.inputIcon} />
                       <TextInput
                         style={styles.input}
                         placeholder="Enter your email"
@@ -256,7 +260,7 @@ export default function AuthScreen() {
                   <Text style={styles.inputLabel}>Password</Text>
                   <View style={styles.inputWrapper}>
                     <View style={[styles.inputContainer, password && styles.inputContainerActive]}>
-                      <Ionicons name="lock-closed" size={20} color="#b30000" style={styles.inputIcon} />
+                      <Ionicons name="lock-closed" size={responsiveValue(18, 22, 16)} color="#b30000" style={styles.inputIcon} />
                       <TextInput
                         style={styles.input}
                         placeholder="Enter your password"
@@ -272,7 +276,7 @@ export default function AuthScreen() {
                       >
                         <Ionicons
                           name={showPassword ? "eye" : "eye-off"}
-                          size={20}
+                          size={responsiveValue(18, 20, 16)}
                           color="#666"
                         />
                       </TouchableOpacity>
@@ -310,7 +314,7 @@ export default function AuthScreen() {
                       ) : (
                         <>
                           <Text style={styles.primaryButtonText}>Sign In</Text>
-                          <Ionicons name="arrow-forward" size={18} color="#fff" />
+                          <Ionicons name="arrow-forward" size={responsiveValue(16, 20, 14)} color="#fff" />
                         </>
                       )}
                     </View>
@@ -335,7 +339,7 @@ export default function AuthScreen() {
                 >
                   <View style={styles.googleButtonContent}>
                     <View style={styles.googleIconContainer}>
-                      <Ionicons name="logo-google" size={20} color="#4285f4" />
+                      <Ionicons name="logo-google" size={responsiveValue(18, 22, 16)} color="#4285f4" />
                     </View>
                     <Text style={styles.googleButtonText}>Google</Text>
                   </View>
@@ -393,10 +397,10 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   loadingSpinner: {
-    marginBottom: 20,
+    marginBottom: responsiveHeight(2),
     backgroundColor: "#fff",
     borderRadius: 50,
-    padding: 20,
+    padding: responsiveValue(20, 24, 18),
     elevation: 8,
     shadowColor: "#b30000",
     shadowOffset: { width: 0, height: 4 },
@@ -404,7 +408,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
   loadingText: {
-    fontSize: responsiveFontSize(16),
+    fontSize: responsiveFontSize(14),
     color: '#b30000',
     fontWeight: '600',
   },
@@ -426,19 +430,19 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: responsiveHeight(15),
     right: responsiveWidth(10),
-    width: 80,
-    height: 80,
+    width: responsiveValue(60, 80, 50),
+    height: responsiveValue(60, 80, 50),
     backgroundColor: "rgba(179, 0, 0, 0.05)",
     borderRadius: 40,
-    borderWidth: 2,
+    borderWidth: responsiveValue(1, 2, 1),
     borderColor: "rgba(179, 0, 0, 0.1)",
   },
   decorativeElement2: {
     position: "absolute",
     top: responsiveHeight(25),
     left: responsiveWidth(5),
-    width: 60,
-    height: 60,
+    width: responsiveValue(50, 60, 40),
+    height: responsiveValue(50, 60, 40),
     backgroundColor: "rgba(255, 68, 68, 0.08)",
     borderRadius: 30,
     transform: [{ rotate: '45deg' }],
@@ -447,8 +451,8 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: responsiveHeight(45),
     right: responsiveWidth(8),
-    width: 40,
-    height: 40,
+    width: responsiveValue(30, 40, 25),
+    height: responsiveValue(30, 40, 25),
     backgroundColor: "rgba(179, 0, 0, 0.06)",
     borderRadius: 20,
   },
@@ -456,29 +460,29 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: responsiveHeight(35),
     left: responsiveWidth(12),
-    width: 100,
-    height: 100,
+    width: responsiveValue(80, 100, 70),
+    height: responsiveValue(80, 100, 70),
     backgroundColor: "rgba(255, 68, 68, 0.03)",
     borderRadius: 50,
-    borderWidth: 1,
+    borderWidth: responsiveValue(1, 1.5, 1),
     borderColor: "rgba(179, 0, 0, 0.08)",
   },
 
   // Header
   authHeader: {
     alignItems: "center",
-    marginTop: Math.max(responsiveHeight(6), 40),
-    marginBottom: isTablet ? 40 : 32,
+    marginTop: responsiveHeight(6),
+    marginBottom: responsiveHeight(3),
     paddingHorizontal: responsiveWidth(5),
   },
   logoContainer: {
     position: "relative",
-    marginBottom: isTablet ? 20 : 16,
+    marginBottom: responsiveHeight(2),
   },
   logoGradient: {
-    width: isTablet ? 85 : isSmallPhone ? 70 : 75,
-    height: isTablet ? 85 : isSmallPhone ? 70 : 75,
-    borderRadius: isTablet ? 20 : 16,
+    width: responsiveValue(70, 85, 65),
+    height: responsiveValue(70, 85, 65),
+    borderRadius: responsiveValue(16, 20, 14),
     justifyContent: "center",
     alignItems: "center",
     elevation: 12,
@@ -490,17 +494,17 @@ const styles = StyleSheet.create({
   logoInner: {
     width: "88%",
     height: "88%",
-    borderRadius: isTablet ? 16 : 12,
+    borderRadius: responsiveValue(12, 16, 10),
     backgroundColor: "rgba(255, 255, 255, 0.15)",
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1.5,
+    borderWidth: responsiveValue(1, 1.5, 1),
     borderColor: "rgba(255, 255, 255, 0.3)",
   },
   logoShine: {
     position: "absolute",
-    top: 8,
-    left: 8,
+    top: responsiveValue(6, 8, 5),
+    left: responsiveValue(6, 8, 5),
     width: "30%",
     height: "30%",
     backgroundColor: "rgba(255, 255, 255, 0.4)",
@@ -513,11 +517,11 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: -4,
     backgroundColor: "rgba(179, 0, 0, 0.15)",
-    borderRadius: isTablet ? 20 : 16,
+    borderRadius: responsiveValue(16, 20, 14),
     zIndex: -1,
   },
   logoText: {
-    fontSize: responsiveFontSize(28),
+    fontSize: responsiveFontSize(24),
     fontWeight: "900",
     color: "#fff",
     textShadowColor: "rgba(0, 0, 0, 0.2)",
@@ -525,54 +529,54 @@ const styles = StyleSheet.create({
     textShadowRadius: 3,
   },
   title: {
-    fontSize: responsiveFontSize(30),
+    fontSize: responsiveFontSize(26),
     fontWeight: "800",
     color: "#2d2d2d",
-    marginBottom: 8,
+    marginBottom: responsiveHeight(1),
     textAlign: "center",
     letterSpacing: 0.5,
   },
   titleAccent: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: responsiveHeight(1.5),
   },
   titleDot: {
-    width: 6,
-    height: 6,
+    width: responsiveValue(5, 6, 4),
+    height: responsiveValue(5, 6, 4),
     backgroundColor: "#b30000",
     borderRadius: 3,
   },
   titleLine: {
-    width: 40,
-    height: 2,
+    width: responsiveValue(35, 40, 30),
+    height: responsiveValue(1.5, 2, 1),
     backgroundColor: "#b30000",
-    marginHorizontal: 8,
+    marginHorizontal: responsiveValue(6, 8, 5),
   },
   subtitle: {
-    fontSize: responsiveFontSize(14),
+    fontSize: responsiveFontSize(12),
     color: "#666",
     textAlign: "center",
-    lineHeight: responsiveFontSize(20),
-    maxWidth: isTablet ? 400 : 280,
+    lineHeight: responsiveFontSize(18),
+    maxWidth: Math.min(responsiveWidth(90), 400),
     fontWeight: "400",
   },
 
   // Form Card
   formCard: {
     width: "100%",
-    maxWidth: isTablet ? 480 : 380,
+    maxWidth: Math.min(responsiveWidth(90), 480),
     backgroundColor: "#ffffff",
-    padding: isTablet ? 28 : 22,
-    borderRadius: isTablet ? 20 : 16,
-    marginBottom: 24,
+    padding: responsiveValue(16, 24, 14),
+    borderRadius: responsiveValue(14, 18, 12),
+    marginBottom: responsiveHeight(3),
     position: "relative",
     elevation: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 12,
-    borderWidth: 1,
+    borderWidth: responsiveValue(1, 1.5, 1),
     borderColor: "rgba(179, 0, 0, 0.08)",
   },
   cardShadow: {
@@ -582,45 +586,45 @@ const styles = StyleSheet.create({
     right: -1,
     bottom: -1,
     backgroundColor: "rgba(179, 0, 0, 0.03)",
-    borderRadius: isTablet ? 21 : 17,
+    borderRadius: responsiveValue(15, 19, 13),
     zIndex: -1,
   },
 
   // Welcome Section
   welcomeSection: {
-    marginBottom: isTablet ? 28 : 24,
+    marginBottom: responsiveHeight(3),
     alignItems: "center",
   },
   welcomeTitle: {
-    fontSize: responsiveFontSize(22),
+    fontSize: responsiveFontSize(18),
     fontWeight: "700",
     color: "#2d2d2d",
-    marginBottom: 4,
+    marginBottom: responsiveHeight(0.5),
   },
   welcomeSubtitle: {
-    fontSize: responsiveFontSize(14),
+    fontSize: responsiveFontSize(12),
     color: "#666",
     textAlign: "center",
   },
 
   // Role Selector
   roleSelectorContainer: {
-    marginBottom: isTablet ? 24 : 20,
+    marginBottom: responsiveHeight(2.5),
   },
   sectionLabel: {
-    fontSize: responsiveFontSize(14),
+    fontSize: responsiveFontSize(12),
     fontWeight: "600",
     color: "#444",
-    marginBottom: 12,
+    marginBottom: responsiveHeight(1),
     textAlign: "center",
   },
   roleSelector: {
     position: "relative",
     flexDirection: "row",
-    borderRadius: isTablet ? 14 : 12,
+    borderRadius: responsiveValue(10, 12, 8),
     overflow: "hidden",
     backgroundColor: "#f8f9fa",
-    padding: 4,
+    padding: responsiveValue(3, 4, 2),
   },
   roleSelectorBackground: {
     position: "absolute",
@@ -629,13 +633,13 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: "#f1f3f4",
-    borderRadius: isTablet ? 14 : 12,
+    borderRadius: responsiveValue(10, 12, 8),
   },
   roleButton: {
     flex: 1,
     position: "relative",
     overflow: "hidden",
-    borderRadius: isTablet ? 12 : 10,
+    borderRadius: responsiveValue(8, 10, 6),
   },
   roleActiveBackground: {
     position: "absolute",
@@ -643,26 +647,26 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: isTablet ? 12 : 10,
+    borderRadius: responsiveValue(8, 10, 6),
   },
   roleContent: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: isTablet ? 14 : 12,
-    paddingHorizontal: 8,
+    paddingVertical: responsiveValue(10, 12, 8),
+    paddingHorizontal: responsiveValue(4, 6, 3),
   },
   roleIconContainer: {
-    marginRight: isTablet ? 8 : 6,
+    marginRight: responsiveValue(4, 6, 3),
     backgroundColor: "rgba(179, 0, 0, 0.1)",
-    padding: isTablet ? 6 : 5,
-    borderRadius: isTablet ? 6 : 5,
+    padding: responsiveValue(4, 5, 3),
+    borderRadius: responsiveValue(4, 5, 3),
   },
   roleIconActive: {
     backgroundColor: "rgba(255, 255, 255, 0.2)",
   },
   roleText: {
-    fontSize: responsiveFontSize(13),
+    fontSize: responsiveFontSize(11),
     fontWeight: "600",
     color: "#b30000",
   },
@@ -672,17 +676,17 @@ const styles = StyleSheet.create({
 
   // Input Section
   inputSection: {
-    marginBottom: isTablet ? 24 : 20,
+    marginBottom: responsiveHeight(2),
   },
   inputGroup: {
-    marginBottom: isTablet ? 18 : 16,
+    marginBottom: responsiveHeight(1.8),
   },
   inputLabel: {
-    fontSize: responsiveFontSize(14),
+    fontSize: responsiveFontSize(12),
     fontWeight: "600",
     color: "#444",
-    marginBottom: 8,
-    marginLeft: 2,
+    marginBottom: responsiveHeight(0.8),
+    marginLeft: responsiveValue(1, 2, 1),
   },
   inputWrapper: {
     position: "relative",
@@ -691,11 +695,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#f8f9fa",
-    borderRadius: isTablet ? 12 : 10,
-    borderWidth: 1.5,
+    borderRadius: responsiveValue(8, 10, 6),
+    borderWidth: responsiveValue(1, 1.5, 1),
     borderColor: "#e9ecef",
-    paddingVertical: isTablet ? 14 : 12,
-    paddingHorizontal: isTablet ? 16 : 14,
+    paddingVertical: responsiveValue(10, 12, 8),
+    paddingHorizontal: responsiveValue(12, 14, 10),
     transition: "all 0.2s ease",
   },
   inputContainerActive: {
@@ -703,33 +707,34 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   inputIcon: {
-    marginRight: isTablet ? 12 : 10,
+    marginRight: responsiveValue(8, 10, 6),
   },
   input: {
     flex: 1,
     color: "#2d2d2d",
-    fontSize: responsiveFontSize(15),
+    fontSize: responsiveFontSize(13),
     fontWeight: "500",
+    paddingVertical: 0,
   },
   eyeIcon: {
-    padding: 4,
+    padding: responsiveValue(3, 4, 2),
   },
   forgotPassword: {
     alignSelf: "flex-end",
-    marginTop: 8,
+    marginTop: responsiveHeight(0.5),
   },
   forgotPasswordText: {
-    fontSize: responsiveFontSize(13),
+    fontSize: responsiveFontSize(11),
     color: "#b30000",
     fontWeight: "600",
   },
 
   // Button Section
   buttonSection: {
-    gap: isTablet ? 16 : 14,
+    gap: responsiveHeight(1.2),
   },
   primaryButton: {
-    borderRadius: isTablet ? 14 : 12,
+    borderRadius: responsiveValue(10, 12, 8),
     overflow: "hidden",
     elevation: 6,
     shadowColor: "#b30000",
@@ -739,18 +744,18 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   primaryButtonGradient: {
-    paddingVertical: isTablet ? 16 : 14,
-    paddingHorizontal: isTablet ? 20 : 18,
+    paddingVertical: responsiveValue(12, 14, 10),
+    paddingHorizontal: responsiveValue(16, 18, 14),
   },
   buttonContent: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: isTablet ? 8 : 6,
+    gap: responsiveValue(4, 6, 3),
   },
   primaryButtonText: {
     color: "#fff",
-    fontSize: responsiveFontSize(16),
+    fontSize: responsiveFontSize(14),
     fontWeight: "700",
   },
   buttonHighlight: {
@@ -769,30 +774,30 @@ const styles = StyleSheet.create({
   dividerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 4,
+    marginVertical: responsiveHeight(0.5),
   },
   dividerLine: {
     flex: 1,
-    height: 1,
+    height: responsiveValue(0.8, 1, 0.6),
     backgroundColor: "#e9ecef",
   },
   dividerTextContainer: {
     backgroundColor: "#fff",
-    paddingHorizontal: 16,
+    paddingHorizontal: responsiveValue(12, 14, 10),
   },
   dividerText: {
     color: "#999",
-    fontSize: responsiveFontSize(12),
+    fontSize: responsiveFontSize(10),
     fontWeight: "500",
   },
 
   // Google Button
   googleButton: {
     backgroundColor: "#fff",
-    borderRadius: isTablet ? 14 : 12,
-    borderWidth: 1.5,
+    borderRadius: responsiveValue(10, 12, 8),
+    borderWidth: responsiveValue(1, 1.5, 1),
     borderColor: "#e9ecef",
-    paddingVertical: isTablet ? 14 : 12,
+    paddingVertical: responsiveValue(10, 12, 8),
     position: "relative",
     elevation: 2,
     shadowColor: "#000",
@@ -804,16 +809,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: isTablet ? 10 : 8,
+    gap: responsiveValue(6, 8, 5),
   },
   googleIconContainer: {
     backgroundColor: "#f8f9fa",
-    padding: 6,
-    borderRadius: 6,
+    padding: responsiveValue(4, 5, 3),
+    borderRadius: responsiveValue(4, 5, 3),
   },
   googleButtonText: {
     color: "#444",
-    fontSize: responsiveFontSize(15),
+    fontSize: responsiveFontSize(13),
     fontWeight: "600",
   },
   googleButtonBorder: {
@@ -830,16 +835,16 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 20,
-    gap: 6,
+    marginBottom: responsiveHeight(2),
+    gap: responsiveValue(4, 6, 3),
   },
   signupText: {
-    fontSize: responsiveFontSize(14),
+    fontSize: responsiveFontSize(12),
     color: "#666",
     fontWeight: "500",
   },
   signupLink: {
-    fontSize: responsiveFontSize(14),
+    fontSize: responsiveFontSize(12),
     color: "#b30000",
     fontWeight: "700",
   },
@@ -848,14 +853,14 @@ const styles = StyleSheet.create({
   footer: {
     alignItems: "center",
     paddingHorizontal: responsiveWidth(5),
-    marginBottom: isTablet ? 30 : 24,
+    marginBottom: responsiveHeight(3),
   },
   termsText: {
     textAlign: "center",
-    fontSize: responsiveFontSize(11),
+    fontSize: responsiveFontSize(10),
     color: "#999",
-    lineHeight: responsiveFontSize(16),
-    maxWidth: isTablet ? 350 : 280,
+    lineHeight: responsiveFontSize(14),
+    maxWidth: Math.min(responsiveWidth(90), 350),
   },
   termsLink: {
     fontWeight: "600",
