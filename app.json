@@ -2,6 +2,7 @@
   "expo": {
     "name": "shefscloud_mobile",
     "slug": "shefscloud_mobile",
+    "icon": "./assets/icon.png",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
@@ -23,15 +24,10 @@
         "android.permission.ACCESS_NOTIFICATION_POLICY",
         "android.permission.VIBRATE",
         "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS",
-        "android.permission.POST_NOTIFICATIONS",
-        "android.permission.ACCESS_NOTIFICATION_POLICY",
-        "android.permission.VIBRATE",
-        "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"
       ],
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.anonymous.shefscloud_mobile"
@@ -49,7 +45,7 @@
           "icon": "./assets/notification-icon.png",
           "color": "#FFFFFF",
           "sounds": [
-            "./assets/sounds/notification.mp3"
+            "./assets/sounds/notifications.mp3"
           ],
           "mode": "production"
         }
@@ -63,6 +59,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f3dea93d-18e9-4f93-bc0e-5add439535f1"
+      }
     }
   }
 }
