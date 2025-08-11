@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { MultiSelect } from 'react-native-element-dropdown';
-import { StepProps } from '@/types/ChefMenuTypes';
 import { styles } from '@/styles/addNewDishStyles';
 
 const IngredientsScreen = ({

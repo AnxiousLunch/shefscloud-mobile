@@ -12,7 +12,6 @@ import { useDispatch, useSelector } from "react-redux"
 import { store } from "@/store/store"
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLocalSearchParams, useRouter } from "expo-router"
-import { CartItemResponse, Dish, RootState, TimeSlot } from "@/types/types"
 
 
 

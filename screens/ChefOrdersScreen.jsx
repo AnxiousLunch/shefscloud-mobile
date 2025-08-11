@@ -5,7 +5,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
 import { useEffect, useState } from "react";
 import { handleGetChefOrders, handleUpdateOrderStatus, handleGetPendingOrdersCount, handleGetDefaultSetting } from "@/services/get_methods";
-import { Order } from "@/types/types";
 import moment from "moment";
 import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons";

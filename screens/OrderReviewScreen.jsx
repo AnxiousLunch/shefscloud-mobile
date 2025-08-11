@@ -17,9 +17,7 @@ import { useSelector } from 'react-redux';
 import moment from 'moment';
 import { handleChefPostReview, handleGetAllReview, handleGetAllReviewReplies } from '@/services/order';
 import { useRouter } from 'expo-router'; // Changed to expo-router
-import { RootState } from '@/types/types'; // Ensure this is correctly imported from your store
 import { KeyboardAvoidingView, Platform } from 'react-native';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 const OrderReviewScreen = () => {
   const router = useRouter(); // Using expo-router

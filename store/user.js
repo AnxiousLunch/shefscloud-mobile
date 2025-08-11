@@ -1,87 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { PayloadAction } from "@reduxjs/toolkit";
-import { AppDispatch } from "@/types/types";
 
-export interface UserInfo {
-  access_token: string;
-  bio: string | null;
-  contract_signed: string | null;
-  cover_pic: string | null;
-  created_at: string;
-  deleted_at: string | null;
-  email: string;
-  email_verified_at: string;
-  first_name: string;
-  food_handle_certificate: string | null;
-  id: number;
-  is_active: number;
-  is_admin: number;
-  is_chef: number;
-  last_name: string;
-  last_order_address: {
-    order_delivery_address: Address;
-  };
-  order_capacity: number | null;
-  phone: string;
-  profile_pic: string | null;
-  updated_at: string;
-  user_addresses: any[]; 
-}
-
-type Address = {
-  address_type: "home" | "apartment" | "office" | string; // string fallback for unexpected values
-
-  // Apartment fields
-  apartment_addition_direction: string;
-  apartment_apartment_no: string;
-  apartment_city: string;
-  apartment_floor: string;
-  apartment_name: string;
-  apartment_street_address: string;
-
-  // Home fields
-  home_addition_direction: string;
-  home_city: string;
-  home_house_no: string;
-  home_street_address: string;
-
-  // Office fields
-  office_addition_direction: string;
-  office_building_no: string;
-  office_city: string;
-  office_company: string;
-  office_department: string;
-  office_floor: string;
-  office_street_address: string;
-
-  // Common fields
-  city: string;
-  delivery_instruction: string;
-  delivery_notes: string;
-  latitude: number;
-  longitude: number;
-  line2: string;
-  name: string;
-  phone: string;
-  postal_code: string;
-  state: string;
-};
-
-
-export interface UserState {
-  userInfo: UserInfo | null;
-  authToken: string;
-  isLoading: boolean;
-  error: string | null;
-  isInitialized: boolean;
-}
 
 // Async thunk to load user data from AsyncStorage
-export const loadUserFromStorage = createAsyncThunk<
-  { userInfo: UserInfo | null; authToken: string },
-  void
->(
+export const loadUserFromStorage = createAsyncThunk(
   'user/loadFromStorage',
   async () => {
     try {
@@ -89,7 +11,7 @@ export const loadUserFromStorage = createAsyncThunk<
       const authToken = await AsyncStorage.getItem("auth");
 
       return {
-        userInfo: userInfo ? JSON.parse(userInfo) as UserInfo : null,
+        userInfo: userInfo ? JSON.parse(userInfo)  : null,
         authToken: authToken || ""
       };
     } catch (error) {
@@ -103,10 +25,7 @@ export const loadUserFromStorage = createAsyncThunk<
 );
 
 // Async thunk to save user data to AsyncStorage
-export const saveUserToStorage = createAsyncThunk<
-  { userInfo: UserInfo; authToken: string },
-  { userInfo: UserInfo; authToken: string }
->(
+export const saveUserToStorage = createAsyncThunk(
   'user/saveToStorage',
   async ({ userInfo, authToken }) => {
     try {
@@ -121,7 +40,7 @@ export const saveUserToStorage = createAsyncThunk<
 );
 
 // Async thunk to clear user data from AsyncStorage
-export const clearUserFromStorage = createAsyncThunk<boolean, void>(
+export const clearUserFromStorage = createAsyncThunk(
   'user/clearFromStorage',
   async () => {
     try {
@@ -136,7 +55,7 @@ export const clearUserFromStorage = createAsyncThunk<boolean, void>(
   }
 );
 
-const initialState: UserState = {
+const initialState = {
   userInfo: null,
   authToken: "",
   isLoading: false,
@@ -148,12 +67,12 @@ const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
-    loginUser: (state, action: PayloadAction<{ data: UserInfo }>) => {
+    loginUser: (state, action) => {
       state.userInfo = action.payload.data;
       state.authToken = action.payload.data.access_token;
       state.error = null;
     },
-    updateUser: (state, action: PayloadAction<UserInfo>) => {
+    updateUser: (state, action) => {
       state.userInfo = action.payload;
     },
     clearError: (state) => {
@@ -194,7 +113,7 @@ const userSlice = createSlice({
 export const { loginUser, updateUser, clearError } = userSlice.actions;
 
 // Custom action creator that combines loginUser and saveUserToStorage
-export const loginAndSaveUser = (userData: { data: UserInfo }) => async (dispatch: AppDispatch) => {
+export const loginAndSaveUser = (userData) => async (dispatch) => {
   dispatch(loginUser(userData));
   await dispatch(saveUserToStorage({
     userInfo: userData.data,
@@ -202,7 +121,7 @@ export const loginAndSaveUser = (userData: { data: UserInfo }) => async (dispatc
   }));
 };
 
-export const signOutUser = () => async (dispatch: AppDispatch) => {
+export const signOutUser = () => async (dispatch) => {
   await dispatch(clearUserFromStorage());
 };
 

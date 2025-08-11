@@ -3,7 +3,6 @@ import { handleGetCategorizeDishesOfCity } from "@/services/get_methods";
 import { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StyleSheet } from "react-native";
-import { Dish, RootStackParamList } from "@/types/types";
 import isValidURL from '@/components/ValidateURL'
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { useRouter } from "expo-router";

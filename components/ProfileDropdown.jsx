@@ -13,7 +13,6 @@ import {
 import { signOutUser } from "@/store/user"
 import { useDispatch } from "react-redux"
 import { useRouter } from "expo-router"
-import { AppDispatch } from "@/store/store"
 import { loadUserFromStorage } from "@/store/user"
 import { UserInfo } from "@/store/user"
 import { clearCurrentUser, emptyCartThunk } from "@/store/cart"
@@ -25,7 +24,7 @@ export default function ProfileDropdown({ isVisible, onClose }) {
   const dispatch = useDispatch();
   const router = useRouter();
   const { width, height } = useWindowDimensions();
-  const [user, setUser] = useState<UserInfo | null>(null);  
+  const [user, setUser] = useState(null);  
   // Responsive scaling factors
   const responsiveScale = Math.min(width / 400, 1);
   const baseFontSize = 16 * responsiveScale;

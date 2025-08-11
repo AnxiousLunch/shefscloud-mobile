@@ -16,13 +16,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSelector } from "react-redux";
-import { RootState } from "@/types/types";
 import { handleGetAllDishes } from "@/services/get_methods";
-import { Dish } from "@/types/types";
 import { Ionicons } from '@expo/vector-icons';
 const { width } = Dimensions.get('window');
 import { useNavigation, useRouter } from "expo-router";
-import { ChefMenuState } from "@/types/ChefMenuTypes";
 
 export default function ChefMenuScreen() {
   const router = useRouter();

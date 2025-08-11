@@ -19,7 +19,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from "expo-router";
-import { AppDispatch } from "@/types/types";
 import { useAppSelector } from "@/hooks/hooks";
 import { loadUserFromStorage } from "@/store/user";
 import { TextInputMask } from 'react-native-masked-text';

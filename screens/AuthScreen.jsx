@@ -21,7 +21,6 @@ import { handleUserLogin } from "../auth_endpoints/AuthEndpoints";
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from "expo-router";
 import { loginAndSaveUser, loadUserFromStorage, saveUserToStorage } from '../store/user';
-import { AppDispatch } from "@/types/types";
 import { useAppSelector } from "@/hooks/hooks";
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
@@ -72,6 +71,11 @@ export default function AuthScreen() {
     setIsLoading(true);
     try {
       const res = await handleUserLogin({ email, password });
+      if (selectedRole === "chef" && !res.data.is_chef) {
+        Alert.alert("To become a chef, visit the website");
+        console.log("To become a chef, visit the website");
+        return;
+      }
       
       // Save role in storage
       await AsyncStorage.setItem("selectedRole", selectedRole);

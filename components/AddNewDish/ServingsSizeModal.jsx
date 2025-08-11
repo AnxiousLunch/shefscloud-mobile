@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { Ionicons } from '@expo/vector-icons';
-import { ServingSizeModalProps } from '@/components/AddNewDish/ServingsSizeModal';
 import { modalStyles } from '@/styles/addNewDishStyles';
 
 const ServingSizeModal = ({

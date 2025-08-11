@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useSelector } from 'react-redux';
-import { RootState } from '@/types/types';
 import { handleGetAvailabilityTimeSlot } from '@/services/shef'; 
 import { 
   handleGetFoodType, 
@@ -16,8 +15,6 @@ import {
   handleCreateMenu,
 } from '@/services/get_methods';
 import { chefMenuInitialState } from '@/constants/initialStates';
-import { ChefMenuState, FoodType, SpiceLevel, TagOption, PortionType, 
-  HeatInstruction, IngredientOption, TimeSlot } from '@/types/ChefMenuTypes';
 import DishDetailsScreen from '@/components/AddNewDish/DishDetailScreen';
 import DescriptionScreen from '@/components/AddNewDish/DescriptionScreen';
 import MoreInfoScreen from '@/components/AddNewDish/MoreInfoScreen';

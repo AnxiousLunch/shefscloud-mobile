@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, TextInput } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { StepProps } from '@/types/ChefMenuTypes';
 import { styles } from '@/styles/addNewDishStyles';
 
 const MoreInfoScreen = ({

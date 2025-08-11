@@ -13,7 +13,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { initializeUserCart } from "@/store/cart";
 import isValidURL from "@/components/ValidateURL";
 import convertTo12Hour from "@/components/convertTo12Hour";
-import { AppDispatch, RootState } from "@/types/types";
 import { useRouter } from "expo-router";
 
 export const CartScreen = () => {

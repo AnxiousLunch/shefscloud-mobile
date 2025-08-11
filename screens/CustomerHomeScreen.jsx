@@ -9,7 +9,6 @@ import { Image } from "react-native"
 import {handleGetFoodCategory, handleGetPopularChefWithDishes} from '../services/get_methods'
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { Feather } from "@expo/vector-icons"
-import { User, City, FoodCategory } from "@/types/types"
 import { useRouter } from "expo-router"
 
 const { width, height } = Dimensions.get("window")

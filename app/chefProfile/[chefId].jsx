@@ -17,7 +17,6 @@ import { useSelector } from "react-redux";
 import { handleGetChefWithDishes } from "@/services/get_methods";
 import { handleChefPostReview, handleGetAllReview } from "@/services/order";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { RootState } from "@/types/types";
 import isValidURL from "@/components/ValidateURL";
 import StarRating from "@/components/StarRating";
 import { SafeAreaView } from "react-native-safe-area-context";

@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, Image } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { MultiSelect } from 'react-native-element-dropdown';
-import { StepProps } from '@/types/ChefMenuTypes';
 import { styles } from '@/styles/addNewDishStyles';
 
 const DishDetailsScreen = ({

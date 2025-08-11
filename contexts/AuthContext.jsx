@@ -8,6 +8,9 @@ import {
   useEffect,
   useState,
 } from "react";
+import { handleUserLogin } from "@/auth_endpoints/AuthEndpoints";
+import { useDispatch } from "react-redux";
+import { loginAndSaveUser } from "@/store/user";
 
 
 const AuthContext = createContext(undefined);
@@ -16,6 +19,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const loadUserFromStorage = async () => {
@@ -35,23 +39,16 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (email, password, role) => {
-    // Simulate API response
-    const mockUser= {
-      id: "1",
-      name: role === "customer" ? "Sarah Johnson" : "Chef Marco Rossi",
-      email,
-      role,
-    };
 
     try {
-      await AsyncStorage.setItem("user", JSON.stringify(mockUser));
-      await AsyncStorage.setItem("auth", "mock_token"); // you can replace this with real token
+      const res = await handleUserLogin({email, password});
+      dispatch(loginAndSaveUser(res));
       setUser(mockUser);
 
       if (role === "customer") {
         router.replace("/(customer)");
       } else {
-        router.replace("/(chef)");
+        router.replace("/(chef)" );
       }
     } catch (error) {
       console.log("Error during login:", error);

@@ -1,6 +1,5 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, Image, ActivityIndicator, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useEffect, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -88,9 +87,11 @@ export default function FoodListScreen() {
     
     return (
       <View style={styles.starsContainer}>
-        {"★".repeat(fullStars)}
-        {hasHalfStar && "☆"}
-        {"☆".repeat(emptyStars)}
+        <Text>
+          {"★".repeat(fullStars)}
+          {hasHalfStar && "☆"}
+          {"☆".repeat(emptyStars)}
+        </Text>
       </View>
     );
   };
@@ -412,7 +413,7 @@ export default function FoodListScreen() {
                         {renderStars(item.average_rating || 0)}
                       </Text>
                       <Text style={styles.ratingText}>
-                        ({item.average_rating?.toFixed(1) || "0.0"}) • {item.total_reviews || 0} review{item.total_reviews !== 1 ? 's' : ''}
+                        ({parseInt(item.average_rating).toFixed(1) || "0.0"}) • {item.total_reviews || 0} review{item.total_reviews !== 1 ? 's' : ''}
                       </Text>
                     </View>
 

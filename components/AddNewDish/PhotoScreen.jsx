@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, TouchableOpacity, Image, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
-import { StepProps } from '@/types/ChefMenuTypes';
 import { styles } from '@/styles/addNewDishStyles'; // Adjust the import path as necessary
 
 const PhotoScreen = ({ logo, updateFields }) => {

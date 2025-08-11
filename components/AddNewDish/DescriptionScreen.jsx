@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { MultiSelect } from 'react-native-element-dropdown';
-import { StepProps } from '@/types/ChefMenuTypes';
 import { styles } from '@/styles/addNewDishStyles';
 import { handleGetAvailabilityTimeSlot } from '@/services/shef';
 import { formatDateForInput } from '@/utils/helpers';

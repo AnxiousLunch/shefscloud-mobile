@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, Switch } from 'react-native';
-import { StepProps } from '@/types/ChefMenuTypes';
 import { styles } from '@/styles/addNewDishStyles';
 
 const DietaryScreen = ({

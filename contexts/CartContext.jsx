@@ -1,9 +1,8 @@
 "use client"
 
 import { createContext, useContext, useState } from "react"
-import { CartItem, CartGroup,  CartContextType } from "@/types/types"
 
-const CartContext = createContext<CartContextType | undefined>(undefined)
+const CartContext = createContext(undefined)
 
 export function CartProvider({ children }) {
   const [cart, setCart] = useState([])

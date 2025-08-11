@@ -1,7 +1,6 @@
 // cartSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { CartItemResponse, Dish, RootState } from "@/types/types";
 
 // Configuration
 const CART_LIFESPAN_DAYS = 7; // Days
@@ -140,7 +139,7 @@ export const addToCartThunk = createAsyncThunk(
   }
 );
 
-export const removeFromCartThunk = createAsyncThunk<void, {chefIndex: number, menuIndex: number}, {state: RootState}>(
+export const removeFromCartThunk = createAsyncThunk(
   'cart/removeFromCartThunk',
   async (payload, { getState, dispatch }) => {
     try {

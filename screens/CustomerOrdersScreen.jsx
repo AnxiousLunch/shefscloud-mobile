@@ -29,7 +29,6 @@ import {
 } from "@/services/order";
 
 import { handleGetDefaultSetting } from "@/services/default_setting";
-import { RootState } from "@/types/types";
 
 const CustomerOrdersScreen = () => {
   const router = useRouter();

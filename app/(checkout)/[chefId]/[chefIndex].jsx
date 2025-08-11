@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { View, Text, ActivityIndicator, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSelector, useDispatch } from "react-redux";
-import { RootState, AppDispatch, CartItemResponse } from "@/types/types";
 import { 
   handleCheckDiscount,
   handleCreateOrder

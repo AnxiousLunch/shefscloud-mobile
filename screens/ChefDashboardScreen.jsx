@@ -4,7 +4,6 @@ import { Alert, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View
 import { SafeAreaView } from "react-native-safe-area-context";
 import ProfileDropdown from "../components/ProfileDropdown";
 import { useAuth } from "../contexts/AuthContext";
-import { useNavigation } from "@react-navigation/native";
 import { handleGetAllDishes, handlePostTransaction } from "@/services/shef";
 import { handleGetOrders, handleGetPendingOrdersForChef } from "@/services/order";
 import { useRouter } from "expo-router";
