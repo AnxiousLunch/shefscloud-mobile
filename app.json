@@ -13,9 +13,12 @@
       "infoPlist": {
         "UIBackgroundModes": [
           "audio",
+          "remote-notification",
+          "audio",
           "remote-notification"
         ]
-      }
+      },
+      "bundleIdentifier": "com.anonymous.shefscloud-mobile"
     },
     "android": {
       "edgeToEdgeEnabled": true,
@@ -42,8 +45,6 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/notification-icon.png",
-          "color": "#FFFFFF",
           "sounds": [
             "./assets/sounds/notifications.mp3"
           ],
