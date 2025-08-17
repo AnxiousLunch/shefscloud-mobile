@@ -35,14 +35,12 @@ export default function ProfileDropdown({ isVisible, onClose }) {
       const res = await dispatch(loadUserFromStorage());
       if (loadUserFromStorage.fulfilled.match(res)) {
         const { userInfo } = res.payload;
-        
         setUser(userInfo);
       } else {
         console.warn("Failed to load user:", res.error);
       }
     };
     
-    console.log(user)
     if (isVisible) {
       fetchUserInfo();
     }
@@ -87,6 +85,16 @@ export default function ProfileDropdown({ isVisible, onClose }) {
     } catch (error) {
       console.error("Logout failed:", error)
     }
+  }
+
+  const navigateToChefDashboard = () => {
+    router.push('/(chef)');
+    onClose();
+  }
+
+  const navigateToCustomerApp = () => {
+    router.push('/(customer)');
+    onClose();
   }
 
   if (!isVisible) return null
@@ -135,13 +143,44 @@ export default function ProfileDropdown({ isVisible, onClose }) {
                 numberOfLines={1}
                 ellipsizeMode="tail"
               >
-                
                 {user?.email}
               </Text>
             </View>
           </View>
 
           <View style={styles.divider} />
+
+          {user?.is_chef ? (
+            <>
+              <TouchableOpacity 
+                style={styles.menuItem} 
+                onPress={navigateToChefDashboard}
+              >
+                <Ionicons 
+                  name="restaurant-outline" 
+                  size={20 * responsiveScale} 
+                  color="#b30000" 
+                />
+                <Text style={[styles.menuText, { color: "#b30000", fontSize: baseFontSize }]}>
+                  Chef Dashboard
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.menuItem} 
+                onPress={navigateToCustomerApp}
+              >
+                <Ionicons 
+                  name="person-outline" 
+                  size={20 * responsiveScale} 
+                  color="#b30000" 
+                />
+                <Text style={[styles.menuText, { color: "#b30000", fontSize: baseFontSize }]}>
+                  Customer View
+                </Text>
+              </TouchableOpacity>
+            </>
+          ) : null}
 
           <TouchableOpacity 
             style={styles.menuItem} 
@@ -152,7 +191,7 @@ export default function ProfileDropdown({ isVisible, onClose }) {
               size={20 * responsiveScale} 
               color="#ef4444" 
             />
-            <Text style={[styles.menuText, { fontSize: baseFontSize }]}>
+            <Text style={[styles.menuText, { color: "#ef4444", fontSize: baseFontSize }]}>
               Logout
             </Text>
           </TouchableOpacity>
@@ -236,6 +275,5 @@ const styles = StyleSheet.create({
   menuText: {
     marginLeft: 12,
     fontWeight: "600",
-    color: "#ef4444",
   },
 })

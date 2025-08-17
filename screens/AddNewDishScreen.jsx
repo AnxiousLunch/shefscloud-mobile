@@ -230,16 +230,16 @@ const AddNewDishScreen = () => {
       });
 
       // Add tags
-const tagsValue = cusineSelectedOptions.length > 0 
-  ? cusineSelectedOptions.map(opt => opt.label).join(',')
-  : 'general';
-formData.append('tags', tagsValue);
+      const tagsValue = cusineSelectedOptions.length > 0 
+        ? cusineSelectedOptions.map(opt => opt.label).join(',')
+        : 'general';
+      formData.append('tags', tagsValue);
 
 
       // Add image
       const uriParts = chefMenu.logo.uri.split('.');
       const fileType = uriParts[uriParts.length - 1];
-      formData.append('image', {
+      formData.append('logo', {
         uri: chefMenu.logo.uri,
         name: `dish_${Date.now()}.${fileType}`,
         type: `image/${fileType}`

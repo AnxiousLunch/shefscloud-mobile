@@ -43,6 +43,8 @@ const DishDetailsScreen = ({
     updateFields({ spice_level_id: value });
   };
 
+  console.log("spice", spiceLevel)
+
   return (
     <View>
       <Text style={styles.sectionTitle}>Dish Detail</Text>

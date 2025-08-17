@@ -21,14 +21,14 @@ const ServingSizeModal = ({
   setPieces,
   setCustomPortion,
 }) => {
-  const [localBaseType, setLocalBaseType] = useState<number>(base_type_id || 1);
-  const [localPortionType, setLocalPortionType] = useState<number | string>(portion_type_id || '');
-  const [localGrams, setLocalGrams] = useState<string>(grams || '');
-  const [localPieces, setLocalPieces] = useState<string>(pieces || '');
-  const [localCustomPortion, setLocalCustomPortion] = useState<string>(customPortion || '');
-  const [localDeliveryPrice, setLocalDeliveryPrice] = useState<string>(delivery_price?.toString() || '');
-  const [localPlatformPrice, setLocalPlatformPrice] = useState<string>(platform_price?.toString() || '');
-  const [localChefEarning, setLocalChefEarning] = useState<string>(chef_earning_fee?.toString() || '');
+  const [localBaseType, setLocalBaseType] = useState(base_type_id || 1);
+  const [localPortionType, setLocalPortionType] = useState(portion_type_id || '');
+  const [localGrams, setLocalGrams] = useState(grams || '');
+  const [localPieces, setLocalPieces] = useState(pieces || '');
+  const [localCustomPortion, setLocalCustomPortion] = useState(customPortion || '');
+  const [localDeliveryPrice, setLocalDeliveryPrice] = useState(delivery_price?.toString() || '');
+  const [localPlatformPrice, setLocalPlatformPrice] = useState(platform_price?.toString() || '');
+  const [localChefEarning, setLocalChefEarning] = useState(chef_earning_fee?.toString() || '');
 
   useEffect(() => {
     if (isOpen) {

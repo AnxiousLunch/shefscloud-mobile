@@ -322,12 +322,13 @@ const CustomerOrdersScreen = () => {
     const canCancel = timeSinceCreation.asMinutes() <= defaultSettings.cancellation_time_span;
     const isDeliveredOrDelivering = status === "delivered" || status === "delivering";
     
-    const statusColor = {
+    const statusColors = {
       canceled: "#FF3B30",
       accepted: "#FF9500",
       delivered: "#34C759",
       default: "#000"
-    }[status] || statusColor.default;
+    }
+    const statusColor = statusColors[status] || statusColors.default;
 
     return (
       <View style={styles.orderCard}>

@@ -9,6 +9,7 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Dimensions,
@@ -46,7 +47,6 @@ const responsiveFontSize = (size) => {
 }
 
 export default function AuthScreen() {
-  const [selectedRole, setSelectedRole] = useState("customer");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -71,14 +71,9 @@ export default function AuthScreen() {
     setIsLoading(true);
     try {
       const res = await handleUserLogin({ email, password });
-      if (selectedRole === "chef" && !res.data.is_chef) {
-        Alert.alert("To become a chef, visit the website");
-        console.log("To become a chef, visit the website");
-        return;
-      }
       
-      // Save role in storage
-      await AsyncStorage.setItem("selectedRole", selectedRole);
+      // Save role in storage (always customer)
+      await AsyncStorage.setItem("selectedRole", "customer");
 
       // Save user in Redux
       dispatch(loginAndSaveUser(res));
@@ -160,25 +155,11 @@ export default function AuthScreen() {
             
             {/* Header Section */}
             <View style={styles.authHeader}>
-              <View style={styles.logoContainer}>
-                <LinearGradient 
-                  colors={["#b30000", "#d42c2c", "#ff4444"]} 
-                  style={styles.logoGradient}
-                >
-                  <View style={styles.logoInner}>
-                    <Text style={styles.logoText}>SC</Text>
-                  </View>
-                  <View style={styles.logoShine} />
-                </LinearGradient>
-                <View style={styles.logoShadow} />
-              </View>
-              
-              <Text style={styles.title}>Shefs Cloud</Text>
-              <View style={styles.titleAccent}>
-                <View style={styles.titleDot} />
-                <View style={styles.titleLine} />
-                <View style={styles.titleDot} />
-              </View>
+              <Image 
+                resizeMode="contain"
+                style={styles.logo}
+                source={require('../assets/shefscloud_logo_2.png')}
+              />
               <Text style={styles.subtitle}>
                 Discover exceptional culinary experiences from verified professional chefs
               </Text>
@@ -192,50 +173,6 @@ export default function AuthScreen() {
               <View style={styles.welcomeSection}>
                 <Text style={styles.welcomeTitle}>Welcome Back!</Text>
                 <Text style={styles.welcomeSubtitle}>Sign in to continue your culinary journey</Text>
-              </View>
-
-              {/* Role Selector */}
-              <View style={styles.roleSelectorContainer}>
-                <Text style={styles.sectionLabel}>I am a</Text>
-                <View style={styles.roleSelector}>
-                  <View style={styles.roleSelectorBackground} />
-                  {["customer", "chef"].map((role) => (
-                    <TouchableOpacity
-                      key={role}
-                      style={[
-                        styles.roleButton, 
-                        selectedRole === role && styles.roleButtonActive
-                      ]}
-                      onPress={() => setSelectedRole(role)}
-                      activeOpacity={0.7}
-                    >
-                      {selectedRole === role && (
-                        <LinearGradient
-                          colors={["#b30000", "#d42c2c"]}
-                          style={styles.roleActiveBackground}
-                        />
-                      )}
-                      <View style={styles.roleContent}>
-                        <View style={[
-                          styles.roleIconContainer, 
-                          selectedRole === role && styles.roleIconActive
-                        ]}>
-                          <Ionicons
-                            name={role === "customer" ? "restaurant" : "storefront"}
-                            size={responsiveValue(18, 20, 16)}
-                            color={selectedRole === role ? "#fff" : "#b30000"}
-                          />
-                        </View>
-                        <Text style={[
-                          styles.roleText, 
-                          selectedRole === role && styles.roleTextActive
-                        ]}>
-                          {role === "customer" ? "Food Lover" : "Professional Chef"}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  ))}
-                </View>
               </View>
 
               {/* Input Fields */}
@@ -479,83 +416,10 @@ const styles = StyleSheet.create({
     marginBottom: responsiveHeight(3),
     paddingHorizontal: responsiveWidth(5),
   },
-  logoContainer: {
-    position: "relative",
+  logo: {
+    width: responsiveValue(200, 250, 180),
+    height: responsiveValue(80, 100, 70),
     marginBottom: responsiveHeight(2),
-  },
-  logoGradient: {
-    width: responsiveValue(70, 85, 65),
-    height: responsiveValue(70, 85, 65),
-    borderRadius: responsiveValue(16, 20, 14),
-    justifyContent: "center",
-    alignItems: "center",
-    elevation: 12,
-    shadowColor: "#b30000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-  },
-  logoInner: {
-    width: "88%",
-    height: "88%",
-    borderRadius: responsiveValue(12, 16, 10),
-    backgroundColor: "rgba(255, 255, 255, 0.15)",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: responsiveValue(1, 1.5, 1),
-    borderColor: "rgba(255, 255, 255, 0.3)",
-  },
-  logoShine: {
-    position: "absolute",
-    top: responsiveValue(6, 8, 5),
-    left: responsiveValue(6, 8, 5),
-    width: "30%",
-    height: "30%",
-    backgroundColor: "rgba(255, 255, 255, 0.4)",
-    borderRadius: 8,
-  },
-  logoShadow: {
-    position: "absolute",
-    top: 4,
-    left: 0,
-    right: 0,
-    bottom: -4,
-    backgroundColor: "rgba(179, 0, 0, 0.15)",
-    borderRadius: responsiveValue(16, 20, 14),
-    zIndex: -1,
-  },
-  logoText: {
-    fontSize: responsiveFontSize(24),
-    fontWeight: "900",
-    color: "#fff",
-    textShadowColor: "rgba(0, 0, 0, 0.2)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
-  },
-  title: {
-    fontSize: responsiveFontSize(26),
-    fontWeight: "800",
-    color: "#2d2d2d",
-    marginBottom: responsiveHeight(1),
-    textAlign: "center",
-    letterSpacing: 0.5,
-  },
-  titleAccent: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: responsiveHeight(1.5),
-  },
-  titleDot: {
-    width: responsiveValue(5, 6, 4),
-    height: responsiveValue(5, 6, 4),
-    backgroundColor: "#b30000",
-    borderRadius: 3,
-  },
-  titleLine: {
-    width: responsiveValue(35, 40, 30),
-    height: responsiveValue(1.5, 2, 1),
-    backgroundColor: "#b30000",
-    marginHorizontal: responsiveValue(6, 8, 5),
   },
   subtitle: {
     fontSize: responsiveFontSize(12),
@@ -609,73 +473,6 @@ const styles = StyleSheet.create({
     fontSize: responsiveFontSize(12),
     color: "#666",
     textAlign: "center",
-  },
-
-  // Role Selector
-  roleSelectorContainer: {
-    marginBottom: responsiveHeight(2.5),
-  },
-  sectionLabel: {
-    fontSize: responsiveFontSize(12),
-    fontWeight: "600",
-    color: "#444",
-    marginBottom: responsiveHeight(1),
-    textAlign: "center",
-  },
-  roleSelector: {
-    position: "relative",
-    flexDirection: "row",
-    borderRadius: responsiveValue(10, 12, 8),
-    overflow: "hidden",
-    backgroundColor: "#f8f9fa",
-    padding: responsiveValue(3, 4, 2),
-  },
-  roleSelectorBackground: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "#f1f3f4",
-    borderRadius: responsiveValue(10, 12, 8),
-  },
-  roleButton: {
-    flex: 1,
-    position: "relative",
-    overflow: "hidden",
-    borderRadius: responsiveValue(8, 10, 6),
-  },
-  roleActiveBackground: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: responsiveValue(8, 10, 6),
-  },
-  roleContent: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: responsiveValue(10, 12, 8),
-    paddingHorizontal: responsiveValue(4, 6, 3),
-  },
-  roleIconContainer: {
-    marginRight: responsiveValue(4, 6, 3),
-    backgroundColor: "rgba(179, 0, 0, 0.1)",
-    padding: responsiveValue(4, 5, 3),
-    borderRadius: responsiveValue(4, 5, 3),
-  },
-  roleIconActive: {
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-  },
-  roleText: {
-    fontSize: responsiveFontSize(11),
-    fontWeight: "600",
-    color: "#b30000",
-  },
-  roleTextActive: {
-    color: "#fff",
   },
 
   // Input Section

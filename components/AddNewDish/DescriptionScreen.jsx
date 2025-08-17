@@ -25,15 +25,17 @@ const DescriptionScreen = ({
 }) => {
   const [timeSlot, setTimeSlot] = useState([]);
 
+
   useEffect(() => {
     const fetchTimeSlots = async () => {
       try {
         const slots = await handleGetAvailabilityTimeSlot();
+        console.log("slots",slots)
         const formattedSlots = slots?.map((slot) => ({
           id: slot.id,
-          label: `${slot.start_time} - ${slot.end_time}`,
-          start_time: slot.start_time,
-          end_time: slot.end_time
+          label: `${slot.time_start} - ${slot.time_end}`,
+          start_time: slot.time_start,
+          end_time: slot.time_end
         })) || [];
         setTimeSlot(formattedSlots);
       } catch (error) {
@@ -57,6 +59,8 @@ const DescriptionScreen = ({
       updateFields({ limit_start: "", limit_end: "" });
     }
   };
+
+  console.log(timeSlot);
 
   return (
     <View>

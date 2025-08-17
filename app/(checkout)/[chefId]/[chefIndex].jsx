@@ -14,6 +14,7 @@ import { MaterialIcons, Feather } from "@expo/vector-icons";
 import convertTo12Hour from "@/components/convertTo12Hour";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useRoute } from "@react-navigation/native";
+import { Button } from "react-native";
 
 const CheckoutLogic = () => {
   const dispatch = useDispatch();
@@ -31,9 +32,13 @@ const CheckoutLogic = () => {
     order_total: 0,
     menus: [],
   });
-  const [defaultSetting, setDefaultSetting] = useState<any>(null);
-  const [coordinates, setCoordinates] = useState({ lat: 24.8607, lng: 67.0011 }); // Dummy Karachi coordinates
-  const [addressPlace, setAddressPlace] = useState<"home" | "office" | "apartment">("home");
+  const [defaultSetting, setDefaultSetting] = useState(null);
+  const [coordinates, setCoordinates] = useState({
+    latitude: 24.8607,
+    longitude: 67.0011
+  }); // Dummy Karachi coordinates
+  const [selectedCoords, setSelectedCoords] = useState();
+  const [addressPlace, setAddressPlace] = useState("home");
 
   const route = useRoute();
   // Redux state
@@ -194,6 +199,16 @@ const CheckoutLogic = () => {
     );
   };
 
+  useEffect(() => {
+    if (selectedCoords) {
+      setOrderDeliveryAddress(prev => ({
+        ...prev,
+        latitude: selectedCoords.latitude,
+        longitude: selectedCoords.longitude
+      }));
+    }
+  }, [selectedCoords]);
+
   // Calculate order details
   const calculateOrderDetails = async () => {
     if (!defaultSetting || !cart.length) return;
@@ -294,9 +309,9 @@ const CheckoutLogic = () => {
         home_city: orderDeliveryAddress.home_city || "Karachi",
         home_house_no: orderDeliveryAddress.home_house_no || "",
         home_street_address: orderDeliveryAddress.home_street_address || "",
-        latitude: orderDeliveryAddress.latitude || 0,
+        latitude: coordinates.latitude || 0,
         line2: orderDeliveryAddress.line2 || "",
-        longitude: orderDeliveryAddress.longitude || 0,
+        longitude: coordinates.longitude || 0,
         name: orderDeliveryAddress.name || "",
         office_addition_direction: orderDeliveryAddress.office_addition_direction || "",
         office_building_no: orderDeliveryAddress.office_building_no || "",
@@ -383,6 +398,8 @@ const CheckoutLogic = () => {
     }
   };
 
+  console.log("normal coordinated", coordinates.latitude, coordinates.longitude);
+
   // Initialization
   useEffect(() => {
     const init = async () => {
@@ -396,9 +413,16 @@ const CheckoutLogic = () => {
         
         // Load last order address if exists
         if (userInfo?.last_order_address?.order_delivery_address) {
-          updateOrderDeliveryAddress(
-            userInfo.last_order_address.order_delivery_address
-          );
+          const lastAddress = userInfo.last_order_address.order_delivery_address;
+          updateOrderDeliveryAddress(lastAddress);
+          
+          // Update coordinates with saved location
+          if (lastAddress.latitude && lastAddress.longitude) {
+            setCoordinates({
+              latitude: lastAddress.latitude,
+              longitude: lastAddress.longitude
+            });
+          }
         }
         
         // Load region from AsyncStorage
@@ -558,8 +582,150 @@ const CheckoutLogic = () => {
             </View>
           )}
 
-          {/* Other address types would go here... */}
+
+
+          {addressPlace === "office" && (
+                  <>
+                    {/* Office Department, Floor, Company, Building No */}
+                    <View style={styles.grid}>
+                      <Field
+                        label="Office Dept"
+                        required
+                        value={orderDeliveryAddress.office_department}
+                        onChangeText={(text) =>
+                          updateOrderDeliveryAddress({ office_department: text })
+                        }
+                        placeholder="Office department"
+                      />
+                      <Field
+                        label="Floor"
+                        required
+                        value={orderDeliveryAddress.office_floor}
+                        onChangeText={(text) =>
+                          updateOrderDeliveryAddress({ office_floor: text })
+                        }
+                        placeholder="Floor"
+                      />
+                      <Field
+                        label="Company"
+                        required
+                        value={orderDeliveryAddress.office_company}
+                        onChangeText={(text) =>
+                          updateOrderDeliveryAddress({ office_company: text })
+                        }
+                        placeholder="Company"
+                      />
+                      <Field
+                        label="Building no."
+                        required
+                        value={orderDeliveryAddress.office_building_no}
+                        onChangeText={(text) =>
+                          updateOrderDeliveryAddress({ office_building_no: text })
+                        }
+                        placeholder="Building no."
+                      />
+                    </View>
+
+                    {/* Street, City */}
+                    <View style={styles.grid}>
+                      <Field
+                        label="Street Address"
+                        required
+                        value={orderDeliveryAddress.office_street_address}
+                        onChangeText={(text) =>
+                          updateOrderDeliveryAddress({ office_street_address: text })
+                        }
+                        placeholder="Street Address"
+                      />
+                      <Field
+                        label="City"
+                        required
+                        value={orderDeliveryAddress.office_city}
+                        onChangeText={(text) =>
+                          updateOrderDeliveryAddress({ office_city: text })
+                        }
+                        placeholder="City"
+                      />
+                    </View>
+
+                    {/* Additional Direction */}
+                    <Field
+                      label="Additional Direction"
+                      value={orderDeliveryAddress.office_addition_direction}
+                      onChangeText={(text) =>
+                        updateOrderDeliveryAddress({ office_addition_direction: text })
+                      }
+                      placeholder="Additional direction"
+                    />
+                  </>
+                )}
+
+                {addressPlace === "apartment" && (
+                  <>
+                    {/* Apartment Name, Apt No, Floor, City */}
+                    <View style={styles.grid}>
+                      <Field
+                        label="Apartment Name"
+                        required
+                        value={orderDeliveryAddress.apartment_name}
+                        onChangeText={(text) =>
+                          updateOrderDeliveryAddress({ apartment_name: text })
+                        }
+                        placeholder="Building Name"
+                      />
+                      <Field
+                        label="Apt. No"
+                        required
+                        value={orderDeliveryAddress.apartment_apartment_no}
+                        onChangeText={(text) =>
+                          updateOrderDeliveryAddress({ apartment_apartment_no: text })
+                        }
+                        placeholder="Apartment No"
+                      />
+                      <Field
+                        label="Floor"
+                        required
+                        value={orderDeliveryAddress.apartment_floor}
+                        onChangeText={(text) =>
+                          updateOrderDeliveryAddress({ apartment_floor: text })
+                        }
+                        placeholder="Floor"
+                      />
+                      <Field
+                        label="City"
+                        required
+                        value={orderDeliveryAddress.apartment_city}
+                        onChangeText={(text) =>
+                          updateOrderDeliveryAddress({ apartment_city: text })
+                        }
+                        placeholder="City"
+                      />
+                      <Field
+                        label="Street Address"
+                        required
+                        value={orderDeliveryAddress.apartment_street_address}
+                        onChangeText={(text) =>
+                          updateOrderDeliveryAddress({ apartment_street_address: text })
+                        }
+                        placeholder="Street Address"
+                        fullWidth
+                      />
+                      <Field
+                        label="Additional Direction"
+                        value={orderDeliveryAddress.apartment_addition_direction}
+                        onChangeText={(text) =>
+                          updateOrderDeliveryAddress({
+                            apartment_addition_direction: text,
+                          })
+                        }
+                        placeholder="Additional direction"
+                        fullWidth
+                      />
+                    </View>
+                  </>
+                )}
         </View>
+
 
         {/* Delivery Instructions */}
         <View style={styles.card}>
@@ -823,6 +989,23 @@ const CheckoutLogic = () => {
   );
 };
 
+
+function Field({ label, required, value, onChangeText, placeholder, fullWidth }) {
+  return (
+    <View style={[styles.fieldContainer, fullWidth && styles.fullWidth]}>
+      <Text style={styles.label}>
+        {label} {required && <Text style={styles.required}>*</Text>}
+      </Text>
+      <TextInput
+        style={styles.input}
+        value={value}
+        onChangeText={onChangeText}
+        placeholder={placeholder}
+      />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -950,29 +1133,36 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   addressButtons: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
-  addressButton: {
-    flex: 1,
-    marginHorizontal: 4,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: "#e2e2e2",
-    borderRadius: 25,
-  },
-  activeAddressButton: {
-    backgroundColor: "#E63946",
-    borderColor: "#E63946",
-  },
-  buttonText: {
-    marginLeft: 5,
-    fontWeight: "500",
-  },
+  flexDirection: "row",
+  justifyContent: "space-between",
+  marginBottom: 16,
+},
+addressButton: {
+  flex: 1,
+  marginHorizontal: 5,
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "center",
+  paddingVertical: 14,
+  paddingHorizontal: 12,
+  borderWidth: 1,
+  borderColor: "#e2e2e2",
+  borderRadius: 30,
+  backgroundColor: "white",
+  elevation: 2, 
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.1,
+  shadowRadius: 2,
+},
+activeAddressButton: {
+  backgroundColor: "#E63946",
+  borderColor: "#E63946",
+},
+buttonText: { // more space between icon and text
+  fontWeight: "600",
+  fontSize: 10, // slightly larger for readability
+},
   addressForm: {
     marginTop: 10,
   },

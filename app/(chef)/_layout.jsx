@@ -53,7 +53,7 @@ export default function ChefLayout() {
         name="orders"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabBarIcon iconName="receipt-outline" focused={focused} badge={5} />
+            <TabBarIcon iconName="receipt-outline" focused={focused} />
           ),
         }}
       />
@@ -69,7 +69,7 @@ export default function ChefLayout() {
         name="notifications" // 👈 must have a file `app/(chef)/notifications.tsx`
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabBarIcon iconName="notifications-outline" focused={focused} badge={1} />
+            <TabBarIcon iconName="notifications-outline" focused={focused} />
           ),
         }}
       />

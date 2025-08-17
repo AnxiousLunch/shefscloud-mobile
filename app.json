@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "shefscloud_mobile",
+    "name": "ShefsCloud",
     "slug": "shefscloud_mobile",
     "icon": "./assets/icon.png",
     "version": "1.0.0",
@@ -27,10 +27,13 @@
         "android.permission.ACCESS_NOTIFICATION_POLICY",
         "android.permission.VIBRATE",
         "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS"
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_MEDIA_LOCATION"
       ],
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
+        "foregroundImage": "./assets/icon_4.png",
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.anonymous.shefscloud_mobile"
@@ -49,6 +52,14 @@
             "./assets/sounds/notifications.mp3"
           ],
           "mode": "production"
+        }
+
+      ],
+      [
+        "expo-maps",
+        {
+          "requestLocationPermission": true,
+          "locationPermission": "Allow $(PRODUCT_NAME) to use your location"
         }
       ],
       [

@@ -10,6 +10,7 @@ import {handleGetFoodCategory, handleGetPopularChefWithDishes} from '../services
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { Feather } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
+import { useSelector } from "react-redux"
 
 const { width, height } = Dimensions.get("window")
 
@@ -30,13 +31,15 @@ function isValidURL(string) {
 }
 
 export default function CustomerHomeScreen() {
-  const { user } = useAuth()
+  const user = useSelector(state => state.user.userInfo);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false)
   const [foodCategory, setFoodCategory] = useState([{id: "", name: "", image: "", created_at: "", updated_at: null, deleted_at: null}]);
   const [mostLoveChef, setMostLovedChef] = useState([]);
   const [activeChefIndex, setActiveChefIndex] = useState(0);
   const [city, setCity] = useState();
+  const [search, setSearch] = useState("");
   const router = useRouter();
+
 
   useEffect(() => {
     (async () => {
@@ -76,6 +79,14 @@ export default function CustomerHomeScreen() {
     }
   };
 
+  const handleSearchSubmit = () => {
+    const trimmed = search.trim();
+    if (trimmed) {
+      router.navigate(`/search/${trimmed}`);
+      setSearch(""); // optional: clear after submit
+    }
+  };
+
   if (mostLoveChef.length < 1) return null;
 
   const activeChef = mostLoveChef[activeChefIndex];
@@ -91,6 +102,7 @@ export default function CustomerHomeScreen() {
     // navigation.navigate('foodCategoryScreen', { categoryId });
     router.navigate(`/foodCategoryScreen/${categoryId}`);
   }
+  console.log(user);
 
   return (
 <SafeAreaView style={[styles.container, { backgroundColor: "transparent" }]}>
@@ -104,7 +116,7 @@ export default function CustomerHomeScreen() {
           <View style={styles.headerContent}>
             <View style={styles.greetingContainer}>
               <Text style={styles.greeting}>
-                {getGreeting()}, {user?.first_name || user?.name?.split(" ")[0] || "User"}!
+                {getGreeting()}, {user?.first_name || user?.name || "User"}!
               </Text>
               <View style={styles.location}>
                 <View style={styles.locationIconContainer}>
@@ -139,17 +151,23 @@ export default function CustomerHomeScreen() {
         <View style={styles.searchSection}>
           <View style={styles.searchContainer}>
             <View style={styles.searchIconContainer}>
-              <Feather
-                name="search"
-                size={width * 0.05}
-                color="#6b7280"
-              />
+              <TouchableOpacity onPress={handleSearchSubmit}>
+                <Feather
+                  name="search"
+                  size={width * 0.05}
+                  color="#6b7280"
+                />
+              </TouchableOpacity>
             </View>
             <TextInput
               style={styles.searchInput}
               placeholder="Search cuisines, chefs, or dishes..."
               placeholderTextColor="#9ca3af"
               numberOfLines={1}
+              value={search}
+              onChangeText={setSearch}
+              returnKeyType="search"
+              onSubmitEditing={handleSearchSubmit}
             />
             <TouchableOpacity style={styles.filterButton}>
               <Feather name="filter" size={width * 0.045} color="#6b7280" />
