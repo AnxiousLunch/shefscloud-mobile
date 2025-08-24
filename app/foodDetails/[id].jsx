@@ -394,7 +394,7 @@ export default function FoodDetailScreen() {
             </View>
 
             <TouchableOpacity style={styles.addToCartButton} onPress={handleAddToCart}>
-              <Text style={styles.addToCartText}>Add to Cart - ${(foodItem.chef_earning_fee + foodItem.platform_price + foodItem.delivery_price).toFixed(2)}</Text>
+              <Text style={styles.addToCartText}>Add to Cart - Rs{(foodItem.chef_earning_fee + foodItem.platform_price + foodItem.delivery_price).toFixed(2)}</Text>
             </TouchableOpacity>
           </View>
         </View>

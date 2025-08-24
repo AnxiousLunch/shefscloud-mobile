@@ -23,6 +23,7 @@ import DietaryScreen from '@/components/AddNewDish/DietaryScreen';
 import PhotoScreen from '@/components/AddNewDish/PhotoScreen';
 import ServingSizeModal from '@/components/AddNewDish/ServingsSizeModal';
 import { styles } from '@/styles/addNewDishStyles';
+import { handleGetCitites } from '@/services/get_methods';
 
 const AddNewDishScreen = () => {
   const authToken = useSelector((state) => state.user.userInfo?.access_token);
@@ -50,6 +51,10 @@ const AddNewDishScreen = () => {
   const [pieces, setPieces] = useState('');
   const [customPortion, setCustomPortion] = useState('');
   const [isServSizeModalOpen, setServSizeModalOpen] = useState(false);
+
+  const [citiesOption, setCitiesOption] = useState([]);
+  const [selectedCities, setSelectedCities] = useState([]);
+
 
   const steps = [
     { title: "Dish Details", component: DishDetailsScreen },
@@ -96,7 +101,8 @@ const AddNewDishScreen = () => {
         portionTypesRes,
         heatInstructionRes,
         ingredientsRes,
-        timeSlotRes
+        timeSlotRes,
+        citiesRes
       ] = await Promise.all([
         handleGetFoodType(authToken),
         handleGetSpiceLevel(authToken),
@@ -104,7 +110,8 @@ const AddNewDishScreen = () => {
         handleGetPortionType(authToken),
         handleGetHeatingInstruction(authToken),
         handleGetIngredients(authToken),
-        handleGetAvailabilityTimeSlot()
+        handleGetAvailabilityTimeSlot(),
+        handleGetCitites()
       ]);
 
       const formattedTimeSlots = timeSlotRes.map((slot) => ({
@@ -120,6 +127,21 @@ const AddNewDishScreen = () => {
           dishToEdit.availability_time_slots.includes(slot.id)
         );
         setSelectedAvailabilitySlot(selected);
+      }
+
+      const formattedCities = citiesRes.map(city => ({
+        id: city.id,
+        value: city.name,
+        label: city.name,
+        country_id: city.country_id
+      }));
+      setCitiesOption(formattedCities);
+
+      if (dishToEdit?.cities?.length) {
+        const citiesArray = formattedCities.filter(city => 
+          dishToEdit.cities.includes(city.id)
+        );
+        setSelectedCities(citiesArray);
       }
 
       setFoodType(foodTypeRes);
@@ -173,6 +195,17 @@ const AddNewDishScreen = () => {
 
   const onBack = () => {
     if (currentStep > 0) setCurrentStep(currentStep - 1);
+  };
+
+    const toggleCitySelection = (city) => {
+    setSelectedCities(prev => {
+      const isSelected = prev.some(c => c.id === city.id);
+      if (isSelected) {
+        return prev.filter(c => c.id !== city.id);
+      } else {
+        return [...prev, city];
+      }
+    });
   };
 
   const onSubmit = async () => {
@@ -235,6 +268,10 @@ const AddNewDishScreen = () => {
         : 'general';
       formData.append('tags', tagsValue);
 
+      selectedCities.forEach(city => {
+        formData.append('cities[]', String(city.id));
+      });
+
 
       // Add image
       const uriParts = chefMenu.logo.uri.split('.');
@@ -267,7 +304,7 @@ const AddNewDishScreen = () => {
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScrollView style={styles.content} nestedScrollEnabled={true}>
         <CurrentStepComponent 
           {...chefMenu} 
           updateFields={updateFields}
@@ -293,6 +330,9 @@ const AddNewDishScreen = () => {
           timeSlot={timeSlot}
           selectedAvailabilitySlot={selectedAvailabilitySlot}
           setSelectedAvailabilitySlot={setSelectedAvailabilitySlot}
+          citiesOption={citiesOption}
+          selectedCities={selectedCities}
+          toggleCitySelection={toggleCitySelection}
         />
       </ScrollView>
 

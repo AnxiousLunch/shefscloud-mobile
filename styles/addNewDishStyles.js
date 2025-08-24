@@ -29,6 +29,7 @@ export const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#e2e8f0',
   },
+  
   backButton: {
     paddingVertical: 12,
     paddingHorizontal: 24,
@@ -341,6 +342,99 @@ export const styles = StyleSheet.create({
     color: '#64748b',
     fontSize: 14,
     textAlign: 'center',
+  },
+  citiesList: {
+    maxHeight: 200,
+    marginTop: 10,
+  },
+  cityItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  cityText: {
+    marginLeft: 10,
+    fontSize: 16,
+  },
+  selectedCitiesContainer: {
+    marginTop: 10,
+  },
+  selectedLabel: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  selectedCitiesList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  cityTag: {
+    backgroundColor: '#FFD700',
+    borderRadius: 15,
+    paddingVertical: 5,
+    paddingHorizontal: 12,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  cityTagText: {
+    color: '#333',
+    fontSize: 14,
+  },
+  expirationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  expirationButton: {
+    backgroundColor: '#f0f0f0',
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 5,
+  },
+  expirationButtonText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  expirationInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 5,
+    padding: 10,
+    marginHorizontal: 10,
+    width: 60,
+    textAlign: 'center',
+  },
+  packagingContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  packagingOption: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 5,
+    padding: 15,
+    width: '48%',
+    alignItems: 'center',
+  },
+  packagingOptionSelected: {
+    borderColor: '#FFD700',
+    backgroundColor: '#FFF9D9',
+  },
+  packagingText: {
+    fontSize: 16,
+  },
+  packagingTextSelected: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  subLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 5,
   },
 });
 

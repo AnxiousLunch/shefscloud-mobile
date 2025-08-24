@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ActivityIndicator, Alert } from "react-native";
+import { View, Text, ActivityIndicator, Alert , Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSelector, useDispatch } from "react-redux";
+import { AppleMaps, GoogleMaps } from "expo-maps";
+
 import { 
   handleCheckDiscount,
   handleCreateOrder
@@ -14,6 +16,7 @@ import { MaterialIcons, Feather } from "@expo/vector-icons";
 import convertTo12Hour from "@/components/convertTo12Hour";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useRoute } from "@react-navigation/native";
+import * as Location from "expo-location"
 import { Button } from "react-native";
 
 const CheckoutLogic = () => {
@@ -39,12 +42,15 @@ const CheckoutLogic = () => {
   }); // Dummy Karachi coordinates
   const [selectedCoords, setSelectedCoords] = useState();
   const [addressPlace, setAddressPlace] = useState("home");
+  const [isMapTouched, setIsMapTouched] = useState(false);
 
   const route = useRoute();
   // Redux state
   const { userInfo, authToken } = useSelector((state) => state.user);
   const { cartItem: cart } = useSelector((state) => state.cart);
   const {chefId, chefIndex} = useLocalSearchParams();
+
+  const [location, setLocation] = useState(null);
 
   // Order state
   const [order, setOrder] = useState({
@@ -114,6 +120,36 @@ const CheckoutLogic = () => {
     address_type: "home",
   });
 
+  
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          console.log("Location permission denied");
+          return;
+        }
+
+        let loc = await Location.getCurrentPositionAsync({});
+        const coords = {
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+        };
+
+        setLocation(coords);
+        setCoordinates(coords); // update your checkout state
+        setOrderDeliveryAddress(prev => ({
+          ...prev,
+          latitude: coords.latitude,
+          longitude: coords.longitude
+        }));
+      } catch (err) {
+        console.error("Location error:", err);
+      }
+    })();
+  }, []);
+
+
   // Helper functions
   const handleButtonClick = (buttonId, percent) => {
     setActiveButton(buttonId);
@@ -139,7 +175,7 @@ const CheckoutLogic = () => {
   const initDummyLocation = () => {
     setBykeaToken("dummy_bykea_token");
     setBykeaFare(150); // Fixed delivery fare
-    setChefAddress({ 
+    setChefAddress({  
       addresses: [{ 
         latitude: "24.8607", 
         longitude: "67.0011" 
@@ -291,6 +327,11 @@ const CheckoutLogic = () => {
         Alert.alert("City not set");
         return;
       }
+
+      console.log("[DEBUG] === STARTING ORDER CREATION ===");
+      console.log("[DEBUG] Route params:", { chefId, chefIndex });
+      console.log("[DEBUG] Current user info:", userInfo);
+      console.log("[DEBUG] Cart state:", JSON.stringify(cart, null, 2));
       const city = JSON.parse(cityStr);
 
       // Transform orderDeliveryAddress to match web payload
@@ -342,7 +383,7 @@ const CheckoutLogic = () => {
       const payload = {
         chef_availability_id: order.chef_availability_id,
         chef_earning_price: order.chef_earning_price,
-        chef_id: order.chef_id,
+        chef_id: parseInt(chefId),
         city_id: city.id,
         delivery_notes: order.delivery_notes || "",
         delivery_percentage: order.delivery_percentage || "0.00",
@@ -363,7 +404,8 @@ const CheckoutLogic = () => {
         total_price: order.total_price,
       };
 
-      console.log("Payload is", payload);
+      console.log("[DEBUG] Full order payload:", JSON.stringify(payload, null, 2));
+
 
       const response = await handleCreateOrder(authToken, payload);
       // Update user info
@@ -451,8 +493,12 @@ const CheckoutLogic = () => {
     }
   }, [defaultSetting, cart, order.tip_price]);
 
+  
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container}
+      scrollEnabled={!isMapTouched}
+    >
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => console.log('back')}>
@@ -724,6 +770,52 @@ const CheckoutLogic = () => {
                     </View>
                   </>
                 )}
+                <View style={styles.mapContainer}
+                  onTouchStart={() => setIsMapTouched(true)}
+                  onTouchEnd={() => setIsMapTouched(false)}
+                >
+                  {location ? (
+                    Platform.OS === "ios" ? (
+                      <AppleMaps.View
+                        style={styles.map}
+                        cameraPosition={{
+                          coordinates: {
+                            latitude: location.latitude,
+                            longitude: location.longitude,
+                          },
+                        }}
+                        markers={[
+                          {
+                            coordinates: location,
+                            draggable: true,
+                            subtitle: "Your location",
+                            showCallout: true,
+                          },
+                        ]}
+                      />
+                    ) : (
+                      <GoogleMaps.View
+                        style={styles.map}
+                        cameraPosition={{
+                          coordinates: {
+                            latitude: location.latitude,
+                            longitude: location.longitude,
+                          },
+                        }}
+                        markers={[
+                          {
+                            coordinates: location,
+                            draggable: true,
+                            snippet: "Your location",
+                            showCallout: true,
+                          },
+                        ]}
+                      />
+                    )
+                  ) : (
+                    <Text>Fetching your location...</Text>
+                  )}
+                </View>
         </View>
 
 
@@ -1377,6 +1469,17 @@ buttonText: { // more space between icon and text
   valueText: {
     fontSize: 16,
     paddingVertical: 12,
+  },
+  mapContainer: {
+    width: "100%",
+    height: 400,
+    marginVertical: 10,
+    borderRadius: 12,
+    overflow: "hidden",
+  },
+  map: {
+    width: "100%",
+    height: "100%",
   },
 });
 

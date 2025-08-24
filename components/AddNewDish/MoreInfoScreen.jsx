@@ -1,14 +1,19 @@
 import React from 'react';
-import { View, Text, TextInput } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { styles } from '@/styles/addNewDishStyles';
+import { FlatList } from 'react-native';
+import CheckBox from 'expo-checkbox'
 
 const MoreInfoScreen = ({
   prep_time,
   shelf_life,
   heating_instruction_id,
   updateFields,
-  heatInstruction
+  heatInstruction,
+  citiesOption,
+  selectedCities,
+  toggleCitySelection,
 }) => {
   return (
     <View>
@@ -48,6 +53,47 @@ const MoreInfoScreen = ({
           keyboardType="numeric"
         />
       </View>
+
+      <View style={[styles.inputGroup, { marginBottom: 15 }]}>
+        <Text style={styles.inputLabel}>Cities</Text>
+        <Text style={styles.subLabel}>
+          Choose the cities where you'd like to offer your delicious dish
+        </Text>
+        
+        <FlatList
+          data={citiesOption}
+          keyExtractor={(item) => item.id.toString()}
+          style={styles.citiesList}
+          contentContainerStyle={{ paddingBottom: 10 }}
+          nestedScrollEnabled={true}
+          renderItem={({ item }) => (
+            <TouchableOpacity 
+              style={styles.cityItem}
+              onPress={() => toggleCitySelection(item)}
+            >
+              <CheckBox
+                value={selectedCities.some(city => city.id === item.id)}
+                onValueChange={() => toggleCitySelection(item)}
+              />
+              <Text style={styles.cityText}>{item.label}</Text>
+            </TouchableOpacity>
+          )}
+        />
+        
+        {selectedCities.length > 0 && (
+          <View style={styles.selectedCitiesContainer}>
+            <Text style={styles.selectedLabel}>Selected cities:</Text>
+            <View style={styles.selectedCitiesList}>
+              {selectedCities.map(city => (
+                <View key={city.id} style={styles.cityTag}>
+                  <Text style={styles.cityTagText}>{city.label}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+      </View>
+
 
       <View style={styles.divider} />
 

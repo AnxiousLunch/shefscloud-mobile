@@ -10,7 +10,8 @@ import {handleGetFoodCategory, handleGetPopularChefWithDishes} from '../services
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { Feather } from "@expo/vector-icons"
 import { useRouter } from "expo-router"
-import { useSelector } from "react-redux"
+import { useDispatch, useSelector } from "react-redux"
+import { loadUserFromStorage } from "@/store/user"
 
 const { width, height } = Dimensions.get("window")
 
@@ -39,7 +40,7 @@ export default function CustomerHomeScreen() {
   const [city, setCity] = useState();
   const [search, setSearch] = useState("");
   const router = useRouter();
-
+  const dispatch = useDispatch();
 
   useEffect(() => {
     (async () => {
@@ -58,6 +59,8 @@ export default function CustomerHomeScreen() {
       // Replace localStorage.getItem with AsyncStorage.getItem
       const cityData = await AsyncStorage.getItem("region");
       if (!cityData) return;
+      const res = await dispatch(loadUserFromStorage()).unwrap();
+      console.log("This is res", res);
       
       const city = JSON.parse(cityData);
       setCity(city);
@@ -102,7 +105,7 @@ export default function CustomerHomeScreen() {
     // navigation.navigate('foodCategoryScreen', { categoryId });
     router.navigate(`/foodCategoryScreen/${categoryId}`);
   }
-  console.log(user);
+
 
   return (
 <SafeAreaView style={[styles.container, { backgroundColor: "transparent" }]}>

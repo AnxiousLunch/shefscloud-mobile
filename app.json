@@ -2,7 +2,7 @@
   "expo": {
     "name": "ShefsCloud",
     "slug": "shefscloud_mobile",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon_5.png",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
@@ -22,6 +22,11 @@
     },
     "android": {
       "edgeToEdgeEnabled": true,
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBiA5URXPErjPFP5LqtYlEjo62sbze_2SE"
+        }
+      },
       "permissions": [
         "android.permission.POST_NOTIFICATIONS",
         "android.permission.ACCESS_NOTIFICATION_POLICY",
@@ -30,10 +35,12 @@
         "android.permission.MODIFY_AUDIO_SETTINGS",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.ACCESS_MEDIA_LOCATION"
+        "android.permission.ACCESS_MEDIA_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ],
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon_4.png",
+        "foregroundImage": "./assets/icon_5.png",
         "backgroundColor": "#FFFFFF"
       },
       "package": "com.anonymous.shefscloud_mobile"
@@ -53,7 +60,6 @@
           ],
           "mode": "production"
         }
-
       ],
       [
         "expo-maps",
