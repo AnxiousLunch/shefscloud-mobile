@@ -232,6 +232,7 @@ export default function FoodDetailScreen() {
     try {
       dispatch(addToCartThunk(payload));
       Alert.alert(`${existingCartQuantity > 0 ? 'Updated' : 'Added to'} Cart`);
+      router.back();
     } catch (error) {
       console.error("Error adding to cart:", error);
       Alert.alert("Failed to add item to cart");
@@ -300,14 +301,8 @@ export default function FoodDetailScreen() {
             </View>
 
             <Text style={styles.priceText}>
-              {(
-                foodItem.chef_earning_fee +
-                foodItem.platform_price +
-                foodItem.delivery_price
-              ).toLocaleString("en-PK", {
-                style: "currency",
-                currency: "PKR",
-              })}
+              {(foodItem.chef_earning_fee + foodItem.platform_price + foodItem.delivery_price)
+                .toLocaleString("en-PK", { style: "currency", currency: "PKR" })}
             </Text>
 
             <View style={styles.descriptionSection}>
@@ -315,45 +310,45 @@ export default function FoodDetailScreen() {
               <Text style={styles.descriptionText}>{foodItem.description}</Text>
             </View>
 
-            <View style={{ marginBottom: 20 }}>
-              {/* Portion Size */}
-              <Text style={styles.sectionTitle}>Portion Size</Text>
-              <Text style={styles.sectionContent}>{foodItem.portion_size || "Standard"}</Text>
-
-              {/* Spicy Level */}
-              <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Spicy Level</Text>
-              <Text style={styles.sectionContent}>{foodItem.spice_level.name || "Mild"}</Text>
-
-
-              <View>
-                
-                <View style={{ marginBottom: 20 }}>
-                  <Text style={styles.label}>
-                    Select Delivery Date <Text style={styles.required}>*</Text>
-                  </Text>
-
-                  <TouchableOpacity
-                    onPress={() => setShowDatePicker(true)}
-                    style={styles.datePickerButton}
-                  >
-                    <Text style={styles.datePickerText}>
-                      {selectedDate
-                        ? selectedDate.toLocaleDateString()
-                        : "Pick a delivery date"}
-                    </Text>
-                  </TouchableOpacity>
-
-                  {showDatePicker && (
-                    <DateTimePicker
-                      value={selectedDate || new Date()}
-                      mode="date"
-                      display="default"
-                      minimumDate={new Date()}
-                      onChange={onDateChange}
-                    />
-                  )}
+            <View style={styles.infoSection}>
+              <View style={styles.infoGrid}>
+                <View style={styles.infoCard}>
+                  <Text style={styles.infoLabel}>Portion Size</Text>
+                  <Text style={styles.infoValue}>{foodItem.portion_size || "Standard"}</Text>
                 </View>
+                <View style={styles.infoCard}>
+                  <Text style={styles.infoLabel}>Spice Level</Text>
+                  <Text style={styles.infoValue}>{foodItem.spice_level.name || "Mild"}</Text>
+                </View>
+              </View>
+            </View>
 
+            <View style={styles.formSection}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.label}>
+                  Select Delivery Date <Text style={styles.required}>*</Text>
+                </Text>
+                <TouchableOpacity
+                  onPress={() => setShowDatePicker(true)}
+                  style={styles.datePickerButton}
+                >
+                  <Text style={styles.datePickerText}>
+                    {selectedDate ? selectedDate.toLocaleDateString() : "Pick a delivery date"}
+                  </Text>
+                  <Ionicons name="calendar-outline" size={20} color="#6b7280" />
+                </TouchableOpacity>
+                {showDatePicker && (
+                  <DateTimePicker
+                    value={selectedDate || new Date()}
+                    mode="date"
+                    display="default"
+                    minimumDate={new Date()}
+                    onChange={onDateChange}
+                  />
+                )}
+              </View>
+
+              <View style={styles.inputGroup}>
                 <Text style={styles.label}>
                   Select Delivery Time <Text style={styles.required}>*</Text>
                 </Text>
@@ -366,8 +361,9 @@ export default function FoodDetailScreen() {
                         delivery_slot: itemValue,
                       }))
                     }
+                    style={{color: "#000000"}}
                   >
-                    <Picker.Item label="--- Pick a delivery slot" value="" />
+                    <Picker.Item label="Pick a delivery slot" value="" />
                     {foodItem.availability_time_slots?.map((date, index) => (
                       <Picker.Item
                         key={index}
@@ -378,23 +374,31 @@ export default function FoodDetailScreen() {
                   </Picker>
                 </View>
               </View>
+            </View>
 
-
-              {/* Quantity Selector */}
-              <Text style={[styles.sectionTitle, { marginTop: 20 }]}>Quantity</Text>
+            <View style={styles.quantitySection}>
+              <Text style={styles.sectionTitle}>Quantity</Text>
               <View style={styles.quantityContainer}>
-                <TouchableOpacity style={styles.qtyButton} onPress={() => setQuantity((q) => Math.max(1, q - 1))}>
-                  <Text style={styles.qtyButtonText}>-</Text>
+                <TouchableOpacity 
+                  style={styles.qtyButton} 
+                  onPress={() => setQuantity((q) => Math.max(1, q - 1))}
+                >
+                  <Text style={styles.qtyButtonText}>−</Text>
                 </TouchableOpacity>
                 <Text style={styles.qtyValue}>{quantity}</Text>
-                <TouchableOpacity style={styles.qtyButton} onPress={() => setQuantity((q) => q + 1)}>
+                <TouchableOpacity 
+                  style={styles.qtyButton} 
+                  onPress={() => setQuantity((q) => q + 1)}
+                >
                   <Text style={styles.qtyButtonText}>+</Text>
                 </TouchableOpacity>
               </View>
             </View>
 
             <TouchableOpacity style={styles.addToCartButton} onPress={handleAddToCart}>
-              <Text style={styles.addToCartText}>Add to Cart - Rs{(foodItem.chef_earning_fee + foodItem.platform_price + foodItem.delivery_price).toFixed(2)}</Text>
+              <Text style={styles.addToCartText}>
+                Add to Cart - Rs{(foodItem.chef_earning_fee + foodItem.platform_price + foodItem.delivery_price).toFixed(2)}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -407,248 +411,334 @@ export default function FoodDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f8fafc",
   },
+  
+  // Header Styles
   header: {
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingVertical: 16,
     flexDirection: "row",
     alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f1f5f9",
     backgroundColor: "#ffffff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#e2e8f0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: "#fef2f2",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: 16,
+    borderWidth: 1,
+    borderColor: "#fecaca",
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: "800",
+    fontSize: 20,
+    fontWeight: "700",
     color: "#1f2937",
+    flex: 1,
   },
+
+  // Content Styles
   content: {
     flex: 1,
-    padding: 25,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   detailCard: {
     backgroundColor: "#ffffff",
-    borderRadius: 25,
+    borderRadius: 20,
     overflow: "hidden",
+    marginBottom: 20,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.08,
-    shadowRadius: 30,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 20,
+    elevation: 6,
   },
+
+  // Image Styles
   foodImageLarge: {
-    height: 250,
+    height: 240,
+    backgroundColor: "#f3f4f6",
     justifyContent: "center",
     alignItems: "center",
-    position: "relative",
   },
-  popularBadge: {
-    position: "absolute",
-    top: 20,
-    right: 20,
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 15,
-  },
-  popularBadgeText: {
-    color: "#ffffff",
-    fontSize: 12,
-    fontWeight: "600",
-  },
+
+  // Content Section
   detailContent: {
-    padding: 30,
+    padding: 24,
   },
   foodTitle: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: "800",
-    marginBottom: 12,
     color: "#1f2937",
+    marginBottom: 8,
+    lineHeight: 32,
   },
   chefName: {
-    color: "#6b7280",
-    marginBottom: 15,
     fontSize: 16,
+    color: "#6b7280",
+    marginBottom: 16,
+    fontWeight: "500",
   },
+
+  // Rating Section
   ratingContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 15,
     marginBottom: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: "#fef9e7",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#fef3c7",
   },
   starsLarge: {
-    color: "#fbbf24",
     fontSize: 16,
+    marginRight: 8,
   },
   ratingNumber: {
-    fontWeight: "600",
-    color: "#1f2937",
     fontSize: 16,
+    fontWeight: "700",
+    color: "#1f2937",
+    marginRight: 6,
   },
   reviewCount: {
+    fontSize: 14,
     color: "#6b7280",
+    fontWeight: "500",
   },
+
+  // Price Section
   priceText: {
-    fontSize: 24,
-    fontWeight: "800",
+    fontSize: 28,
+    fontWeight: "900",
     color: "#dc2626",
-    marginBottom: 25,
+    marginBottom: 24,
+    textAlign: "center",
+    paddingVertical: 12,
+    backgroundColor: "#fef2f2",
+    borderRadius: 12,
   },
+
+  // Description Section
   descriptionSection: {
-    marginBottom: 25,
+    marginBottom: 24,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f1f5f9",
   },
   sectionTitle: {
-    fontWeight: "700",
-    marginBottom: 12,
     fontSize: 18,
+    fontWeight: "700",
     color: "#1f2937",
+    marginBottom: 12,
+    marginTop: 4,
   },
   descriptionText: {
-    color: "#6b7280",
+    fontSize: 15,
+    color: "#4b5563",
     lineHeight: 24,
-    fontSize: 15,
+    textAlign: "justify",
   },
-  ingredientsSection: {
-    marginBottom: 25,
-  },
-  ingredientsText: {
-    color: "#6b7280",
+  sectionContent: {
     fontSize: 15,
+    color: "#4b5563",
+    marginBottom: 4,
+    fontWeight: "500",
+  },
+
+  // Form Elements
+  formSection: {
+    marginBottom: 24,
+  },
+  inputGroup: {
+    marginBottom: 20,
+    position: "relative",
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#374151",
+    marginBottom: 8,
+    paddingHorizontal: 4,
+  },
+  required: {
+    color: "#dc2626",
+    fontSize: 14,
+  },
+
+  // Date Picker Styles
+  datePickerButton: {
+    borderWidth: 2,
+    borderColor: "#d1d5db",
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    backgroundColor: "#ffffff",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    minHeight: 52,
+  },
+  datePickerText: {
+    fontSize: 16,
+    color: "#374151",
+    fontWeight: "500",
+  },
+
+  // Picker Styles
+  pickerWrapper: {
+    borderWidth: 2,
+    borderColor: "#d1d5db",
+    borderRadius: 12,
+    backgroundColor: "#ffffff",
+    overflow: "hidden",
+    minHeight: 52,
+  },
+
+  // Quantity Section
+  quantitySection: {
+    marginBottom: 24,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#f1f5f9",
+  },
+  quantityContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 12,
+    backgroundColor: "#f8fafc",
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+  },
+  qtyButton: {
+    width: 44,
+    height: 44,
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#e5e7eb",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  qtyButtonText: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#374151",
+  },
+  qtyValue: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#1f2937",
+    marginHorizontal: 24,
+    minWidth: 40,
+    textAlign: "center",
+  },
+
+  // Info Cards (for portion size, spice level, etc.)
+  infoSection: {
+    marginBottom: 24,
   },
   infoGrid: {
     flexDirection: "row",
-    gap: 15,
-    marginBottom: 30,
+    gap: 12,
+    marginTop: 8,
   },
   infoCard: {
     flex: 1,
-    alignItems: "center",
-    padding: 20,
     backgroundColor: "#f8fafc",
-    borderRadius: 15,
-  },
-  infoIcon: {
-    fontSize: 24,
-    marginBottom: 8,
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
   },
   infoLabel: {
     fontSize: 12,
     color: "#6b7280",
     marginBottom: 4,
+    fontWeight: "600",
+    textTransform: "uppercase",
   },
   infoValue: {
+    fontSize: 14,
     fontWeight: "700",
     color: "#1f2937",
+    textAlign: "center",
   },
+
+  // Add to Cart Button
   addToCartButton: {
     backgroundColor: "#dc2626",
-    paddingVertical: 20,
-    borderRadius: 15,
+    paddingVertical: 18,
+    borderRadius: 16,
     alignItems: "center",
+    marginTop: 12,
     shadowColor: "#dc2626",
-    shadowOffset: {
-      width: 0,
-      height: 8,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 25,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
     elevation: 8,
   },
   addToCartText: {
     color: "#ffffff",
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: "800",
+    letterSpacing: 0.5,
   },
+
+  // Loading and Error States
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#f8fafc",
   },
   errorContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#f8fafc",
+    paddingHorizontal: 20,
   },
   errorText: {
     fontSize: 18,
     color: "#dc2626",
-  },
-  sectionContent: {
-    fontSize: 15,
-    color: "#374151",
-    marginBottom: 10,
+    fontWeight: "600",
+    textAlign: "center",
   },
 
-  quantityContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 15,
-    marginTop: 10,
+  // Interactive States
+  activeInput: {
+    borderColor: "#dc2626",
+    backgroundColor: "#fef2f2",
   },
-
-  qtyButton: {
-    backgroundColor: "#f3f4f6",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+  disabledButton: {
+    backgroundColor: "#9ca3af",
   },
-
-  qtyButtonText: {
-    fontSize: 20,
-    color: "#1f2937",
-    fontWeight: "700",
+  
+  // Accessibility improvements
+  touchableArea: {
+    minHeight: 44,
+    minWidth: 44,
   },
-
-  qtyValue: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#1f2937",
-  },
-  label: {
-    position: 'absolute',
-    top: -10,
-    left: 8,
-    backgroundColor: 'white',
-    paddingHorizontal: 4,
-    zIndex: 1,
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  required: {
-    color: '#007bff', // or whatever "primary" color you want
-  },
-  pickerWrapper: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 4,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  datePickerButton: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 4,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    backgroundColor: '#f9fafb',
-    marginTop: 5,
-  },
-  datePickerText: {
-    fontSize: 15,
-    color: '#1f2937',
-  },
-
-})
+});
