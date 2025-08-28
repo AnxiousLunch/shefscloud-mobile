@@ -1,4 +1,4 @@
-// ChefDetailScreen.tsx - Fixed visibility and contrast issues
+// ChefDetailScreen.tsx - Updated with gradient header and improved design
 import React, { useEffect, useState } from "react";
 import { 
   View, 
@@ -11,7 +11,8 @@ import {
   Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  ScrollView
 } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import { useSelector } from "react-redux";
@@ -147,7 +148,7 @@ const ChefDetailScreen = () => {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" />
+        <ActivityIndicator size="large" color="#dc2626" />
       </View>
     );
   }
@@ -180,11 +181,22 @@ const ChefDetailScreen = () => {
         return <FilterSection {...item.data} />;
       
       case 'dishes_header':
-        return (
-          <View style={styles.sectionHeaderContainer}>
-            <Text style={styles.dishesTitle}>MAIN ITEMS</Text>
-          </View>
-        );
+  return (
+    <View>
+      <View style={styles.sectionHeaderContainer}>
+        <Text style={styles.dishesTitle}>MAIN ITEMS</Text>
+      </View>
+      <FlatList
+        data={dishes}
+        keyExtractor={(dish) => `dish_${dish.id}`}
+        renderItem={({ item }) => <DishItem dish={item} />}
+        numColumns={2}
+        columnWrapperStyle={{ justifyContent: "space-between", paddingHorizontal: 12 }}
+        scrollEnabled={false} // so main FlatList handles scroll
+      />
+    </View>
+  );
+
       
       case 'dish':
         return <DishItem dish={item.data} isEven={index % 2 === 0} />;
@@ -236,11 +248,23 @@ const ChefDetailScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
-          <Ionicons name="arrow-back" size={24} color="#dc2626" />
-        </TouchableOpacity>
-      </View>
+      {/* Updated Header with Gradient */}
+      <LinearGradient
+        colors={['#dc2626', '#dc2626']}
+        style={styles.headerGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+      >
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            {chefAndDishes ? `${chefAndDishes.first_name} ${chefAndDishes.last_name}` : 'Chef'}
+          </Text>
+          <View style={styles.rightPlaceholder} />
+        </View>
+      </LinearGradient>
       
       <KeyboardAvoidingView 
         style={styles.keyboardAvoid}
@@ -277,19 +301,6 @@ const ChefContent = ({ chefAndDishes }) => {
           colors={['transparent', 'rgba(0,0,0,0.7)']}
           style={styles.coverGradient}
         />
-        
-        {/* Chef name overlay on cover image */}
-        <View style={styles.chefNameOverlay}>
-          <Text style={styles.chefNameText}>
-            {chefAndDishes.first_name} {chefAndDishes.last_name}
-          </Text>
-          {chefAndDishes.email_verified_at && (
-            <View style={styles.verifiedBadgeOverlay}>
-              <Ionicons name="checkmark-circle" size={16} color="#4ade80" />
-              <Text style={styles.verifiedTextOverlay}>Verified</Text>
-            </View>
-          )}
-        </View>
       </View>
       
       <View style={styles.profileContainer}>
@@ -305,6 +316,7 @@ const ChefContent = ({ chefAndDishes }) => {
         <View style={styles.infoContainer}>          
           <View style={styles.statsContainer}>
             <View style={styles.statBadge}>
+              <Ionicons name="restaurant" size={16} color="#dc2626" />
               <Text style={styles.statText}>{chefAndDishes.menus?.length || 0} Dishes</Text>
             </View>
           </View>
@@ -340,33 +352,43 @@ const FilterSection = ({ sortingWithDays, setSortingWithDays, sortingWithSlot, s
     <View style={styles.filterContainer}>
       <Text style={styles.filterTitle}>Select Delivery Day</Text>
       
-      <FlatList
+      <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        data={[...days, { name: "Reset", value: "reset" }]}
-        keyExtractor={(item) => item.value}
-        renderItem={({ item }) => (
+        contentContainerStyle={styles.daysScrollContainer}
+      >
+        {days.map((item) => (
           <TouchableOpacity
+            key={item.value}
             style={[
               styles.dayButton,
               sortingWithDays === item.value && styles.activeDayButton,
-              item.value === "reset" && styles.resetButton
             ]}
-            onPress={() => setSortingWithDays(item.value === "reset" ? "" : item.value)}
+            onPress={() => setSortingWithDays(item.value)}
           >
             <Text style={[
               styles.dayText,
-              item.value === "reset" && styles.resetText
+              sortingWithDays === item.value && styles.activeDayText
             ]}>
               {item.name}
             </Text>
           </TouchableOpacity>
-        )}
-      />
+        ))}
+        <TouchableOpacity
+          style={styles.resetButton}
+          onPress={() => setSortingWithDays("")}
+        >
+          <Text style={styles.resetText}>Reset</Text>
+        </TouchableOpacity>
+      </ScrollView>
       
       <View style={styles.timeSlotContainer}>
         <Text style={styles.timeSlotLabel}>Delivery Time</Text>
-        <View style={styles.pickerContainer}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.timeSlotScrollContainer}
+        >
           {timeSlots.map(slot => (
             <TouchableOpacity
               key={slot.id}
@@ -374,12 +396,14 @@ const FilterSection = ({ sortingWithDays, setSortingWithDays, sortingWithSlot, s
                 styles.timeSlotButton,
                 sortingWithSlot === slot.id && styles.activeTimeSlot
               ]}
-              onPress={() => setSortingWithSlot(slot.id)}
+              onPress={() => setSortingWithSlot(sortingWithSlot === slot.id ? "" : slot.id)}
             >
-              <Text>{slot.time_start} - {slot.time_end}</Text>
+              <Text style={sortingWithSlot === slot.id && styles.activeTimeSlotText}>
+                {slot.time_start} - {slot.time_end}
+              </Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </ScrollView>
       </View>
     </View>
   );
@@ -396,7 +420,7 @@ const DishItem = ({ dish }) => {
         }}
         style={styles.dishImage}
       />
-      <Text style={styles.dishName}>{dish.name}</Text>
+      <Text style={styles.dishName} numberOfLines={1}>{dish.name}</Text>
       <View style={styles.ratingContainer}>
         <StarRating 
           rating={dish.average_rating || 0} 
@@ -424,7 +448,7 @@ const ReviewItem = ({ review, expandedReviews, toggleReadMore, toggleReplies }) 
           />
         ) : (
           <View style={styles.avatarPlaceholder}>
-            <Text>N/A</Text>
+            <Ionicons name="person" size={20} color="#9ca3af" />
           </View>
         )}
         
@@ -474,11 +498,11 @@ const ReviewItem = ({ review, expandedReviews, toggleReadMore, toggleReplies }) 
                 />
               ) : (
                 <View style={styles.smallAvatarPlaceholder}>
-                  <Text style={styles.smallText}>N/A</Text>
+                  <Ionicons name="person" size={16} color="#9ca3af" />
                 </View>
               )}
               
-              <View>
+              <View style={styles.replyContent}>
                 <Text style={styles.replyText}>{reply.reply}</Text>
                 <Text style={styles.replyInfo}>
                   By: {reply.user.first_name} {reply.user.last_name}
@@ -503,26 +527,39 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
+  headerGradient: {
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    paddingBottom: 10,
+  },
   header: {
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingTop: 15,
     flexDirection: "row",
     alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: "#f1f5f9",
-    backgroundColor: "#ffffff",
+    justifyContent: "space-between",
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#fff",
+    flex: 1,
+    textAlign: "center",
+    marginHorizontal: 10,
+  },
+  rightPlaceholder: {
+    width: 40,
   },
   keyboardAvoid: {
     flex: 1,
-  },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#fef2f2",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 12,
   },
   flatListContent: {
     paddingBottom: 20,
@@ -558,39 +595,6 @@ const styles = StyleSheet.create({
     height: '60%',
     borderRadius: 16,
   },
-  chefNameOverlay: {
-    position: 'absolute',
-    bottom: 16,
-    left: 16,
-    right: 16,
-    flexDirection: 'column',
-    alignItems: 'flex-start',
-  },
-  chefNameText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    textShadowColor: 'rgba(0, 0, 0, 0.5)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
-    marginBottom: 4,
-  },
-  verifiedBadgeOverlay: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  verifiedTextOverlay: {
-    fontSize: 12,
-    color: '#ffffff',
-    marginLeft: 4,
-    fontWeight: '600',
-  },
   profileContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -613,18 +617,19 @@ const styles = StyleSheet.create({
   },
   statBadge: {
     flexDirection: 'row',
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#fef2f2',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    alignItems: 'center'
+    borderColor: '#fee2e2',
   },
   statText: {
     fontSize: 12,
-    color: '#64748b',
-    fontWeight: '500',
+    color: '#dc2626',
+    fontWeight: '600',
+    marginLeft: 4,
   },
   bioText: {
     fontSize: 14,
@@ -634,127 +639,156 @@ const styles = StyleSheet.create({
   },
   certifiedBadge: {
     flexDirection: 'row',
-    backgroundColor: '#fef3c7',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
+    backgroundColor: '#fffbeb',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
     alignSelf: 'flex-start',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#fbbf24',
+    borderColor: '#fef3c7',
   },
   certifiedText: {
     fontSize: 12,
     marginLeft: 4,
-    color: '#92400e',
+    color: '#d97706',
     fontWeight: '600',
   },
   filterContainer: {
-    padding: 16
+    padding: 16,
+    backgroundColor: '#f8fafc',
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   filterTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    color: '#666'
+    fontWeight: '600',
+    marginBottom: 12,
+    color: '#374151'
+  },
+  daysScrollContainer: {
+    paddingBottom: 8,
   },
   dayButton: {
-    padding: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     marginRight: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8
+    borderColor: '#e5e7eb',
+    borderRadius: 20,
+    backgroundColor: '#fff',
   },
   activeDayButton: {
-    backgroundColor: '#f02444',
-    borderColor: '#f02444'
+    backgroundColor: '#dc2626',
+    borderColor: '#dc2626'
   },
   dayText: {
-    fontWeight: 'bold',
-    color: '#777'
+    fontWeight: '500',
+    color: '#6b7280'
+  },
+  activeDayText: {
+    color: '#fff',
+    fontWeight: '600'
   },
   resetButton: {
-    padding: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderWidth: 1,
-    borderColor: '#f02444',
-    borderRadius: 8,
+    borderColor: '#dc2626',
+    borderRadius: 20,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    backgroundColor: '#fff',
   },
   resetText: {
-    color: '#f02444',
-    fontWeight: 'bold'
+    color: '#dc2626',
+    fontWeight: '600'
   },
   timeSlotContainer: {
     marginTop: 16
   },
   timeSlotLabel: {
-    position: 'absolute',
-    top: -8,
-    left: 16,
-    backgroundColor: '#fff',
-    paddingHorizontal: 4,
-    zIndex: 1,
-    fontSize: 12,
-    color: '#666'
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#374151'
   },
-  pickerContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap'
+  timeSlotScrollContainer: {
+    paddingBottom: 8,
   },
   timeSlotButton: {
-    padding: 8,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     marginRight: 8,
-    marginBottom: 8
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    backgroundColor: '#fff',
   },
   activeTimeSlot: {
-    borderColor: '#f02444',
-    backgroundColor: '#f0244420'
+    borderColor: '#dc2626',
+    backgroundColor: '#dc2626'
+  },
+  activeTimeSlotText: {
+    color: '#fff'
   },
   dishesTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     textTransform: 'uppercase',
-    marginVertical: 16
+    marginVertical: 16,
+    color: '#1f2937',
+    textAlign: 'center',
   },
   dishCard: {
     margin: 8,
-    padding: 8,
+    padding: 12,
     borderWidth: 1,
-    borderColor: '#eee',
-    borderRadius: 8,
-    width: '45%'
+    borderColor: '#f3f4f6',
+    borderRadius: 12,
+    width: '45%',
+    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
   dishImage: {
     width: '100%',
     height: 120,
-    borderRadius: 8
+    borderRadius: 8,
+    marginBottom: 8,
   },
   dishName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginTop: 8
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 4,
+    color: '#1f2937',
   },
   ratingContainer: {
-    marginVertical: 4
+    marginVertical: 6
   },
   dishPrice: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#f02444'
+    color: '#dc2626',
+    marginTop: 4,
   },
   sectionTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     textTransform: 'uppercase',
-    marginBottom: 16
+    marginBottom: 16,
+    color: '#1f2937',
+    textAlign: 'center',
   },
   reviewCard: {
     backgroundColor: '#fff',
-    borderRadius: 8,
+    borderRadius: 12,
     padding: 16,
     marginHorizontal: 16,
     marginBottom: 16,
@@ -762,12 +796,14 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 2
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#f3f4f6',
   },
   reviewHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8
+    marginBottom: 12
   },
   avatar: {
     width: 48,
@@ -778,7 +814,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#f3f4f6',
     justifyContent: 'center',
     alignItems: 'center'
   },
@@ -786,21 +822,25 @@ const styles = StyleSheet.create({
     marginLeft: 12
   },
   reviewerName: {
-    fontWeight: 'bold',
-    fontSize: 16
+    fontWeight: '600',
+    fontSize: 16,
+    color: '#1f2937',
+    marginBottom: 4,
   },
   reviewText: {
     fontSize: 14,
+    color: '#4b5563',
+    lineHeight: 20,
     marginBottom: 8
   },
   readMore: {
-    color: '#1e90ff',
-    fontWeight: 'bold'
+    color: '#dc2626',
+    fontWeight: '600'
   },
   viewReplies: {
-    color: '#1e90ff',
+    color: '#dc2626',
     fontSize: 12,
-    textDecorationLine: 'underline',
+    fontWeight: '600',
     marginBottom: 8
   },
   repliesContainer: {
@@ -809,36 +849,37 @@ const styles = StyleSheet.create({
   },
   replyCard: {
     flexDirection: 'row',
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#f9fafb',
     padding: 12,
     borderRadius: 8,
     marginBottom: 8
   },
   smallAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     marginRight: 8
   },
   smallAvatarPlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#e5e7eb',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8
   },
-  smallText: {
-    fontSize: 10
+  replyContent: {
+    flex: 1,
   },
   replyText: {
-    fontSize: 14,
-    flex: 1
+    fontSize: 13,
+    color: '#4b5563',
+    marginBottom: 4,
   },
   replyInfo: {
-    fontSize: 12,
-    color: '#666'
+    fontSize: 11,
+    color: '#9ca3af'
   },
   feedbackContainer: {
     padding: 16,
@@ -870,10 +911,15 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   submitButton: {
-    backgroundColor: '#f02444',
+    backgroundColor: '#dc2626',
     padding: 16,
     borderRadius: 8,
-    alignItems: 'center'
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   buttonText: {
     color: '#fff',
