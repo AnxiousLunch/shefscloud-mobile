@@ -11,6 +11,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Image,
   Dimensions,
   ActivityIndicator,
 } from "react-native";
@@ -165,31 +166,18 @@ export default function SignUpScreen() {
             </TouchableOpacity>
 
             {/* Header Section */}
-            <View style={styles.authHeader}>
-              <View style={styles.logoContainer}>
-                <LinearGradient 
-                  colors={["#b30000", "#d42c2c", "#ff4444"]} 
-                  style={styles.logoGradient}
-                >
-                  <View style={styles.logoInner}>
-                    <Text style={styles.logoText}>SC</Text>
-                  </View>
-                  <View style={styles.logoShine} />
-                </LinearGradient>
-                <View style={styles.logoShadow} />
-              </View>
-              
-              <Text style={styles.title}>Shefs Cloud</Text>
-              <View style={styles.titleAccent}>
-                <View style={styles.titleDot} />
-                <View style={styles.titleLine} />
-                <View style={styles.titleDot} />
-              </View>
-              <Text style={styles.subtitle}>
-                Create your account to discover exceptional culinary experiences
-              </Text>
-            </View>
+           <View style={styles.authHeader}>
+  {/* Use the same logo as login */}
+  <Image 
+    resizeMode="contain"
+    style={styles.logo}
+    source={require('../assets/shefscloud_logo_2.png')}
+  />
 
+  <Text style={styles.subtitle}>
+    Create your account to discover exceptional culinary experiences
+  </Text>
+</View>
             {/* Main Form Card */}
             <View style={styles.formCard}>
               <View style={styles.cardShadow} />
@@ -374,8 +362,12 @@ export default function SignUpScreen() {
             <View style={styles.footer}>
               <Text style={styles.termsText}>
                 By continuing, you agree to our{" "}
-                <Text style={styles.termsLink}>Terms of Service</Text> and{" "}
-                <Text style={styles.termsLink}>Privacy Policy</Text>
+                <Text style={styles.termsLink}
+                 onPress={() => router.push('/termsofservice')}
+                 >Terms of Service</Text> and{" "}
+                <Text style={styles.termsLink}
+                 onPress={() => router.push('/privacy')}
+                >Privacy Policy</Text>
               </Text>
             </View>
           </ScrollView>
@@ -391,6 +383,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#ffffff",
   },
+  authHeader: {
+    alignItems: "center",
+    marginTop: responsiveHeight(6),
+    marginBottom: responsiveHeight(3),
+    paddingHorizontal: responsiveWidth(5),
+  },
+  logo: {
+    width: responsiveValue(200, 250, 180),
+    height: responsiveValue(80, 100, 70),
+    marginBottom: responsiveHeight(2),
+  },
+  subtitle: {
+    fontSize: responsiveFontSize(12),
+    color: "#666",
+    textAlign: "center",
+    lineHeight: responsiveFontSize(18),
+    maxWidth: Math.min(responsiveWidth(90), 400),
+    fontWeight: "400",
+  },
+
   backgroundGradient: {
     position: "absolute",
     top: 0,
