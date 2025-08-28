@@ -685,7 +685,7 @@ const CustomerOrdersScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    container: {
+   container: {
     flex: 1,
   },
   header: {
@@ -711,15 +711,18 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#fffffff",
     justifyContent: "center",
     alignItems: "center",
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#FFF",
-    marginTop: 8,
+    fontSize: width * 0.06,
+    fontWeight: "800",
+    color: "#ffffff",
+    textAlign: "center",
+  },
+  rightSpacer: {
+    width: 40, // Same as backButton for balance
   },
   sectionContainer: {
     backgroundColor: "#FFF",
