@@ -216,7 +216,7 @@ export default function CustomerHomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Featured Chefs</Text>
-            <TouchableOpacity activeOpacity={0.7}>
+            <TouchableOpacity activeOpacity={0.7} onPress={() => router.push('/allChefs')}>
               <Text style={styles.seeAll}>View All</Text>
             </TouchableOpacity>
           </View>

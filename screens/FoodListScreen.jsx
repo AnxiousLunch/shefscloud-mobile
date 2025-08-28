@@ -141,6 +141,7 @@ export default function FoodListScreen() {
     header: {
       paddingHorizontal: 20,
       paddingVertical: 16,
+      paddingTop: 50,
       flexDirection: "row",
       alignItems: "center",
       backgroundColor: "#dc2626",
@@ -336,105 +337,106 @@ export default function FoodListScreen() {
 
   // Main render
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={handleBackPress}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="arrow-back" size={24} color="#ffffff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>All Foods</Text>
-      </View>
+    <View style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={handleBackPress}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="arrow-back" size={24} color="#ffffff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>All Foods</Text>
+        </View>
 
-      {error && !isFetching ? (
-        <ErrorState />
-      ) : dishes.length === 0 && !isFetching ? (
-        <EmptyState />
-      ) : (
-        <ScrollView 
-          style={styles.content} 
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl 
-              refreshing={refreshing} 
-              onRefresh={onRefresh}
-              tintColor="#dc2626"
-              colors={["#dc2626"]}
-            />
-          }
-        >
-          {isFetching && dishes.length === 0 ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#dc2626" />
-              <Text style={styles.loadingText}>Loading delicious dishes...</Text>
-            </View>
-          ) : (
-            <View style={styles.foodGrid}>
-              {dishes.map((item) => (
-                <TouchableOpacity 
-                  key={item.id} 
-                  style={styles.foodCard} 
-                  onPress={() => handleFoodPress(item.id)}
-                  activeOpacity={0.9}
-                >
-                  {item.logo ? (
-                    <Image
-                      source={{ uri: item.logo }}
-                      style={styles.foodImage}
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <View style={[styles.foodImage, styles.imagePlaceholder]}>
-                      <Ionicons name="image-outline" size={32} color="#d1d5db" />
-                    </View>
-                  )}
+        {error && !isFetching ? (
+          <ErrorState />
+        ) : dishes.length === 0 && !isFetching ? (
+          <EmptyState />
+        ) : (
+          <ScrollView 
+            style={styles.content} 
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl 
+                refreshing={refreshing} 
+                onRefresh={onRefresh}
+                tintColor="#dc2626"
+                colors={["#dc2626"]}
+              />
+            }
+          >
+            {isFetching && dishes.length === 0 ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#dc2626" />
+                <Text style={styles.loadingText}>Loading delicious dishes...</Text>
+              </View>
+            ) : (
+              <View style={styles.foodGrid}>
+                {dishes.map((item) => (
+                  <TouchableOpacity 
+                    key={item.id} 
+                    style={styles.foodCard} 
+                    onPress={() => handleFoodPress(item.id)}
+                    activeOpacity={0.9}
+                  >
+                    {item.logo ? (
+                      <Image
+                        source={{ uri: item.logo }}
+                        style={styles.foodImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View style={[styles.foodImage, styles.imagePlaceholder]}>
+                        <Ionicons name="image-outline" size={32} color="#d1d5db" />
+                      </View>
+                    )}
 
-                  <View style={styles.foodInfo}>
-                    <Text
-                      style={styles.foodName}
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                    >
-                      {item.name}
-                    </Text>
-
-                    <Text
-                      style={styles.foodChef}
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                    >
-                      by {item.user?.first_name || "Unknown"} {item.user?.last_name || "Chef"}
-                    </Text>
-
-                    <View style={styles.foodRating}>
-                      <Text style={styles.stars}>
-                        {renderStars(item.average_rating || 0)}
+                    <View style={styles.foodInfo}>
+                      <Text
+                        style={styles.foodName}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
+                        {item.name}
                       </Text>
-                      <Text style={styles.ratingText}>
-                        ({parseInt(item.average_rating).toFixed(1) || "0.0"}) • {item.total_reviews || 0} review{item.total_reviews !== 1 ? 's' : ''}
+
+                      <Text
+                        style={styles.foodChef}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
+                        by {item.user?.first_name || "Unknown"} {item.user?.last_name || "Chef"}
+                      </Text>
+
+                      <View style={styles.foodRating}>
+                        <Text style={styles.stars}>
+                          {renderStars(item.average_rating || 0)}
+                        </Text>
+                        <Text style={styles.ratingText}>
+                          ({parseInt(item.average_rating).toFixed(1) || "0.0"}) • {item.total_reviews || 0} review{item.total_reviews !== 1 ? 's' : ''}
+                        </Text>
+                      </View>
+
+                      <Text
+                        style={styles.foodPrice}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
+                        {formatPrice(
+                          item.chef_earning_fee || 0,
+                          item.platform_price || 0,
+                          item.delivery_price || 0
+                        )}
                       </Text>
                     </View>
-
-                    <Text
-                      style={styles.foodPrice}
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                    >
-                      {formatPrice(
-                        item.chef_earning_fee || 0,
-                        item.platform_price || 0,
-                        item.delivery_price || 0
-                      )}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </ScrollView>
-      )}
-    </SafeAreaView>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </ScrollView>
+        )}
+    </View>
   );
+
 }

@@ -83,8 +83,8 @@ export default function ChefDashboardScreen() {
       return;
     }
 
-    console.log("✅ Using Token:", token);
-    console.log("✅ User ID:", user.id);
+    console.log(" Using Token:", token);
+    console.log(" User ID:", user.id);
 
     
 

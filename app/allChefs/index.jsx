@@ -205,11 +205,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
+    marginTop: 8,
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: "800",
     color: "#1f2937",
+    marginTop: 8,
   },
   content: {
     flex: 1,
@@ -257,29 +259,33 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   chefInfoContainer: {
-    flexDirection: "row",
+    flexDirection: "column",
     alignItems: "center",
   },
   chefImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     marginRight: 12,
   },
   chefInfo: {
     flex: 1,
+    alignItems: "center",
   },
   chefName: {
     fontWeight: "bold",
     fontSize: 16,
     marginBottom: 4,
+    textAlign: "center",
   },
   chefTitle: {
     color: "#6b7280",
     fontSize: 14,
+    textAlign: "center",
   },
   arrow: {
     opacity: 0.5,
+    marginTop: 8,
   },
   
 });

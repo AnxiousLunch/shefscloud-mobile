@@ -491,7 +491,7 @@ const CustomerOrdersScreen = () => {
         </View>
       )}
     </View>
-  );
+  );  
 
   return (
     <View style={styles.container}>
@@ -679,6 +679,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
     color: "#FFF",
+    marginTop: 8,
   },
   sectionContainer: {
     backgroundColor: "#FFF",

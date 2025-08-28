@@ -82,7 +82,9 @@ export const CartScreen = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Your Cart</Text>
+            <View style={styles.header}>
+                <Text style={styles.headerTitle}>Your Cart</Text>
+            </View>
             
             <ScrollView contentContainerStyle={styles.scrollContainer}>
                 {cart && cart.length > 0 ? (
@@ -156,15 +158,19 @@ export const CartScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#fff",
-        paddingTop: 50, // Add padding for status bar
+        backgroundColor: "#F5F5F5",
     },
-    title: {
-        fontSize: 24,
+    header: {
+        backgroundColor: "#dc2626",
+        paddingVertical: 20,
+        paddingHorizontal: 16,
+        alignItems: "center",
+    },
+    headerTitle: {
+        fontSize: 22,
         fontWeight: "bold",
-        textAlign: "center",
-        marginVertical: 20,
-        color: "#2a2a2a",
+        color: "#FFF",
+        marginTop: 8,
     },
     loadingContainer: {
         flex: 1,

@@ -1,16 +1,17 @@
-// ChefDetailScreen.tsx
+// ChefDetailScreen.tsx - Fixed visibility and contrast issues
 import React, { useEffect, useState } from "react";
 import { 
   View, 
   Text, 
   Image, 
-  ScrollView, 
   TextInput, 
   TouchableOpacity, 
   StyleSheet,
   FlatList,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform
 } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import { useSelector } from "react-redux";
@@ -22,6 +23,7 @@ import StarRating from "@/components/StarRating";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 
 const ChefDetailScreen = () => {
   const route = useRoute();
@@ -32,6 +34,10 @@ const ChefDetailScreen = () => {
   const [reviews, setReviews] = useState([]);
   const [feedbackMessage, setFeedbackMessage] = useState("");
   const [expandedReviews, setExpandedReviews] = useState({});
+  const [dishes, setDishes] = useState([]);
+  const [sortingWithDays, setSortingWithDays] = useState("");
+  const [sortingWithSlot, setSortingWithSlot] = useState("");
+  const [timeSlots, setTimeSlots] = useState([]);
   const router = useRouter();
 
   // Fetch chef data
@@ -80,6 +86,31 @@ const ChefDetailScreen = () => {
     fetchReviews();
   }, [chefId, authToken]);
 
+  // Filter dishes based on selected day and time slot
+  useEffect(() => {
+    const filteredDishes = chefAndDishes?.menus
+      ?.filter((menu) => menu.is_live === 1)
+      ?.filter((dish) => {
+        const dayMatch = !sortingWithDays || dish[sortingWithDays.toLowerCase()] === 1;
+        const slotMatch = !sortingWithSlot || dish.availability_time_slots?.some(
+          (slot) => sortingWithSlot === slot.availability_time_slots_id
+        );
+        return dayMatch && slotMatch;
+      }) || [];
+    
+    setDishes(filteredDishes);
+  }, [chefAndDishes, sortingWithDays, sortingWithSlot]);
+
+  // Fetch time slots
+  useEffect(() => {
+    const mockTimeSlots = [
+      { id: 1, time_start: "09:00", time_end: "12:00" },
+      { id: 2, time_start: "12:00", time_end: "15:00" },
+      { id: 3, time_start: "15:00", time_end: "18:00" },
+    ];
+    setTimeSlots(mockTimeSlots);
+  }, []);
+
   const toggleReadMore = (reviewId) => {
     setExpandedReviews(prev => ({
       ...prev,
@@ -109,6 +140,10 @@ const ChefDetailScreen = () => {
     }
   };
 
+  const handleBackPress = () => {
+    router.back();
+  };
+
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -124,116 +159,66 @@ const ChefDetailScreen = () => {
       </View>
     );
   }
-  const handleBackPress = () => {
-    router.back();
-  };
 
-  return (
-    <SafeAreaView>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
-          <Ionicons name="arrow-back" size={24} color="#dc2626" />
-        </TouchableOpacity>
-      </View>
-      <ScrollView style={styles.container}>
-        <ChefContent chefAndDishes={chefAndDishes} />
-        <FilterAndDate chefAndDishes={chefAndDishes} />
-        
-        <View style={styles.reviewsContainer}>
-          <Text style={styles.sectionTitle}>REVIEWS</Text>
-          
-          <View style={styles.reviewsScrollContainer}>
-            {reviews.length > 0 ? (
-              reviews.map(review => (
-                <View key={review.id} style={styles.reviewCard}>
-                  <View style={styles.reviewHeader}>
-                    {review.user_menu?.user?.profile_pic ? (
-                      <Image 
-                        source={{ uri: review.user_menu.user.profile_pic }}
-                        style={styles.avatar}
-                      />
-                    ) : (
-                      <View style={styles.avatarPlaceholder}>
-                        <Text>N/A</Text>
-                      </View>
-                    )}
-                    
-                    <View style={styles.reviewInfo}>
-                      <Text style={styles.reviewerName}>
-                        {review?.user_menu?.user?.first_name} {review?.user_menu?.user?.last_name}
-                      </Text>
-                      <StarRating 
-                        rating={review?.user_menu?.average_rating || 0} 
-                        reviewCount={review?.user_menu?.total_reviews || 0}
-                      />
-                    </View>
-                  </View>
-                  
-                  <Text style={styles.reviewText}>
-                    {expandedReviews[review.id] 
-                      ? review.review 
-                      : (review.review?.slice(0, 150) || "No message provided")}
-                    {review.review?.length > 150 && (
-                      <Text 
-                        style={styles.readMore} 
-                        onPress={() => toggleReadMore(review.id)}
-                      >
-                        {expandedReviews[review.id] ? " Read Less" : " Read More"}
-                      </Text>
-                    )}
-                  </Text>
-                  
-                  {review.replies.length > 0 && (
-                    <TouchableOpacity onPress={() => toggleReplies(review.id)}>
-                      <Text style={styles.viewReplies}>
-                        {expandedReviews[`replies_${review.id}`]
-                          ? "Hide Replies"
-                          : `View Replies (${review.replies.length})`}
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                  
-                  {expandedReviews[`replies_${review.id}`] && (
-                    <View style={styles.repliesContainer}>
-                      {review.replies.map((reply) => (
-                        <View key={reply.id} style={styles.replyCard}>
-                          {reply.user?.profile_pic ? (
-                            <Image 
-                              source={{ uri: reply.user.profile_pic }}
-                              style={styles.smallAvatar}
-                            />
-                          ) : (
-                            <View style={styles.smallAvatarPlaceholder}>
-                              <Text style={styles.smallText}>N/A</Text>
-                            </View>
-                          )}
-                          
-                          <View>
-                            <Text style={styles.replyText}>{reply.reply}</Text>
-                            <Text style={styles.replyInfo}>
-                              By: {reply.user.first_name} {reply.user.last_name}
-                            </Text>
-                          </View>
-                        </View>
-                      ))}
-                    </View>
-                  )}
-                </View>
-              ))
-            ) : (
-              <View style={styles.noReviews}>
-                <Text style={styles.noReviewsText}>No Reviews Available</Text>
-              </View>
-            )}
+  // Prepare data for FlatList - create sections
+  const flatListData = [
+    { type: 'chef', data: chefAndDishes },
+    { type: 'filters', data: { sortingWithDays, setSortingWithDays, sortingWithSlot, setSortingWithSlot, timeSlots } },
+    { type: 'dishes_header' },
+    ...dishes.map(dish => ({ type: 'dish', data: dish })),
+    { type: 'reviews_header' },
+    ...reviews.map(review => ({ type: 'review', data: review })),
+    { type: 'feedback_form' }
+  ];
+
+  const renderItem = ({ item, index }) => {
+    switch (item.type) {
+      case 'chef':
+        return <ChefContent chefAndDishes={item.data} />;
+      
+      case 'filters':
+        return <FilterSection {...item.data} />;
+      
+      case 'dishes_header':
+        return (
+          <View style={styles.sectionHeaderContainer}>
+            <Text style={styles.dishesTitle}>MAIN ITEMS</Text>
           </View>
-          
+        );
+      
+      case 'dish':
+        return <DishItem dish={item.data} isEven={index % 2 === 0} />;
+      
+      case 'reviews_header':
+        return (
+          <View style={styles.sectionHeaderContainer}>
+            <Text style={styles.sectionTitle}>REVIEWS</Text>
+          </View>
+        );
+      
+      case 'review':
+        return (
+          <ReviewItem 
+            review={item.data}
+            expandedReviews={expandedReviews}
+            toggleReadMore={toggleReadMore}
+            toggleReplies={toggleReplies}
+          />
+        );
+      
+      case 'feedback_form':
+        return (
           <View style={styles.feedbackContainer}>
+            <Text style={styles.feedbackTitle}>Write Your Review</Text>
             <TextInput
               style={styles.feedbackInput}
               value={feedbackMessage}
               onChangeText={setFeedbackMessage}
-              placeholder="Write your feedback..."
+              placeholder="Share your experience with this chef..."
+              placeholderTextColor="#9ca3af"
               multiline
+              numberOfLines={4}
+              textAlignVertical="top"
             />
             <TouchableOpacity 
               style={styles.submitButton} 
@@ -242,24 +227,70 @@ const ChefDetailScreen = () => {
               <Text style={styles.buttonText}>Submit Review</Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </ScrollView>
+        );
+      
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
+          <Ionicons name="arrow-back" size={24} color="#dc2626" />
+        </TouchableOpacity>
+      </View>
+      
+      <KeyboardAvoidingView 
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+        <FlatList
+          data={flatListData}
+          keyExtractor={(item, index) => `${item.type}_${index}`}
+          renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.flatListContent}
+        />
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
 
-// ChefContent.tsx
+// Separate components for better organization
 const ChefContent = ({ chefAndDishes }) => {
   return (
     <View style={styles.chefContainer}>
-      <Image 
-        source={{ 
-          uri: chefAndDishes.cover_pic && isValidURL(chefAndDishes.cover_pic) 
-            ? chefAndDishes.cover_pic 
-            : 'https://t3.ftcdn.net/jpg/04/84/88/76/360_F_484887682_Mx57wpHG4lKrPAG0y7Q8Q7bJ952J3TTO.jpg'
-        }}
-        style={styles.coverImage}
-      />
+      <View style={styles.coverContainer}>
+        <Image 
+          source={{ 
+            uri: chefAndDishes.cover_pic && isValidURL(chefAndDishes.cover_pic) 
+              ? chefAndDishes.cover_pic 
+              : 'https://t3.ftcdn.net/jpg/04/84/88/76/360_F_484887682_Mx57wpHG4lKrPAG0y7Q8Q7bJ952J3TTO.jpg'
+          }}
+          style={styles.coverImage}
+        />
+        {/* Dark overlay for better text contrast */}
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.7)']}
+          style={styles.coverGradient}
+        />
+        
+        {/* Chef name overlay on cover image */}
+        <View style={styles.chefNameOverlay}>
+          <Text style={styles.chefNameText}>
+            {chefAndDishes.first_name} {chefAndDishes.last_name}
+          </Text>
+          {chefAndDishes.email_verified_at && (
+            <View style={styles.verifiedBadgeOverlay}>
+              <Ionicons name="checkmark-circle" size={16} color="#4ade80" />
+              <Text style={styles.verifiedTextOverlay}>Verified</Text>
+            </View>
+          )}
+        </View>
+      </View>
       
       <View style={styles.profileContainer}>
         <Image 
@@ -271,30 +302,20 @@ const ChefContent = ({ chefAndDishes }) => {
           style={styles.profileImage}
         />
         
-        <View style={styles.infoContainer}>
-          <View style={styles.nameContainer}>
-            <Text style={styles.chefName}>
-              {chefAndDishes.first_name} {chefAndDishes.last_name}
-            </Text>
-            {chefAndDishes.email_verified_at && (
-              <View style={styles.verifiedBadge}>
-                <Text style={styles.verifiedText}>Verified</Text>
-              </View>
-            )}
-          </View>
-          
+        <View style={styles.infoContainer}>          
           <View style={styles.statsContainer}>
             <View style={styles.statBadge}>
-              <Text style={styles.statText}>{chefAndDishes.menus?.length} Dishes</Text>
+              <Text style={styles.statText}>{chefAndDishes.menus?.length || 0} Dishes</Text>
             </View>
           </View>
           
           <Text style={styles.bioText}>
-            {chefAndDishes.bio === ""? chefAndDishes.bio : 'Bio Unavailable'}
+            {chefAndDishes.bio || 'Bio Unavailable'}
           </Text>
           
           {chefAndDishes.food_handle_certificate && (
             <View style={styles.certifiedBadge}>
+              <Ionicons name="certificate" size={16} color="#f59e0b" />
               <Text style={styles.certifiedText}>Certified</Text>
             </View>
           )}
@@ -304,39 +325,7 @@ const ChefContent = ({ chefAndDishes }) => {
   );
 };
 
-// FilterAndDate.tsx
-const FilterAndDate = ({ chefAndDishes }) => {
-  const [sortingWithDays, setSortingWithDays] = useState("");
-  const [sortingWithSlot, setSortingWithSlot] = useState("");
-  const [dishes, setDishes] = useState([]);
-  const [timeSlots, setTimeSlots] = useState([]);
-
-  useEffect(() => {
-    // Filter dishes based on selected day and time slot
-    const filteredDishes = chefAndDishes?.menus
-      ?.filter((menu) => menu.is_live === 1)
-      ?.filter((dish) => {
-        const dayMatch = !sortingWithDays || dish[sortingWithDays.toLowerCase()] === 1;
-        const slotMatch = !sortingWithSlot || dish.availability_time_slots?.some(
-          (slot) => sortingWithSlot === slot.availability_time_slots_id
-        );
-        return dayMatch && slotMatch;
-      }) || [];
-    
-    setDishes(filteredDishes);
-  }, [chefAndDishes, sortingWithDays, sortingWithSlot]);
-
-  // Fetch time slots (simplified)
-  useEffect(() => {
-    // This would normally be an API call
-    const mockTimeSlots = [
-      { id: 1, time_start: "09:00", time_end: "12:00" },
-      { id: 2, time_start: "12:00", time_end: "15:00" },
-      { id: 3, time_start: "15:00", time_end: "18:00" },
-    ];
-    setTimeSlots(mockTimeSlots);
-  }, []);
-
+const FilterSection = ({ sortingWithDays, setSortingWithDays, sortingWithSlot, setSortingWithSlot, timeSlots }) => {
   const days = [
     { name: "Mon", value: "is_monday" },
     { name: "Tue", value: "is_tuesday" },
@@ -351,27 +340,29 @@ const FilterAndDate = ({ chefAndDishes }) => {
     <View style={styles.filterContainer}>
       <Text style={styles.filterTitle}>Select Delivery Day</Text>
       
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        {days.map((day) => (
+      <FlatList
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        data={[...days, { name: "Reset", value: "reset" }]}
+        keyExtractor={(item) => item.value}
+        renderItem={({ item }) => (
           <TouchableOpacity
-            key={day.value}
             style={[
               styles.dayButton,
-              sortingWithDays === day.value && styles.activeDayButton
+              sortingWithDays === item.value && styles.activeDayButton,
+              item.value === "reset" && styles.resetButton
             ]}
-            onPress={() => setSortingWithDays(day.value)}
+            onPress={() => setSortingWithDays(item.value === "reset" ? "" : item.value)}
           >
-            <Text style={styles.dayText}>{day.name}</Text>
+            <Text style={[
+              styles.dayText,
+              item.value === "reset" && styles.resetText
+            ]}>
+              {item.name}
+            </Text>
           </TouchableOpacity>
-        ))}
-        
-        <TouchableOpacity
-          style={styles.resetButton}
-          onPress={() => setSortingWithDays("")}
-        >
-          <Text style={styles.resetText}>Reset</Text>
-        </TouchableOpacity>
-      </ScrollView>
+        )}
+      />
       
       <View style={styles.timeSlotContainer}>
         <Text style={styles.timeSlotLabel}>Delivery Time</Text>
@@ -390,44 +381,113 @@ const FilterAndDate = ({ chefAndDishes }) => {
           ))}
         </View>
       </View>
-      
-      <Text style={styles.dishesTitle}>MAIN ITEMS</Text>
-      
-      <FlatList
-        data={dishes}
-        numColumns={2}
-        keyExtractor={item => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.dishCard}>
-            <Image 
-              source={{ 
-                uri: item.logo && isValidURL(item.logo) 
-                  ? item.logo 
-                  : 'https://t4.ftcdn.net/jpg/04/70/29/97/360_F_470299797_UD0eoVMMSUbHCcNJCdv2t8B2g1GVqYgs.jpg'
-              }}
-              style={styles.dishImage}
-            />
-            <Text style={styles.dishName}>{item.name}</Text>
-            <View style={styles.ratingContainer}>
-              <StarRating 
-                rating={item.average_rating || 0} 
-                reviewCount={item.total_reviews || 0}
-              />
-            </View>
-            <Text style={styles.dishPrice}>
-              {calculateTotalPrice(item).toLocaleString('en-US', {
-                style: 'currency',
-                currency: 'USD'
-              })}
-            </Text>
+    </View>
+  );
+};
+
+const DishItem = ({ dish }) => {
+  return (
+    <View style={styles.dishCard}>
+      <Image 
+        source={{ 
+          uri: dish.logo && isValidURL(dish.logo) 
+            ? dish.logo 
+            : 'https://t4.ftcdn.net/jpg/04/70/29/97/360_F_470299797_UD0eoVMMSUbHCcNJCdv2t8B2g1GVqYgs.jpg'
+        }}
+        style={styles.dishImage}
+      />
+      <Text style={styles.dishName}>{dish.name}</Text>
+      <View style={styles.ratingContainer}>
+        <StarRating 
+          rating={dish.average_rating || 0} 
+          reviewCount={dish.total_reviews || 0}
+        />
+      </View>
+      <Text style={styles.dishPrice}>
+        {calculateTotalPrice(dish).toLocaleString('en-US', {
+          style: 'currency',
+          currency: 'USD'
+        })}
+      </Text>
+    </View>
+  );
+};
+
+const ReviewItem = ({ review, expandedReviews, toggleReadMore, toggleReplies }) => {
+  return (
+    <View style={styles.reviewCard}>
+      <View style={styles.reviewHeader}>
+        {review.user_menu?.user?.profile_pic ? (
+          <Image 
+            source={{ uri: review.user_menu.user.profile_pic }}
+            style={styles.avatar}
+          />
+        ) : (
+          <View style={styles.avatarPlaceholder}>
+            <Text>N/A</Text>
           </View>
         )}
-        ListEmptyComponent={
-          <View style={styles.noDishes}>
-            <Text>No dishes available</Text>
-          </View>
-        }
-      />
+        
+        <View style={styles.reviewInfo}>
+          <Text style={styles.reviewerName}>
+            {review?.user_menu?.user?.first_name} {review?.user_menu?.user?.last_name}
+          </Text>
+          <StarRating 
+            rating={review?.user_menu?.average_rating || 0} 
+            reviewCount={review?.user_menu?.total_reviews || 0}
+          />
+        </View>
+      </View>
+      
+      <Text style={styles.reviewText}>
+        {expandedReviews[review.id] 
+          ? review.review 
+          : (review.review?.slice(0, 150) || "No message provided")}
+        {review.review?.length > 150 && (
+          <Text 
+            style={styles.readMore} 
+            onPress={() => toggleReadMore(review.id)}
+          >
+            {expandedReviews[review.id] ? " Read Less" : " Read More"}
+          </Text>
+        )}
+      </Text>
+      
+      {review.replies.length > 0 && (
+        <TouchableOpacity onPress={() => toggleReplies(review.id)}>
+          <Text style={styles.viewReplies}>
+            {expandedReviews[`replies_${review.id}`]
+              ? "Hide Replies"
+              : `View Replies (${review.replies.length})`}
+          </Text>
+        </TouchableOpacity>
+      )}
+      
+      {expandedReviews[`replies_${review.id}`] && (
+        <View style={styles.repliesContainer}>
+          {review.replies.map((reply) => (
+            <View key={reply.id} style={styles.replyCard}>
+              {reply.user?.profile_pic ? (
+                <Image 
+                  source={{ uri: reply.user.profile_pic }}
+                  style={styles.smallAvatar}
+                />
+              ) : (
+                <View style={styles.smallAvatarPlaceholder}>
+                  <Text style={styles.smallText}>N/A</Text>
+                </View>
+              )}
+              
+              <View>
+                <Text style={styles.replyText}>{reply.reply}</Text>
+                <Text style={styles.replyInfo}>
+                  By: {reply.user.first_name} {reply.user.last_name}
+                </Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
     </View>
   );
 };
@@ -437,8 +497,7 @@ const calculateTotalPrice = (dish) => {
   return dish.chef_earning_fee + dish.platform_price + dish.delivery_price;
 };
 
-
-// Styles
+// Updated Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -453,6 +512,9 @@ const styles = StyleSheet.create({
     borderBottomColor: "#f1f5f9",
     backgroundColor: "#ffffff",
   },
+  keyboardAvoid: {
+    flex: 1,
+  },
   backButton: {
     width: 44,
     height: 44,
@@ -462,10 +524,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 12,
   },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#1f2937",
+  flatListContent: {
+    paddingBottom: 20,
+  },
+  sectionHeaderContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   centered: {
     flex: 1,
@@ -475,79 +539,115 @@ const styles = StyleSheet.create({
   chefContainer: {
     padding: 16
   },
-  coverImage: {
+  coverContainer: {
+    position: 'relative',
     width: '100%',
     height: 200,
+    marginBottom: 16,
+  },
+  coverImage: {
+    width: '100%',
+    height: '100%',
     borderRadius: 16
+  },
+  coverGradient: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: '60%',
+    borderRadius: 16,
+  },
+  chefNameOverlay: {
+    position: 'absolute',
+    bottom: 16,
+    left: 16,
+    right: 16,
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+  },
+  chefNameText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#ffffff',
+    textShadowColor: 'rgba(0, 0, 0, 0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+    marginBottom: 4,
+  },
+  verifiedBadgeOverlay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  verifiedTextOverlay: {
+    fontSize: 12,
+    color: '#ffffff',
+    marginLeft: 4,
+    fontWeight: '600',
   },
   profileContainer: {
     flexDirection: 'row',
-    marginTop: -60,
-    paddingHorizontal: 8
+    alignItems: 'flex-start',
   },
   profileImage: {
     width: 100,
-    height: 150,
+    height: 120,
     borderRadius: 16,
     borderWidth: 3,
     borderColor: '#fff'
   },
   infoContainer: {
     flex: 1,
-    marginLeft: 16
-  },
-  nameContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8
-  },
-  chefName: {
-    fontSize: 24,
-    fontWeight: 'bold'
-  },
-  verifiedBadge: {
-    flexDirection: 'row',
-    backgroundColor: '#f0f0f0',
-    padding: 4,
-    borderRadius: 4,
-    marginLeft: 8,
-    alignItems: 'center'
-  },
-  verifiedText: {
-    fontSize: 12,
-    marginLeft: 4
+    marginLeft: 16,
+    paddingTop: 8,
   },
   statsContainer: {
     flexDirection: 'row',
-    marginBottom: 8
+    marginBottom: 12
   },
   statBadge: {
     flexDirection: 'row',
+    backgroundColor: '#f8fafc',
     borderWidth: 1,
-    borderColor: '#f0f0f0',
-    padding: 4,
-    borderRadius: 4,
+    borderColor: '#e2e8f0',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
     alignItems: 'center'
   },
   statText: {
     fontSize: 12,
-    marginLeft: 4
+    color: '#64748b',
+    fontWeight: '500',
   },
   bioText: {
     fontSize: 14,
-    color: '#666',
-    marginBottom: 8
+    color: '#64748b',
+    lineHeight: 20,
+    marginBottom: 12
   },
   certifiedBadge: {
     flexDirection: 'row',
-    backgroundColor: '#f0f0f0',
-    padding: 4,
-    borderRadius: 4,
-    alignSelf: 'flex-start'
+    backgroundColor: '#fef3c7',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#fbbf24',
   },
   certifiedText: {
     fontSize: 12,
-    marginLeft: 4
+    marginLeft: 4,
+    color: '#92400e',
+    fontWeight: '600',
   },
   filterContainer: {
     padding: 16
@@ -621,12 +721,12 @@ const styles = StyleSheet.create({
     marginVertical: 16
   },
   dishCard: {
-    flex: 1,
     margin: 8,
     padding: 8,
     borderWidth: 1,
     borderColor: '#eee',
-    borderRadius: 8
+    borderRadius: 8,
+    width: '45%'
   },
   dishImage: {
     width: '100%',
@@ -646,28 +746,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#f02444'
   },
-  noDishes: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32
-  },
-  reviewsContainer: {
-    padding: 16
-  },
   sectionTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     textTransform: 'uppercase',
     marginBottom: 16
   },
-  reviewsScrollContainer: {
-    maxHeight: 300
-  },
   reviewCard: {
     backgroundColor: '#fff',
     borderRadius: 8,
     padding: 16,
+    marginHorizontal: 16,
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -751,27 +840,34 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666'
   },
-  noReviews: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 32
+  feedbackContainer: {
+    padding: 16,
+    backgroundColor: '#f8fafc',
+    marginHorizontal: 16,
+    marginBottom: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
-  noReviewsText: {
+  feedbackTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#666'
-  },
-  feedbackContainer: {
-    marginTop: 16
+    color: '#1e293b',
+    marginBottom: 12,
   },
   feedbackInput: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#d1d5db',
     borderRadius: 8,
     padding: 16,
-    minHeight: 100,
+    minHeight: 120,
+    maxHeight: 150,
     marginBottom: 16,
-    textAlignVertical: 'top'
+    textAlignVertical: 'top',
+    backgroundColor: '#ffffff',
+    fontSize: 16,
+    color: '#374151',
+    lineHeight: 22,
   },
   submitButton: {
     backgroundColor: '#f02444',
@@ -783,7 +879,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 16
-  }
+  },
 });
 
 export default ChefDetailScreen;
