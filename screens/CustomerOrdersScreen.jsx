@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -10,7 +10,8 @@ import {
   FlatList,
   ActivityIndicator,
   Image,
-  Alert
+  Alert,
+  StatusBar
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useSelector } from "react-redux";
@@ -18,6 +19,12 @@ import moment from "moment";
 import { AntDesign, MaterialIcons, Feather } from "@expo/vector-icons";
 import Toast from "react-native-toast-message";
 import * as Haptics from "expo-haptics";
+import { Dimensions } from 'react-native';
+const { width, height } = Dimensions.get('window');
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+
+
 
 // Services
 import {
@@ -29,6 +36,7 @@ import {
 } from "@/services/order";
 
 import { handleGetDefaultSetting } from "@/services/default_setting";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const CustomerOrdersScreen = () => {
   const router = useRouter();
@@ -52,6 +60,10 @@ const CustomerOrdersScreen = () => {
     dish_name: null,
     created_at: null,
   });
+  const handleBackPress = useCallback(() => {
+        router.back();
+      }, [router]);
+
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [reviews, setReviews] = useState([]);
   const [activeReviewIndex, setActiveReviewIndex] = useState(null);
@@ -494,12 +506,32 @@ const CustomerOrdersScreen = () => {
   );  
 
   return (
-    <View style={styles.container}>
-      <ScrollView>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Your Orders</Text>
-        </View>
-        
+   <SafeAreaView style={styles.container}>
+          <StatusBar barStyle="light-content" backgroundColor="#DC2626" />
+    
+          {/* Gradient Header */}
+          <LinearGradient
+            colors={["#DC2626", "#B91C1C"]}
+            style={styles.header}
+          >
+            <View style={styles.headerContent}>
+              {/* Back button */}
+              <TouchableOpacity 
+                style={styles.backButton} 
+                onPress={handleBackPress}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="arrow-back" size={22} color="#DC2626" />
+              </TouchableOpacity>
+    
+              {/* Title */}
+              <Text style={styles.headerTitle}>Your Orders</Text>
+    
+              {/* Spacer to balance back button */}
+              <View style={styles.rightSpacer} />
+            </View>
+          </LinearGradient>
+     <ScrollView contentContainerStyle={styles.scrollContainer}>     
         {/* Orders Section */}
         <View style={styles.sectionContainer}>
           <Text style={styles.sectionTitle}>Order History</Text>
@@ -660,28 +692,53 @@ const CustomerOrdersScreen = () => {
       </Modal>
       
       <Toast />
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#F9FAFB",
   },
   header: {
-    backgroundColor: "#dc2626",
-    paddingVertical: 20,
-    paddingHorizontal: 16,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  headerContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    flex: 1,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#fff",
+    justifyContent: "center",
     alignItems: "center",
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#FFF",
-    marginTop: 8,
+    fontSize: width * 0.06,
+    fontWeight: "800",
+    color: "#fff",
+    textAlign: "center",
   },
-  sectionContainer: {
+  rightSpacer: {
+    width: 40, // balances back button
+  },
+sectionContainer: {
     backgroundColor: "#FFF",
     borderRadius: 12,
     margin: 16,

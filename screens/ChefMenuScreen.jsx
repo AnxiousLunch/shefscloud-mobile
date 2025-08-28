@@ -12,13 +12,15 @@ import {
   TextInput,
   FlatList,
   Modal,
-  Dimensions
+  Dimensions,
+  StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSelector } from "react-redux";
 import { handleGetAllDishes } from "@/services/get_methods";
 import { Ionicons } from '@expo/vector-icons';
 const { width } = Dimensions.get('window');
+import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRouter } from "expo-router";
 
 export default function ChefMenuScreen() {
@@ -287,11 +289,16 @@ export default function ChefMenuScreen() {
   
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Menu Management</Text>
-      </View>
-
+        <SafeAreaView style={styles.container}>
+          <StatusBar barStyle="light-content" backgroundColor="#DC2626" />
+          
+          {/* Header */}
+          <LinearGradient
+            colors={['#DC2626', '#B91C1C']}
+            style={styles.header}
+          >
+            <Text style={styles.headerTitle}>Chef Menu</Text>
+            </LinearGradient>
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#dc2626" />
@@ -439,28 +446,29 @@ export default function ChefMenuScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: "#f8fafc" 
+container: {
+    flex: 1,
+    backgroundColor: "#F9FAFB",
   },
   header: {
-    backgroundColor: "#ffffff",
-    padding: 16,
+  justifyContent: "center",
+  alignItems: "center",
+  paddingVertical: 16,
+  borderBottomLeftRadius: 24,
+  borderBottomRightRadius: 24,
+  elevation: 4,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+},
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "white",
     alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e2e8f0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 1,
   },
-  headerTitle: { 
-    fontSize: 18, 
-    fontWeight: "700", 
-    color: "#1e293b" 
-  },
-  loadingContainer: { 
+    loadingContainer: { 
     flex: 1, 
     justifyContent: "center", 
     alignItems: "center" 
