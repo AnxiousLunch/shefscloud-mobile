@@ -258,26 +258,26 @@ const res = await handlePostTransaction(user?.access_token, user?.id, startDate,
         <View style={styles.header}>
           <View style={styles.headerContent}>
             <View>
-<Text style={styles.greeting}>
-  Welcome Back, {user?.first_name || user?.name?.split(" ")[0] || "Chef"}!
-</Text>
+              <Text style={styles.greeting}>
+                Welcome Back, {user?.first_name || user?.name?.split(" ")[0] || "Chef"}!
+              </Text>
               <Text style={styles.location}>📍 Here's what's happening with your kitchen</Text>
             </View>
-<TouchableOpacity 
-  style={styles.profileAvatar} 
-  onPress={() => setShowProfileDropdown(true)}
->
-  {user?.profile_pic ? (
-    <Image 
-      source={{ uri: user.profile_pic }}
-      style={styles.profileImage}
-    />
-  ) : (
-    <Text style={styles.profileAvatarText}>
-      {user?.name?.charAt(0) || "C"}
-    </Text>
-  )}
-</TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.profileAvatar} 
+              onPress={() => setShowProfileDropdown(true)}
+            >
+              {user?.profile_pic ? (
+                <Image 
+                  source={{ uri: user.profile_pic }}
+                  style={styles.profileImage}
+                />
+              ) : (
+                <Text style={styles.profileAvatarText}>
+                  {user?.name?.charAt(0) || "C"}
+                </Text>
+              )}
+            </TouchableOpacity>
 
           </View>
         </View>
@@ -474,14 +474,14 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   greeting: {
-    fontSize: responsiveFontSize(24),
+    fontSize: responsiveFontSize(20),
     fontWeight: "800",
     color: "#1e293b",
     marginBottom: 4,
   },
   location: {
     color: "#64748b",
-    fontSize: responsiveFontSize(14),
+    fontSize: responsiveFontSize(12),
   },
   headerContent: {
     flexDirection: "row",

@@ -43,7 +43,7 @@
         "foregroundImage": "./assets/icon_5.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "com.anonymous.shefscloud_mobile"
+      "package": "com.anonymous.shefscloud_mobile",
     },
     "web": {
       "bundler": "metro",
@@ -79,7 +79,10 @@
       "typedRoutes": true
     },
     "extra": {
-      "router": {}
+      "router": {},
+      "eas": {
+        "projectId": "f3dea93d-18e9-4f93-bc0e-5add439535f1"
+      }
     }
   }
 }
