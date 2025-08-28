@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, Image, ActivityIndicator, RefreshControl } from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, Image, ActivityIndicator, RefreshControl, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useState, useEffect, useCallback } from "react";
@@ -7,6 +7,7 @@ import { handleGetAllDishesOfCity } from "@/services/get_methods";
 import { useRouter } from "expo-router";
 import { Dimensions } from 'react-native';
 const { width, height } = Dimensions.get('window');
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function FoodListScreen() {
   const router = useRouter();
@@ -138,42 +139,44 @@ export default function FoodListScreen() {
   const styles = StyleSheet.create({
    container: {
     flex: 1,
+    backgroundColor: "#F9FAFB",
   },
-    header: {
-    backgroundColor: "#dc2626",
-    paddingHorizontal: width * 0.06,
-    paddingTop: height * 0.02,
-    paddingBottom: height * 0.025,
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    elevation: 4,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   headerContent: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    flex: 1,
   },
-backButton: {
+  backButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#fffffff",
+    backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
   },
   headerTitle: {
     fontSize: width * 0.06,
     fontWeight: "800",
-    color: "#ffffff",
+    color: "#fff",
     textAlign: "center",
   },
   rightSpacer: {
-    width: 40, // Same as backButton for balance
+    width: 40, // balances back button
   },
    content: {
       flex: 1,
@@ -343,24 +346,32 @@ backButton: {
 
   // Main render
   return (
-  <SafeAreaView style={[styles.container, { backgroundColor: "transparent" }]}>
-    {/* Header */}
-    <View style={styles.header}>
-      <View style={styles.headerContent}>
-        <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={handleBackPress}
-          activeOpacity={0.7}
-        >
-          <Ionicons name="arrow-back" size={24} color="#dc2626" />
-        </TouchableOpacity>
-        
-        <Text style={styles.headerTitle}>All Foods</Text>
-        
-        <View style={styles.rightSpacer} />
-      </View>
-    </View>
-        {error && !isFetching ? (
+  <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#DC2626" />
+
+      {/* Gradient Header */}
+      <LinearGradient
+        colors={["#DC2626", "#B91C1C"]}
+        style={styles.header}
+      >
+        <View style={styles.headerContent}>
+          {/* Back button */}
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={handleBackPress}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="arrow-back" size={22} color="#DC2626" />
+          </TouchableOpacity>
+
+          {/* Title */}
+          <Text style={styles.headerTitle}>All Foods</Text>
+
+          {/* Spacer to balance back button */}
+          <View style={styles.rightSpacer} />
+        </View>
+      </LinearGradient>
+            {error && !isFetching ? (
           <ErrorState />
         ) : dishes.length === 0 && !isFetching ? (
           <EmptyState />
