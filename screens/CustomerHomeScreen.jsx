@@ -182,9 +182,10 @@ export default function CustomerHomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Browse by Cuisine</Text>
-            <TouchableOpacity activeOpacity={0.7}>
-              <Text style={styles.seeAll}>See All</Text>
-            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/browse")}>
+  <Text style={styles.seeAll}>See All</Text>
+</TouchableOpacity>
+
           </View>
           <ScrollView 
             horizontal 
