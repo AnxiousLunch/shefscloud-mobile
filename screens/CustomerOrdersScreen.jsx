@@ -22,6 +22,7 @@ import { Dimensions } from 'react-native';
 const { width, height } = Dimensions.get('window');
 import { Ionicons } from "@expo/vector-icons";
 
+
 // Services
 import {
   handleChangeOrderStatus,
@@ -711,7 +712,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#fffffff",
+    backgroundColor: "#ffffff",
     justifyContent: "center",
     alignItems: "center",
   },

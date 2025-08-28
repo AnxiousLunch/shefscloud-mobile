@@ -136,42 +136,46 @@ export default function FoodListScreen() {
   );
 
   const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: "#f8fafc",
-    },
+   container: {
+    flex: 1,
+  },
     header: {
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-      paddingTop: 50,
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: "#dc2626",
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 4,
+    backgroundColor: "#dc2626",
+    paddingHorizontal: width * 0.06,
+    paddingTop: height * 0.02,
+    paddingBottom: height * 0.025,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
     },
-    backButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: "rgba(255, 255, 255, 0.2)",
-      justifyContent: "center",
-      alignItems: "center",
-      marginRight: 16,
-    },
-    headerTitle: {
-      fontSize: 20,
-      fontWeight: "700",
-      color: "#ffffff",
-      flex: 1,
-      textAlign: "center",
-      marginRight: 56, // Compensate for back button width
-      fontFamily: "System", // Use system font for better consistency
-    },
-    content: {
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  headerContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#fffffff",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  headerTitle: {
+    fontSize: width * 0.06,
+    fontWeight: "800",
+    color: "#ffffff",
+    textAlign: "center",
+  },
+  rightSpacer: {
+    width: 40, // Same as backButton for balance
+  },
+   content: {
       flex: 1,
     },
     loadingContainer: {
@@ -339,18 +343,23 @@ export default function FoodListScreen() {
 
   // Main render
   return (
-    <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton} 
-            onPress={handleBackPress}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="arrow-back" size={24} color="#ffffff" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>All Foods</Text>
-        </View>
-
+  <SafeAreaView style={[styles.container, { backgroundColor: "transparent" }]}>
+    {/* Header */}
+    <View style={styles.header}>
+      <View style={styles.headerContent}>
+        <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={handleBackPress}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="arrow-back" size={24} color="#dc2626" />
+        </TouchableOpacity>
+        
+        <Text style={styles.headerTitle}>All Foods</Text>
+        
+        <View style={styles.rightSpacer} />
+      </View>
+    </View>
         {error && !isFetching ? (
           <ErrorState />
         ) : dishes.length === 0 && !isFetching ? (
@@ -438,7 +447,7 @@ export default function FoodListScreen() {
             )}
           </ScrollView>
         )}
-    </View>
+    </SafeAreaView>
   );
 
 }
