@@ -262,34 +262,8 @@ export default function AuthScreen() {
                   </LinearGradient>
                   <View style={styles.buttonHighlight} />
                 </TouchableOpacity>
-
-                {/* Divider */}
-                <View style={styles.dividerContainer}>
-                  <View style={styles.dividerLine} />
-                  <View style={styles.dividerTextContainer}>
-                    <Text style={styles.dividerText}>or continue with</Text>
-                  </View>
-                  <View style={styles.dividerLine} />
-                </View>
-
-                {/* Google Sign-In */}
-                <TouchableOpacity 
-                  style={styles.googleButton} 
-                  onPress={handleGoogleLogin}
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.googleButtonContent}>
-                    <View style={styles.googleIconContainer}>
-                      <Ionicons name="logo-google" size={responsiveValue(18, 22, 16)} color="#4285f4" />
-                    </View>
-                    <Text style={styles.googleButtonText}>Google</Text>
-                  </View>
-                  <View style={styles.googleButtonBorder} />
-                </TouchableOpacity>
               </View>
             </View>
-
-            {/* Sign Up Section */}
             <View style={styles.signupSection}>
               <Text style={styles.signupText}>Don't have an account?</Text>
               <TouchableOpacity
@@ -304,8 +278,12 @@ export default function AuthScreen() {
             <View style={styles.footer}>
               <Text style={styles.termsText}>
                 By continuing, you agree to our{" "}
-                <Text style={styles.termsLink}>Terms of Service</Text> and{" "}
-                <Text style={styles.termsLink}>Privacy Policy</Text>
+                <Text style={styles.termsLink}
+                onPress={() => router.push('/termsofservice')}
+                >Terms of Service</Text> and{" "}
+                <Text style={styles.termsLink}
+                 onPress={() => router.push('/privacy')}
+                 >Privacy Policy</Text>
               </Text>
             </View>
           </ScrollView>
@@ -591,46 +569,6 @@ const styles = StyleSheet.create({
     fontSize: responsiveFontSize(10),
     fontWeight: "500",
   },
-
-  // Google Button
-  googleButton: {
-    backgroundColor: "#fff",
-    borderRadius: responsiveValue(10, 12, 8),
-    borderWidth: responsiveValue(1, 1.5, 1),
-    borderColor: "#e9ecef",
-    paddingVertical: responsiveValue(10, 12, 8),
-    position: "relative",
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-  },
-  googleButtonContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: responsiveValue(6, 8, 5),
-  },
-  googleIconContainer: {
-    backgroundColor: "#f8f9fa",
-    padding: responsiveValue(4, 5, 3),
-    borderRadius: responsiveValue(4, 5, 3),
-  },
-  googleButtonText: {
-    color: "#444",
-    fontSize: responsiveFontSize(13),
-    fontWeight: "600",
-  },
-  googleButtonBorder: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 1,
-    backgroundColor: "rgba(179, 0, 0, 0.1)",
-  },
-
   // Signup Section
   signupSection: {
     flexDirection: "row",
