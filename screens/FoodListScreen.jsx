@@ -5,6 +5,8 @@ import { useState, useEffect, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { handleGetAllDishesOfCity } from "@/services/get_methods";
 import { useRouter } from "expo-router";
+import { Dimensions } from 'react-native';
+const { width, height } = Dimensions.get('window');
 
 export default function FoodListScreen() {
   const router = useRouter();

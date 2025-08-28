@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { 
   View, 
   Text, 
@@ -14,17 +14,24 @@ import { initializeUserCart } from "@/store/cart";
 import isValidURL from "@/components/ValidateURL";
 import convertTo12Hour from "@/components/convertTo12Hour";
 import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Dimensions } from 'react-native';
+const { width, height } = Dimensions.get('window');
+import { Ionicons } from "@expo/vector-icons";
+
 
 export const CartScreen = () => {
     const router = useRouter();
     const dispatch = useDispatch();
     
-    // FIX 1: Access cartItem instead of cart
+    const handleBackPress = useCallback(() => {
+      router.back();
+    }, [router]);
     const { cartItem: cart, currentUserId } = useSelector((state) => state.cart);
     
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [loading, setLoading] = useState(true);
-
+    
     useEffect(() => {
         const checkAuthAndLoadCart = async () => {
             try {
@@ -151,7 +158,8 @@ export const CartScreen = () => {
                     </View>
                 )}
             </ScrollView>
-        </View>
+            </SafeAreaView>
+        
     );
 };
 
