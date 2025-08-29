@@ -12,7 +12,7 @@ import { useDispatch, useSelector } from "react-redux"
 import { store } from "@/store/store"
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useLocalSearchParams, useRouter } from "expo-router"
-
+import { initializeUserCart } from "@/store/cart"
 
 
 function convertTo12Hour(time24) {
@@ -181,7 +181,7 @@ export default function FoodDetailScreen() {
 
 
 
-  const handleAddToCart = () => {
+  const handleAddToCart =  async () => {
     if (!foodItem) {
       Alert.alert("Cart cannot be empty");
       return;
@@ -224,9 +224,14 @@ export default function FoodDetailScreen() {
 
     const state = store.getState().cart;
     if (!state.currentUserId || !state.cartInitialized) {
-      console.error("Cannot add to cart");
-      Alert.alert("Cart not initialized or user not logged in" );
-      return;
+      const userStr = await AsyncStorage.getItem("user");
+      if (!userStr) {
+        Alert.alert("You must be logged in to add to cart");
+        return;
+      }
+      const user = JSON.parse(userStr);
+
+      await dispatch(initializeUserCart(user.id));
     }
 
     try {
@@ -420,7 +425,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#ffffff",
+    backgroundColor: "#dc2626",
     borderBottomWidth: 1,
     borderBottomColor: "#e2e8f0",
     shadowColor: "#000",
@@ -443,7 +448,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: "700",
-    color: "#1f2937",
+    color: "#fff",
     flex: 1,
   },
 

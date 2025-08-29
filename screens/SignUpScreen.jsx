@@ -349,7 +349,7 @@ export default function SignUpScreen() {
                 <View style={styles.signinSection}>
                   <Text style={styles.signinText}>Already have an account?</Text>
                   <TouchableOpacity
-                    onPress={() => router.replace('/')}
+                    onPress={() => router.replace('/(auth)')}
                     activeOpacity={0.7}
                   >
                     <Text style={styles.signinLink}>Sign In</Text>

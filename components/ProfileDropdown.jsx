@@ -98,7 +98,6 @@ export default function ProfileDropdown({ isVisible, onClose }) {
   }
 
   if (!isVisible) return null
-
   return (
     <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
       <TouchableOpacity 
@@ -130,7 +129,7 @@ export default function ProfileDropdown({ isVisible, onClose }) {
               { width: 40 * responsiveScale, height: 40 * responsiveScale }
             ]}>
               <Text style={[styles.avatarText, { fontSize: baseFontSize }]}>
-                {user?.first_name?.charAt(0) || "U"}
+                {user?.first_name?.charAt(0)}
               </Text>
             </View>
             

@@ -9,6 +9,7 @@ import moment from "moment";
 import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons";
 import { TextInput } from "react-native-paper";
+import React from "react";
 
 export default function ChefOrdersScreen() {
   const { user } = useAuth();
@@ -614,7 +615,11 @@ export default function ChefOrdersScreen() {
         {/* Orders List */}
         {currentOrders.length > 0 ? (
           <>
-            {currentOrders.map(renderOrderItem)}
+            {currentOrders.map((item) => (
+              <React.Fragment key={item.isHeader ? `header-${item.title}` : `order-${item.id}`}>
+                {renderOrderItem(item)}
+              </React.Fragment>
+            ))}
             
             {/* Pagination */}
             {totalPages > 1 && (

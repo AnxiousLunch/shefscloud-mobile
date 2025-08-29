@@ -9,7 +9,7 @@ import {
   handleCreateOrder
 } from "@/services/order"
 import {handleGetDefaultSetting} from "@/services/default_setting"
-import { updateCartItem, removeFromCart, onOrderSubmit, removeFromCartThunk } from "@/store/cart";
+import { updateCartItem, removeFromCart, onOrderSubmit, removeFromCartThunk, onOrderSubmitThunk } from "@/store/cart";
 import { updateUser } from "@/store/user";
 import { ScrollView, TextInput, Image, TouchableOpacity, StyleSheet } from "react-native";
 import { MaterialIcons, Feather } from "@expo/vector-icons";
@@ -18,6 +18,8 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useRoute } from "@react-navigation/native";
 import * as Location from "expo-location"
 import { Button } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 
 const CheckoutLogic = () => {
   const dispatch = useDispatch();
@@ -420,13 +422,13 @@ const CheckoutLogic = () => {
       dispatch(updateUser(updatedUserInfo));
 
       dispatch(
-        onOrderSubmit({
-          chefId: order.chef_id,
+        onOrderSubmitThunk({
+          chefId: parseInt(chefId),
           delivery_date: order.delivery_time,
           delivery_slot: order.delivery_slot,
         })
       );
-      dispatch(removeFromCart({ chefId: parseInt(chefId), chefIndex: parseInt(chefIndex) }));
+      // await dispatch(removeFromCart({ chefId: parseInt(chefId), chefIndex: parseInt(chefIndex) }));
 
       setOrder({ ...order, tip_price: 0, discount_price: 0 });
       setPromoCode({ code: "", order_total: 0, menus: [] });
@@ -497,586 +499,589 @@ const CheckoutLogic = () => {
 
   return (
     <ScrollView style={styles.container}
-      scrollEnabled={!isMapTouched}
+    
+    scrollEnabled={!isMapTouched}
     >
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => console.log('back')}>
-          <Feather name="arrow-left" size={24} color="black" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Checkout</Text>
-      </View>
-
-      {/* Delivery Information */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Delivery Information</Text>
-        
-        {/* Personal Info */}
-        <View style={styles.card}>
-          <Text style={styles.label}>Name *</Text>
-          <TextInput
-            style={styles.input}
-            value={order.name}
-            onChangeText={text => setOrder(prev => ({ ...prev, name: text }))}
-            placeholder="Enter Name"
-          />
-
-          <Text style={styles.label}>Phone *</Text>
-          <TextInput
-            style={styles.input}
-            value={order.phone}
-            onChangeText={text => setOrder(prev => ({ ...prev, phone: text }))}
-            placeholder="Enter Phone"
-            keyboardType="phone-pad"
-          />
-
-          <Text style={styles.label}>Email *</Text>
-          <TextInput
-            style={styles.input}
-            value={order.email}
-            onChangeText={text => setOrder(prev => ({ ...prev, email: text }))}
-            placeholder="Enter Email"
-            keyboardType="email-address"
-          />
+        <SafeAreaView>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Feather name="arrow-left" size={24} color="black" />
+          </TouchableOpacity>
+          <Text style={styles.title}>Checkout</Text>
         </View>
 
-        {/* Address Type Selector */}
-        <View style={styles.addressTypeContainer}>
-          <Text style={styles.note}>* Select where you want your food delivered</Text>
+        {/* Delivery Information */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Delivery Information</Text>
           
-          <View style={styles.addressButtons}>
-            <TouchableOpacity
-              style={[
-                styles.addressButton,
-                addressPlace === "home" && styles.activeAddressButton
-              ]}
-              onPress={() => setAddressPlace("home")}
-            >
-              <MaterialIcons name="house" size={20} color={addressPlace === "home" ? "white" : "black"} />
-              <Text style={[styles.buttonText, addressPlace === "home" && { color: "white" }]}>
-                Bunglow
-              </Text>
-            </TouchableOpacity>
+          {/* Personal Info */}
+          <View style={styles.card}>
+            <Text style={styles.label}>Name *</Text>
+            <TextInput
+              style={styles.input}
+              value={order.name}
+              onChangeText={text => setOrder(prev => ({ ...prev, name: text }))}
+              placeholder="Enter Name"
+            />
 
-            <TouchableOpacity
-              style={[
-                styles.addressButton,
-                addressPlace === "office" && styles.activeAddressButton
-              ]}
-              onPress={() => setAddressPlace("office")}
-            >
-              <MaterialIcons name="work" size={20} color={addressPlace === "office" ? "white" : "black"} />
-              <Text style={[styles.buttonText, addressPlace === "office" && { color: "white" }]}>
-                Office
-              </Text>
-            </TouchableOpacity>
+            <Text style={styles.label}>Phone *</Text>
+            <TextInput
+              style={styles.input}
+              value={order.phone}
+              onChangeText={text => setOrder(prev => ({ ...prev, phone: text }))}
+              placeholder="Enter Phone"
+              keyboardType="phone-pad"
+            />
 
-            <TouchableOpacity
-              style={[
-                styles.addressButton,
-                addressPlace === "apartment" && styles.activeAddressButton
-              ]}
-              onPress={() => setAddressPlace("apartment")}
-            >
-              <MaterialIcons name="apartment" size={20} color={addressPlace === "apartment" ? "white" : "black"} />
-              <Text style={[styles.buttonText, addressPlace === "apartment" && { color: "white" }]}>
-                Apartment
-              </Text>
-            </TouchableOpacity>
+            <Text style={styles.label}>Email *</Text>
+            <TextInput
+              style={styles.input}
+              value={order.email}
+              onChangeText={text => setOrder(prev => ({ ...prev, email: text }))}
+              placeholder="Enter Email"
+              keyboardType="email-address"
+            />
           </View>
 
-          {/* Address Form - Home */}
-          {addressPlace === "home" && (
-            <View style={styles.addressForm}>
-              <Text style={styles.label}>Street Address *</Text>
-              <TextInput
-                style={styles.input}
-                value={orderDeliveryAddress.home_street_address}
-                onChangeText={text => setOrderDeliveryAddress(prev => ({ ...prev, home_street_address: text }))}
-                placeholder="Street Address"
-              />
+          {/* Address Type Selector */}
+          <View style={styles.addressTypeContainer}>
+            <Text style={styles.note}>* Select where you want your food delivered</Text>
+            
+            <View style={styles.addressButtons}>
+              <TouchableOpacity
+                style={[
+                  styles.addressButton,
+                  addressPlace === "home" && styles.activeAddressButton
+                ]}
+                onPress={() => setAddressPlace("home")}
+              >
+                <MaterialIcons name="house" size={20} color={addressPlace === "home" ? "white" : "black"} />
+                <Text style={[styles.buttonText, addressPlace === "home" && { color: "white" }]}>
+                  Bunglow
+                </Text>
+              </TouchableOpacity>
 
-              <View style={styles.row}>
-                <View style={styles.halfInput}>
-                  <Text style={styles.label}>House Number *</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={orderDeliveryAddress.home_house_no}
-                    onChangeText={text => setOrderDeliveryAddress(prev => ({ ...prev, home_house_no: text }))}
-                    placeholder="House no."
-                  />
-                </View>
+              <TouchableOpacity
+                style={[
+                  styles.addressButton,
+                  addressPlace === "office" && styles.activeAddressButton
+                ]}
+                onPress={() => setAddressPlace("office")}
+              >
+                <MaterialIcons name="work" size={20} color={addressPlace === "office" ? "white" : "black"} />
+                <Text style={[styles.buttonText, addressPlace === "office" && { color: "white" }]}>
+                  Office
+                </Text>
+              </TouchableOpacity>
 
-                <View style={styles.halfInput}>
-                  <Text style={styles.label}>City *</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={orderDeliveryAddress.home_city}
-                    onChangeText={text => setOrderDeliveryAddress(prev => ({ ...prev, home_city: text }))}
-                    placeholder="City"
-                  />
-                </View>
-              </View>
-
-              <Text style={styles.label}>Additional Direction</Text>
-              <TextInput
-                style={styles.input}
-                value={orderDeliveryAddress.home_addition_direction}
-                onChangeText={text => setOrderDeliveryAddress(prev => ({ ...prev, home_addition_direction: text }))}
-                placeholder="Additional direction"
-              />
+              <TouchableOpacity
+                style={[
+                  styles.addressButton,
+                  addressPlace === "apartment" && styles.activeAddressButton
+                ]}
+                onPress={() => setAddressPlace("apartment")}
+              >
+                <MaterialIcons name="apartment" size={20} color={addressPlace === "apartment" ? "white" : "black"} />
+                <Text style={[styles.buttonText, addressPlace === "apartment" && { color: "white" }]}>
+                  Apartment
+                </Text>
+              </TouchableOpacity>
             </View>
-          )}
 
+            {/* Address Form - Home */}
+            {addressPlace === "home" && (
+              <View style={styles.addressForm}>
+                <Text style={styles.label}>Street Address *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={orderDeliveryAddress.home_street_address}
+                  onChangeText={text => setOrderDeliveryAddress(prev => ({ ...prev, home_street_address: text }))}
+                  placeholder="Street Address"
+                />
 
-
-          {addressPlace === "office" && (
-                  <>
-                    {/* Office Department, Floor, Company, Building No */}
-                    <View style={styles.grid}>
-                      <Field
-                        label="Office Dept"
-                        required
-                        value={orderDeliveryAddress.office_department}
-                        onChangeText={(text) =>
-                          updateOrderDeliveryAddress({ office_department: text })
-                        }
-                        placeholder="Office department"
-                      />
-                      <Field
-                        label="Floor"
-                        required
-                        value={orderDeliveryAddress.office_floor}
-                        onChangeText={(text) =>
-                          updateOrderDeliveryAddress({ office_floor: text })
-                        }
-                        placeholder="Floor"
-                      />
-                      <Field
-                        label="Company"
-                        required
-                        value={orderDeliveryAddress.office_company}
-                        onChangeText={(text) =>
-                          updateOrderDeliveryAddress({ office_company: text })
-                        }
-                        placeholder="Company"
-                      />
-                      <Field
-                        label="Building no."
-                        required
-                        value={orderDeliveryAddress.office_building_no}
-                        onChangeText={(text) =>
-                          updateOrderDeliveryAddress({ office_building_no: text })
-                        }
-                        placeholder="Building no."
-                      />
-                    </View>
-
-                    {/* Street, City */}
-                    <View style={styles.grid}>
-                      <Field
-                        label="Street Address"
-                        required
-                        value={orderDeliveryAddress.office_street_address}
-                        onChangeText={(text) =>
-                          updateOrderDeliveryAddress({ office_street_address: text })
-                        }
-                        placeholder="Street Address"
-                      />
-                      <Field
-                        label="City"
-                        required
-                        value={orderDeliveryAddress.office_city}
-                        onChangeText={(text) =>
-                          updateOrderDeliveryAddress({ office_city: text })
-                        }
-                        placeholder="City"
-                      />
-                    </View>
-
-                    {/* Additional Direction */}
-                    <Field
-                      label="Additional Direction"
-                      value={orderDeliveryAddress.office_addition_direction}
-                      onChangeText={(text) =>
-                        updateOrderDeliveryAddress({ office_addition_direction: text })
-                      }
-                      placeholder="Additional direction"
+                <View style={styles.row}>
+                  <View style={styles.halfInput}>
+                    <Text style={styles.label}>House Number *</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={orderDeliveryAddress.home_house_no}
+                      onChangeText={text => setOrderDeliveryAddress(prev => ({ ...prev, home_house_no: text }))}
+                      placeholder="House no."
                     />
-                  </>
-                )}
+                  </View>
 
-                {addressPlace === "apartment" && (
-                  <>
-                    {/* Apartment Name, Apt No, Floor, City */}
-                    <View style={styles.grid}>
-                      <Field
-                        label="Apartment Name"
-                        required
-                        value={orderDeliveryAddress.apartment_name}
-                        onChangeText={(text) =>
-                          updateOrderDeliveryAddress({ apartment_name: text })
-                        }
-                        placeholder="Building Name"
-                      />
-                      <Field
-                        label="Apt. No"
-                        required
-                        value={orderDeliveryAddress.apartment_apartment_no}
-                        onChangeText={(text) =>
-                          updateOrderDeliveryAddress({ apartment_apartment_no: text })
-                        }
-                        placeholder="Apartment No"
-                      />
-                      <Field
-                        label="Floor"
-                        required
-                        value={orderDeliveryAddress.apartment_floor}
-                        onChangeText={(text) =>
-                          updateOrderDeliveryAddress({ apartment_floor: text })
-                        }
-                        placeholder="Floor"
-                      />
-                      <Field
-                        label="City"
-                        required
-                        value={orderDeliveryAddress.apartment_city}
-                        onChangeText={(text) =>
-                          updateOrderDeliveryAddress({ apartment_city: text })
-                        }
-                        placeholder="City"
-                      />
-                      <Field
-                        label="Street Address"
-                        required
-                        value={orderDeliveryAddress.apartment_street_address}
-                        onChangeText={(text) =>
-                          updateOrderDeliveryAddress({ apartment_street_address: text })
-                        }
-                        placeholder="Street Address"
-                        fullWidth
-                      />
+                  <View style={styles.halfInput}>
+                    <Text style={styles.label}>City *</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={orderDeliveryAddress.home_city}
+                      onChangeText={text => setOrderDeliveryAddress(prev => ({ ...prev, home_city: text }))}
+                      placeholder="City"
+                    />
+                  </View>
+                </View>
+
+                <Text style={styles.label}>Additional Direction</Text>
+                <TextInput
+                  style={styles.input}
+                  value={orderDeliveryAddress.home_addition_direction}
+                  onChangeText={text => setOrderDeliveryAddress(prev => ({ ...prev, home_addition_direction: text }))}
+                  placeholder="Additional direction"
+                />
+              </View>
+            )}
+
+
+
+            {addressPlace === "office" && (
+                    <>
+                      {/* Office Department, Floor, Company, Building No */}
+                      <View style={styles.grid}>
+                        <Field
+                          label="Office Dept"
+                          required
+                          value={orderDeliveryAddress.office_department}
+                          onChangeText={(text) =>
+                            updateOrderDeliveryAddress({ office_department: text })
+                          }
+                          placeholder="Office department"
+                        />
+                        <Field
+                          label="Floor"
+                          required
+                          value={orderDeliveryAddress.office_floor}
+                          onChangeText={(text) =>
+                            updateOrderDeliveryAddress({ office_floor: text })
+                          }
+                          placeholder="Floor"
+                        />
+                        <Field
+                          label="Company"
+                          required
+                          value={orderDeliveryAddress.office_company}
+                          onChangeText={(text) =>
+                            updateOrderDeliveryAddress({ office_company: text })
+                          }
+                          placeholder="Company"
+                        />
+                        <Field
+                          label="Building no."
+                          required
+                          value={orderDeliveryAddress.office_building_no}
+                          onChangeText={(text) =>
+                            updateOrderDeliveryAddress({ office_building_no: text })
+                          }
+                          placeholder="Building no."
+                        />
+                      </View>
+
+                      {/* Street, City */}
+                      <View style={styles.grid}>
+                        <Field
+                          label="Street Address"
+                          required
+                          value={orderDeliveryAddress.office_street_address}
+                          onChangeText={(text) =>
+                            updateOrderDeliveryAddress({ office_street_address: text })
+                          }
+                          placeholder="Street Address"
+                        />
+                        <Field
+                          label="City"
+                          required
+                          value={orderDeliveryAddress.office_city}
+                          onChangeText={(text) =>
+                            updateOrderDeliveryAddress({ office_city: text })
+                          }
+                          placeholder="City"
+                        />
+                      </View>
+
+                      {/* Additional Direction */}
                       <Field
                         label="Additional Direction"
-                        value={orderDeliveryAddress.apartment_addition_direction}
+                        value={orderDeliveryAddress.office_addition_direction}
                         onChangeText={(text) =>
-                          updateOrderDeliveryAddress({
-                            apartment_addition_direction: text,
-                          })
+                          updateOrderDeliveryAddress({ office_addition_direction: text })
                         }
                         placeholder="Additional direction"
-                        fullWidth
                       />
-                    </View>
-                  </>
-                )}
-                <View style={styles.mapContainer}
-                  onTouchStart={() => setIsMapTouched(true)}
-                  onTouchEnd={() => setIsMapTouched(false)}
-                >
-                  {location ? (
-                    Platform.OS === "ios" ? (
-                      <AppleMaps.View
-                        style={styles.map}
-                        cameraPosition={{
-                          coordinates: {
-                            latitude: location.latitude,
-                            longitude: location.longitude,
-                          },
-                        }}
-                        markers={[
-                          {
-                            coordinates: location,
-                            draggable: true,
-                            subtitle: "Your location",
-                            showCallout: true,
-                          },
-                        ]}
-                      />
-                    ) : (
-                      <GoogleMaps.View
-                        style={styles.map}
-                        cameraPosition={{
-                          coordinates: {
-                            latitude: location.latitude,
-                            longitude: location.longitude,
-                          },
-                        }}
-                        markers={[
-                          {
-                            coordinates: location,
-                            draggable: true,
-                            snippet: "Your location",
-                            showCallout: true,
-                          },
-                        ]}
-                      />
-                    )
-                  ) : (
-                    <Text>Fetching your location...</Text>
+                    </>
                   )}
-                </View>
-        </View>
 
-
-        {/* Delivery Instructions */}
-        <View style={styles.card}>
-          <Text style={styles.label}>Delivery Instruction</Text>
-          <TextInput
-            style={[styles.input, styles.multilineInput]}
-            multiline
-            numberOfLines={4}
-            value={orderDeliveryAddress.delivery_instruction}
-            onChangeText={text => setOrderDeliveryAddress(prev => ({ ...prev, delivery_instruction: text }))}
-            placeholder="Special instructions for delivery"
-          />
-        </View>
-
-        {/* Delivery Time */}
-        <View style={styles.card}>
-          <Text style={styles.note}>
-            * To change the delivery time, remove this item and place a new order.
-          </Text>
-          
-          <View style={styles.row}>
-            <View style={styles.halfInput}>
-              <Text style={styles.label}>Delivery Date *</Text>
-              <Text style={styles.valueText}>
-                {order.delivery_time}
-              </Text>
-            </View>
-
-            <View style={styles.halfInput}>
-              <Text style={styles.label}>Delivery Time *</Text>
-              <Text style={styles.valueText}>
-                {(convertTo12Hour(order.delivery_slot?.split("-")[0]))} - 
-                {convertTo12Hour(order.delivery_slot?.split("-")[1])}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Promo Code */}
-        <View style={styles.card}>
-          <Text style={styles.label}>Promo code or Gift card</Text>
-          <View style={styles.promoContainer}>
-            <TextInput
-              style={[styles.input, styles.promoInput]}
-              value={promoCode.code}
-              onChangeText={text => setPromoCode(prev => ({ ...prev, code: text }))}
-              placeholder="Enter promo code"
-            />
-            <TouchableOpacity style={styles.promoButton} onPress={handlePromoCodeSubmit}>
-              <Text style={styles.promoButtonText}>Apply</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Tip Section */}
-        <View style={styles.card}>
-          <View style={styles.tipHeader}>
-            <Text style={styles.sectionTitle}>Tip Chef:</Text>
-            <Text style={styles.tipAmount}>
-              {order.tip_price.toLocaleString("en-PK", {
-                style: "currency",
-                currency: "PKR",
-              })}
-            </Text>
-          </View>
-
-          <View style={styles.tipButtons}>
-            {["No Tip", "10%", "15%", "20%", "25%"].map((label, index) => (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.tipButton,
-                  activeButton === `btn${index + 1}` && styles.activeTipButton
-                ]}
-                onPress={() => handleButtonClick(`btn${index + 1}`, index * 5)}
-              >
-                <Text style={styles.tipButtonText}>{label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Terms */}
-        <Text style={styles.termsText}>
-          By placing your order, you agree to Shef's updated Terms of Service, 
-          Privacy Policy, and to receive order updates and marketing text messages.
-        </Text>
-
-        {/* Payment Details */}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Payment Details</Text>
-          <Text style={styles.note}>All transactions are secure and encrypted.</Text>
-
-          <View style={styles.paymentOptions}>
-            <TouchableOpacity 
-              style={styles.paymentOption}
-              onPress={() => setOrder(prev => ({ ...prev, payment_mode: 1 }))}
-            >
-              <MaterialIcons 
-                name={order.payment_mode === 1 ? "radio-button-checked" : "radio-button-unchecked"} 
-                size={24} 
-                color="#E63946" 
-              />
-              <Text style={styles.paymentLabel}>Cash on Delivery</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.paymentOption, styles.disabledOption]}
-              disabled
-            >
-              <MaterialIcons name="radio-button-unchecked" size={24} color="#ccc" />
-              <Text style={[styles.paymentLabel, styles.disabledLabel]}>Card (Unavailable)</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-
-      {/* Order Summary */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Your Order</Text>
-        
-        {cart.map((chef, chef_index) => {
-          if (
-            chef.id === parseInt(chefId) &&
-            chef_index === parseInt(chefIndex)
-          ) {
-            return (
-              <View key={chef.id}>
-                <View style={styles.chefInfo}>
-                  <Image
-                    source={{ uri: chef.profile_pic || "https://via.placeholder.com/50" }}
-                    style={styles.chefImage}
-                  />
-                  <Text style={styles.chefName}>
-                    {chef.first_name} {chef.last_name}
-                  </Text>
-                </View>
-
-                {chef.menu.map((menuItem, menuIndex) => (
-                  <View key={menuIndex} style={styles.menuItem}>
-                    <View style={styles.menuInfo}>
-                      <Image
-                        source={{ uri: menuItem.logo || "https://via.placeholder.com/60" }}
-                        style={styles.menuImage}
-                      />
-                      <View>
-                        <Text style={styles.menuName}>{menuItem.name}</Text>
-                        <Text style={styles.menuPrice}>
-                          {menuItem.quantity} x{" "}
-                          {menuItem.unit_price.toLocaleString("en-PK", {
-                            style: "currency",
-                            currency: "PKR",
-                          })}
-                        </Text>
+                  {addressPlace === "apartment" && (
+                    <>
+                      {/* Apartment Name, Apt No, Floor, City */}
+                      <View style={styles.grid}>
+                        <Field
+                          label="Apartment Name"
+                          required
+                          value={orderDeliveryAddress.apartment_name}
+                          onChangeText={(text) =>
+                            updateOrderDeliveryAddress({ apartment_name: text })
+                          }
+                          placeholder="Building Name"
+                        />
+                        <Field
+                          label="Apt. No"
+                          required
+                          value={orderDeliveryAddress.apartment_apartment_no}
+                          onChangeText={(text) =>
+                            updateOrderDeliveryAddress({ apartment_apartment_no: text })
+                          }
+                          placeholder="Apartment No"
+                        />
+                        <Field
+                          label="Floor"
+                          required
+                          value={orderDeliveryAddress.apartment_floor}
+                          onChangeText={(text) =>
+                            updateOrderDeliveryAddress({ apartment_floor: text })
+                          }
+                          placeholder="Floor"
+                        />
+                        <Field
+                          label="City"
+                          required
+                          value={orderDeliveryAddress.apartment_city}
+                          onChangeText={(text) =>
+                            updateOrderDeliveryAddress({ apartment_city: text })
+                          }
+                          placeholder="City"
+                        />
+                        <Field
+                          label="Street Address"
+                          required
+                          value={orderDeliveryAddress.apartment_street_address}
+                          onChangeText={(text) =>
+                            updateOrderDeliveryAddress({ apartment_street_address: text })
+                          }
+                          placeholder="Street Address"
+                          fullWidth
+                        />
+                        <Field
+                          label="Additional Direction"
+                          value={orderDeliveryAddress.apartment_addition_direction}
+                          onChangeText={(text) =>
+                            updateOrderDeliveryAddress({
+                              apartment_addition_direction: text,
+                            })
+                          }
+                          placeholder="Additional direction"
+                          fullWidth
+                        />
                       </View>
-                    </View>
-
-                    <View style={styles.quantityControl}>
-                      <TouchableOpacity
-                        onPress={() => dispatch(removeFromCartThunk({chefIndex: chef_index, menuIndex: menuIndex}))}
-                        style={styles.removeButton}
-                      >
-                        <Feather name="trash-2" size={20} color="#E63946" />
-                      </TouchableOpacity>
-                    </View>
+                    </>
+                  )}
+                  <View style={styles.mapContainer}
+                    onTouchStart={() => setIsMapTouched(true)}
+                    onTouchEnd={() => setIsMapTouched(false)}
+                  >
+                    {location ? (
+                      Platform.OS === "ios" ? (
+                        <AppleMaps.View
+                          style={styles.map}
+                          cameraPosition={{
+                            coordinates: {
+                              latitude: location.latitude,
+                              longitude: location.longitude,
+                            },
+                          }}
+                          markers={[
+                            {
+                              coordinates: location,
+                              draggable: true,
+                              subtitle: "Your location",
+                              showCallout: true,
+                            },
+                          ]}
+                        />
+                      ) : (
+                        <GoogleMaps.View
+                          style={styles.map}
+                          cameraPosition={{
+                            coordinates: {
+                              latitude: location.latitude,
+                              longitude: location.longitude,
+                            },
+                          }}
+                          markers={[
+                            {
+                              coordinates: location,
+                              draggable: true,
+                              snippet: "Your location",
+                              showCallout: true,
+                            },
+                          ]}
+                        />
+                      )
+                    ) : (
+                      <Text>Fetching your location...</Text>
+                    )}
                   </View>
-                ))}
+          </View>
+
+
+          {/* Delivery Instructions */}
+          <View style={styles.card}>
+            <Text style={styles.label}>Delivery Instruction</Text>
+            <TextInput
+              style={[styles.input, styles.multilineInput]}
+              multiline
+              numberOfLines={4}
+              value={orderDeliveryAddress.delivery_instruction}
+              onChangeText={text => setOrderDeliveryAddress(prev => ({ ...prev, delivery_instruction: text }))}
+              placeholder="Special instructions for delivery"
+            />
+          </View>
+
+          {/* Delivery Time */}
+          <View style={styles.card}>
+            <Text style={styles.note}>
+              * To change the delivery time, remove this item and place a new order.
+            </Text>
+            
+            <View style={styles.row}>
+              <View style={styles.halfInput}>
+                <Text style={styles.label}>Delivery Date *</Text>
+                <Text style={styles.valueText}>
+                  {order.delivery_time}
+                </Text>
               </View>
-            );
-          }
 
-          return null; // make sure something is returned from the map
-        })}
-        {/* Menu Items */}
+              <View style={styles.halfInput}>
+                <Text style={styles.label}>Delivery Time *</Text>
+                <Text style={styles.valueText}>
+                  {(convertTo12Hour(order.delivery_slot?.split("-")[0]))} - 
+                  {convertTo12Hour(order.delivery_slot?.split("-")[1])}
+                </Text>
+              </View>
+            </View>
+          </View>
 
-        {/* Order Summary */}
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryTitle}>Order Summary</Text>
-          
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Subtotal</Text>
-            <Text style={styles.summaryValue}>
-              {order.sub_total.toLocaleString("en-PK", {
-                style: "currency",
-                currency: "PKR",
-              })}
-            </Text>
+          {/* Promo Code */}
+          <View style={styles.card}>
+            <Text style={styles.label}>Promo code or Gift card</Text>
+            <View style={styles.promoContainer}>
+              <TextInput
+                style={[styles.input, styles.promoInput]}
+                value={promoCode.code}
+                onChangeText={text => setPromoCode(prev => ({ ...prev, code: text }))}
+                placeholder="Enter promo code"
+              />
+              <TouchableOpacity style={styles.promoButton} onPress={handlePromoCodeSubmit}>
+                <Text style={styles.promoButtonText}>Apply</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-          
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Delivery Fee</Text>
-            <Text style={styles.summaryValue}>
-              {order.delivery_price.toLocaleString("en-PK", {
-                style: "currency",
-                currency: "PKR",
-              })}
-            </Text>
-          </View>
-          
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Fees & Taxes</Text>
-            <Text style={styles.summaryValue}>
-              {order.service_fee.toLocaleString("en-PK", {
-                style: "currency",
-                currency: "PKR",
-              })}
-            </Text>
-          </View>
-          
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Shef Tip</Text>
-            <Text style={styles.summaryValue}>
-              {order.tip_price.toLocaleString("en-PK", {
-                style: "currency",
-                currency: "PKR",
-              })}
-            </Text>
-          </View>
-          
-          {order.discount_price > 0 && (
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Discount</Text>
-              <Text style={styles.summaryValueDiscount}>
-                -{order.discount_price.toLocaleString("en-PK", {
+
+          {/* Tip Section */}
+          <View style={styles.card}>
+            <View style={styles.tipHeader}>
+              <Text style={styles.sectionTitle}>Tip Chef:</Text>
+              <Text style={styles.tipAmount}>
+                {order.tip_price.toLocaleString("en-PK", {
                   style: "currency",
                   currency: "PKR",
                 })}
               </Text>
             </View>
-          )}
+
+            <View style={styles.tipButtons}>
+              {["No Tip", "10%", "15%", "20%", "25%"].map((label, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.tipButton,
+                    activeButton === `btn${index + 1}` && styles.activeTipButton
+                  ]}
+                  onPress={() => handleButtonClick(`btn${index + 1}`, index * 5)}
+                >
+                  <Text style={styles.tipButtonText}>{label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+
+          {/* Terms */}
+          <Text style={styles.termsText}>
+            By placing your order, you agree to Shef's updated Terms of Service, 
+            Privacy Policy, and to receive order updates and marketing text messages.
+          </Text>
+
+          {/* Payment Details */}
+          <View style={styles.card}>
+            <Text style={styles.sectionTitle}>Payment Details</Text>
+            <Text style={styles.note}>All transactions are secure and encrypted.</Text>
+
+            <View style={styles.paymentOptions}>
+              <TouchableOpacity 
+                style={styles.paymentOption}
+                onPress={() => setOrder(prev => ({ ...prev, payment_mode: 1 }))}
+              >
+                <MaterialIcons 
+                  name={order.payment_mode === 1 ? "radio-button-checked" : "radio-button-unchecked"} 
+                  size={24} 
+                  color="#E63946" 
+                />
+                <Text style={styles.paymentLabel}>Cash on Delivery</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={[styles.paymentOption, styles.disabledOption]}
+                disabled
+              >
+                <MaterialIcons name="radio-button-unchecked" size={24} color="#ccc" />
+                <Text style={[styles.paymentLabel, styles.disabledLabel]}>Card (Unavailable)</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        {/* Order Summary */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Your Order</Text>
           
-          <View style={styles.summaryTotal}>
-            <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalValue}>
-              {order.total_price.toLocaleString("en-PK", {
-                style: "currency",
-                currency: "PKR",
-              })}
+          {cart.map((chef, chef_index) => {
+            if (
+              chef.id === parseInt(chefId) &&
+              chef_index === parseInt(chefIndex)
+            ) {
+              return (
+                <View key={chef.id}>
+                  <View style={styles.chefInfo}>
+                    <Image
+                      source={{ uri: chef.profile_pic || "https://via.placeholder.com/50" }}
+                      style={styles.chefImage}
+                    />
+                    <Text style={styles.chefName}>
+                      {chef.first_name} {chef.last_name}
+                    </Text>
+                  </View>
+
+                  {chef.menu.map((menuItem, menuIndex) => (
+                    <View key={menuIndex} style={styles.menuItem}>
+                      <View style={styles.menuInfo}>
+                        <Image
+                          source={{ uri: menuItem.logo || "https://via.placeholder.com/60" }}
+                          style={styles.menuImage}
+                        />
+                        <View>
+                          <Text style={styles.menuName}>{menuItem.name}</Text>
+                          <Text style={styles.menuPrice}>
+                            {menuItem.quantity} x{" "}
+                            {menuItem.unit_price.toLocaleString("en-PK", {
+                              style: "currency",
+                              currency: "PKR",
+                            })}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View style={styles.quantityControl}>
+                        <TouchableOpacity
+                          onPress={() => dispatch(removeFromCartThunk({chefIndex: chef_index, menuIndex: menuIndex}))}
+                          style={styles.removeButton}
+                        >
+                          <Feather name="trash-2" size={20} color="#E63946" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ))}
+                </View>
+              );
+            }
+
+            return null; // make sure something is returned from the map
+          })}
+          {/* Menu Items */}
+
+          {/* Order Summary */}
+          <View style={styles.summaryCard}>
+            <Text style={styles.summaryTitle}>Order Summary</Text>
+            
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Subtotal</Text>
+              <Text style={styles.summaryValue}>
+                {order.sub_total.toLocaleString("en-PK", {
+                  style: "currency",
+                  currency: "PKR",
+                })}
+              </Text>
+            </View>
+            
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Delivery Fee</Text>
+              <Text style={styles.summaryValue}>
+                {order.delivery_price.toLocaleString("en-PK", {
+                  style: "currency",
+                  currency: "PKR",
+                })}
+              </Text>
+            </View>
+            
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Fees & Taxes</Text>
+              <Text style={styles.summaryValue}>
+                {order.service_fee.toLocaleString("en-PK", {
+                  style: "currency",
+                  currency: "PKR",
+                })}
+              </Text>
+            </View>
+            
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Shef Tip</Text>
+              <Text style={styles.summaryValue}>
+                {order.tip_price.toLocaleString("en-PK", {
+                  style: "currency",
+                  currency: "PKR",
+                })}
+              </Text>
+            </View>
+            
+            {order.discount_price > 0 && (
+              <View style={styles.summaryRow}>
+                <Text style={styles.summaryLabel}>Discount</Text>
+                <Text style={styles.summaryValueDiscount}>
+                  -{order.discount_price.toLocaleString("en-PK", {
+                    style: "currency",
+                    currency: "PKR",
+                  })}
+                </Text>
+              </View>
+            )}
+            
+            <View style={styles.summaryTotal}>
+              <Text style={styles.totalLabel}>Total</Text>
+              <Text style={styles.totalValue}>
+                {order.total_price.toLocaleString("en-PK", {
+                  style: "currency",
+                  currency: "PKR",
+                })}
+              </Text>
+            </View>
+            
+            <Text style={styles.summaryNote}>
+              Note: Delivery price may vary based on time and location.
             </Text>
           </View>
-          
-          <Text style={styles.summaryNote}>
-            Note: Delivery price may vary based on time and location.
-          </Text>
         </View>
-      </View>
 
-      {/* Place Order Button */}
-      <TouchableOpacity 
-        style={styles.placeOrderButton}
-        onPress={() => handleCreateOrderPress()}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <Text style={styles.placeOrderText}>Place Order</Text>
-        )}
-      </TouchableOpacity>
+        {/* Place Order Button */}
+        <TouchableOpacity 
+          style={styles.placeOrderButton}
+          onPress={() => handleCreateOrderPress()}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text style={styles.placeOrderText}>Place Order</Text>
+          )}
+        </TouchableOpacity>
+    </SafeAreaView>
     </ScrollView>
   );
 };

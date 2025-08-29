@@ -7,6 +7,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { handleGetAllDishes, handlePostTransaction } from "@/services/shef";
 import { handleGetOrders, handleGetPendingOrdersForChef } from "@/services/order";
 import { useRouter } from "expo-router";
+import { useDispatch } from "react-redux";
+import { loadUserFromStorage } from "@/store/user";
 
 const { width, height } = Dimensions.get("window");
 
@@ -50,8 +52,10 @@ const MenuItem = ({ dish, onPress }) => (
 
 export default function ChefDashboardScreen() {
   const router = useRouter();
+  const dispatch = useDispatch();
   // const navigation = useNavigation();
-  const { user, authToken } = useAuth();
+  const [user, setUser] = useState(null);
+  const [authToken, setAuthToken] = useState(null);
 
   const token = authToken || user?.access_token; 
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
@@ -77,6 +81,21 @@ export default function ChefDashboardScreen() {
     delivered: 0
   });
 
+
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      const res = await dispatch(loadUserFromStorage());
+      if (loadUserFromStorage.fulfilled.match(res)) {
+        const { userInfo } = res.payload;
+        setUser(userInfo);
+        setAuthToken(userInfo.access_token);
+      } else {
+        console.warn("Failed to load user:", res.error);
+      }
+    };
+    fetchUserInfo();
+  }, [dispatch]);
+
   useEffect(() => {
     if (!token || !user?.id) {
       console.warn("Waiting for auth data...");
@@ -85,7 +104,6 @@ export default function ChefDashboardScreen() {
 
     console.log(" Using Token:", token);
     console.log(" User ID:", user.id);
-
     
 
     const fetchData = async () => {
@@ -250,6 +268,8 @@ const res = await handlePostTransaction(user?.access_token, user?.id, startDate,
   const handleDishPress = (dish) => {
     router.push("/menu", { dish });
   };
+
+  console.log("user", user)
 
   return (
     <SafeAreaView style={styles.container}>

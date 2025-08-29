@@ -198,6 +198,25 @@ export const emptyCartThunk = createAsyncThunk(
   }
 );
 
+// export const onOrderSubmitThunk = createAsyncThunk(
+//   'cart/onOrderSubmitThunk',
+//   async (payload, { getState, dispatch }) => {
+//     try {
+//       dispatch(cartSlice.actions.onOrderSubmit(payload));
+      
+//       const state = getState();
+//       const { currentUserId, cartItem } = state.cart;
+      
+//       if (currentUserId) {
+//         await saveCartToStorage(currentUserId, cartItem);
+//       }
+//     } catch (error) {
+//       console.error('Failed to submit order:', error);
+//       throw error;
+//     }
+//   }
+// );
+
 export const onOrderSubmitThunk = createAsyncThunk(
   'cart/onOrderSubmitThunk',
   async (payload, { getState, dispatch }) => {
@@ -320,9 +339,19 @@ const cartSlice = createSlice({
       }
     },
     
+    // onOrderSubmit: (state, action) => {
+    //   const { chefId, delivery_date, delivery_slot } = action.payload;
+      
+    //   state.cartItem = state.cartItem.filter(chef => 
+    //     !(chef.id === chefId && 
+    //       chef.delivery_date === delivery_date && 
+    //       chef.delivery_slot === delivery_slot)
+    //   );
+    // },
     onOrderSubmit: (state, action) => {
       const { chefId, delivery_date, delivery_slot } = action.payload;
       
+      // Filter out the specific chef's order for the given delivery date and slot
       state.cartItem = state.cartItem.filter(chef => 
         !(chef.id === chefId && 
           chef.delivery_date === delivery_date && 
