@@ -38,3 +38,34 @@ export const handleUserSignUp = async (credentials) => {
     throw new Error(error.message);
   }
 };
+
+export const handleShowProfile = async (token) => {
+  try {
+    const { data } = await api.get("/api/show-profile", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return data;
+  } catch (error) {
+    console.log("error while calling show profile ", error);
+  }
+};
+
+export const handleUpdateProfile = async (token, credentials) => {
+  try {
+    const { data } = await api.post("/api/update-profile", credentials, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return data;
+  } catch (error) {
+    if (error.response.data.message && typeof error.response.data.message!=="string" ) {
+      // console.log("response ", error.response)
+      //Error Object
+      const errorObj = error.response.data.message;
+      // Error object's key OR keys
+      const errorObjKey = Object.keys(error.response.data.message)[0];
+      //Array of Error message - getting first message
+      throw new Error(errorObj[errorObjKey][0]);
+    }
+
+    throw new Error(error.message); }
+};

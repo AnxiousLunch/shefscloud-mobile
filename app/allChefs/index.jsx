@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   StatusBar,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
@@ -100,6 +101,7 @@ const ChefCard = ({ chef, index }) => {
 };
 
 const AllChef = () => {
+   const insets = useSafeAreaInsets(); 
   const [chefs, setChefs] = useState([]);
   const router = useRouter();
 
@@ -124,10 +126,11 @@ const AllChef = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Status bar color same as header */}
+
       <StatusBar barStyle="light-content" backgroundColor="#B91C1C" />
 
-      <LinearGradient colors={["#DC2626", "#B91C1C"]} style={styles.header}>
+      <LinearGradient colors={["#DC2626", "#B91C1C"]}
+       style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <View style={styles.headerContent}>
           <TouchableOpacity 
             style={styles.backButton} 

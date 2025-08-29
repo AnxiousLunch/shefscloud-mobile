@@ -202,7 +202,7 @@ export default function CustomerHomeScreen() {
                 />
               ) : (
                 <Text style={styles.profileAvatarText}>
-                  {user?.name?.charAt(0) || "U"}
+                  {user?.first_name?.charAt(0) || "U"}
                 </Text>
               )}
             </TouchableOpacity>

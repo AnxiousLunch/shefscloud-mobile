@@ -257,7 +257,7 @@ const ChefDetailScreen = () => {
       >
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={handleBackPress}>
-            <Ionicons name="arrow-back" size={24} color="#fff" />
+            <Ionicons name="arrow-back" size={24} color="#dc2626" />
           </TouchableOpacity>
           <Text style={styles.headerTitle} numberOfLines={1}>
             {chefAndDishes ? `${chefAndDishes.first_name} ${chefAndDishes.last_name}` : 'Chef'}
@@ -528,8 +528,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   headerGradient: {
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
     paddingBottom: 10,
   },
   header: {
@@ -543,12 +543,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    backgroundColor: "#ffffff",
     justifyContent: "center",
     alignItems: "center",
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#fff",
     flex: 1,

@@ -8,10 +8,13 @@ import {
   SafeAreaView,
   Dimensions,
   Linking,
+  StatusBar,
+  Platform
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width, height } = Dimensions.get("window");
 
@@ -32,7 +35,7 @@ const responsiveFontSize = (size) => {
 
 export default function TermsOfServiceScreen() {
   const router = useRouter();
-
+   const insets = useSafeAreaInsets(); 
   const handleEmailPress = () => {
     Linking.openURL('mailto:info@shefscloud.com');
   };
@@ -42,7 +45,9 @@ export default function TermsOfServiceScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      <StatusBar barStyle="dark-content" backgroundColor="#dc2626" translucent />
+
       <LinearGradient
         colors={["#ffffff", "#fef7f0", "#fdeae1", "#f9dcc4"]}
         style={styles.backgroundGradient}
@@ -56,7 +61,7 @@ export default function TermsOfServiceScreen() {
             onPress={() => router.back()}
           >
             <View style={styles.backButtonCircle}>
-              <Ionicons name="arrow-back" size={responsiveValue(24, 28, 20)} color="#b30000" />
+              <Ionicons name="arrow-back" size={responsiveValue(24, 28, 20)} color="#dc2626" />
             </View>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Terms of Service</Text>
@@ -434,17 +439,21 @@ const styles = StyleSheet.create({
     bottom: 0,
   },
   safeArea: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: responsiveWidth(5),
-    paddingVertical: responsiveHeight(2),
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(179, 0, 0, 0.1)',
-  },
+  flex: 1,
+  paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0, 
+},
+header: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  paddingHorizontal: responsiveWidth(5),
+  paddingVertical: responsiveHeight(1),
+  borderBottomLeftRadius: 24,
+  borderBottomRightRadius: 24,
+  borderBottomWidth: 1,
+  borderBottomColor: 'rgba(179, 0, 0, 0.1)',
+  backgroundColor: "#dc2626", // keep solid background so it looks clean
+},
   backButton: {
     padding: responsiveValue(8, 10, 6),
   },
@@ -462,9 +471,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   headerTitle: {
-    fontSize: responsiveFontSize(18),
-    fontWeight: '700',
-    color: '#2d2d2d',
+    fontSize: responsiveFontSize(24),
+    fontWeight: 'bold',
+    color: '#ffffff',
   },
   headerPlaceholder: {
     width: responsiveValue(40, 50, 36),

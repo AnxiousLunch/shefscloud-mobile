@@ -8,7 +8,8 @@ import {
   TouchableOpacity, 
   View, 
   ScrollView,
-  useWindowDimensions
+  useWindowDimensions,
+  Linking
 } from "react-native"
 import { signOutUser } from "@/store/user"
 import { useDispatch } from "react-redux"
@@ -180,6 +181,38 @@ export default function ProfileDropdown({ isVisible, onClose }) {
               </TouchableOpacity>
             </>
           ) : null}
+          {!user?.is_chef && (
+          <>
+    <TouchableOpacity 
+      style={styles.menuItem} 
+      onPress={() => router.push("/userprofile")}
+    >
+      <Ionicons 
+        name="person-circle-outline" 
+        size={20 * responsiveScale} 
+        color="#3b82f6" 
+      />
+      <Text style={[styles.menuText, { color: "#3b82f6", fontSize: baseFontSize }]}>
+        Profile
+      </Text>
+    </TouchableOpacity>
+
+    <TouchableOpacity 
+      style={styles.menuItem} 
+      onPress={() => Linking.openURL("https://shefscloud.com/become-a-chef")}
+    >
+      <Ionicons 
+        name="star-outline" 
+        size={20 * responsiveScale} 
+        color="#16a34a" 
+      />
+      <Text style={[styles.menuText, { color: "#16a34a", fontSize: baseFontSize }]}>
+        Become a Chef
+      </Text>
+    </TouchableOpacity>
+  </>
+)}
+
 
           <TouchableOpacity 
             style={styles.menuItem} 

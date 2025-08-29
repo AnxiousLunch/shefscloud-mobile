@@ -8,10 +8,12 @@ import {
   SafeAreaView,
   Dimensions,
   Linking,
+  StatusBar
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width, height } = Dimensions.get("window");
 
@@ -32,13 +34,16 @@ const responsiveFontSize = (size) => {
 
 export default function PrivacyPolicyScreen() {
   const router = useRouter();
-
+  const insets = useSafeAreaInsets(); 
+  
   const handleEmailPress = () => {
     Linking.openURL('mailto:info@shefscloud.com');
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <StatusBar barStyle="dark-content" backgroundColor="#dc2626" translucent />
+      
       <LinearGradient
         colors={["#ffffff", "#fef7f0", "#fdeae1", "#f9dcc4"]}
         style={styles.backgroundGradient}
@@ -52,7 +57,7 @@ export default function PrivacyPolicyScreen() {
             onPress={() => router.back()}
           >
             <View style={styles.backButtonCircle}>
-              <Ionicons name="arrow-back" size={responsiveValue(24, 28, 20)} color="#b30000" />
+              <Ionicons name="arrow-back" size={responsiveValue(24, 28, 20)} color="#dc2626" />
             </View>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Privacy Policy</Text>
@@ -386,6 +391,9 @@ const styles = StyleSheet.create({
     paddingVertical: responsiveHeight(2),
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(179, 0, 0, 0.1)',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    backgroundColor: "#dc2626"
   },
   backButton: {
     padding: responsiveValue(8, 10, 6),
@@ -404,9 +412,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   headerTitle: {
-    fontSize: responsiveFontSize(18),
-    fontWeight: '700',
-    color: '#2d2d2d',
+    fontSize: responsiveFontSize(24),
+    fontWeight: 'bold',
+    color: '#ffffff',
   },
   headerPlaceholder: {
     width: responsiveValue(40, 50, 36),
