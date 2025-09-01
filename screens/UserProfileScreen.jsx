@@ -43,6 +43,7 @@ const UserProfileScreen = () => {
     (async () => {
       try {
         const response = await handleShowProfile(authToken);
+        console.log("response", response)
         if (response) {
           dispatch(updateUser(response));
           setProfileData({
@@ -58,6 +59,8 @@ const UserProfileScreen = () => {
     })();
   }, [authToken, dispatch, shouldReload]);
 
+  console.log("profiledata", profileData)
+
   // Pick image
   const pickImage = async () => {
     try {
@@ -70,7 +73,7 @@ const UserProfileScreen = () => {
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
-        aspect: [3, 4],
+        aspect: [4, 3],
         quality: 1,
       });
 
@@ -82,7 +85,7 @@ const UserProfileScreen = () => {
             uri: asset.uri,
             type: asset.type || "image/jpeg",
             fileName: asset.fileName || `profile_${Date.now()}.jpg`,
-          },
+          }
         });
       }
     } catch (error) {
@@ -94,41 +97,33 @@ const UserProfileScreen = () => {
   // Submit update
   const handleSubmit = async () => {
     try {
-      if (!profileData.first_name || !profileData.phone) {
-        Alert.alert("Error", "First name and phone are required.");
-        return;
-      }
-      if (!profileData.profile_pic?.uri) {
-        Alert.alert("Error", "Please add a profile picture.");
-        return;
-      }
-
       setIsPending(true);
 
-      // Build form data
       const formData = new FormData();
-      formData.append("id", profileData.id);
-      formData.append("first_name", profileData.first_name);
-      formData.append("last_name", profileData.last_name);
-      formData.append("email", profileData.email);
-      formData.append("phone", profileData.phone);
+      formData.append("id", String(profileData.id));
+      formData.append("first_name", String(profileData.first_name));
+      formData.append("last_name", String(profileData.last_name));
+      formData.append("email", String(profileData.email));
+      formData.append("phone", String(profileData.phone));
 
-      // ✅ handle image safely
+      // ✅ Only append if user picked a NEW image
       if (profileData.profile_pic?.uri) {
-        const fileType = profileData.profile_pic.uri.split(".").pop();
+        const uriParts = profileData.profile_pic.uri.split(".");
+        const fileType = uriParts[uriParts.length - 1];
 
         formData.append("profile_pic", {
           uri: profileData.profile_pic.uri,
-          name: profileData.profile_pic.fileName || `profile_${Date.now()}.${fileType}`,
-          type: profileData.profile_pic.type || `image/${fileType}`,
+          name: `profile_${Date.now()}.${fileType}`,
+          type: `image/${fileType}`,
         });
       }
 
-      // API call
-      const response = await handleUpdateProfile(authToken, formData);
 
-      // Update redux + state
-      dispatch(updateUser(response));
+      // Debug
+      formData._parts.forEach(([key, value]) => console.log(key, value));
+
+      const response = await handleUpdateProfile(authToken, formData);
+      dispatch(updateUser(response.data));
       setProfileData({
         ...response,
         profile_pic: response.profile_pic
@@ -136,9 +131,10 @@ const UserProfileScreen = () => {
           : null,
       });
 
-      Alert.alert("Success", "Profile updated successfully.");
       setShouldReload((prev) => !prev);
+      Alert.alert("Success", "Profile updated successfully.");
     } catch (error) {
+      console.log("Error", error.message || "Something went wrong");
       Alert.alert("Error", error.message || "Something went wrong");
     } finally {
       setIsPending(false);

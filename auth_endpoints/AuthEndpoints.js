@@ -50,22 +50,73 @@ export const handleShowProfile = async (token) => {
   }
 };
 
-export const handleUpdateProfile = async (token, credentials) => {
+export async function handleUpdateProfile(token, formData) {
+  return fetch("http://backend-shef.shefscloud.com/api/update-profile", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+}
+
+// Forget Password
+export const handleForgetPassword = async (credentials) => {
   try {
-    const { data } = await api.post("/api/update-profile", credentials, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    // const { data } = await api.post("/api/forget-password", credentials);
+    const { data } = await api.post(
+      `/api/forget-password?email=${credentials.email}`
+    );
     return data;
   } catch (error) {
-    if (error.response.data.message && typeof error.response.data.message!=="string" ) {
-      // console.log("response ", error.response)
+    console.log(error);
+    if (error.response.data.errors) {
       //Error Object
-      const errorObj = error.response.data.message;
+      const errorObj = error.response.data.errors;
       // Error object's key OR keys
-      const errorObjKey = Object.keys(error.response.data.message)[0];
+      const errorObjKey = Object.keys(error.response.data.errors)[0];
       //Array of Error message - getting first message
       throw new Error(errorObj[errorObjKey][0]);
     }
-
-    throw new Error(error.message); }
+    if (
+      error.response.data.message &&
+      typeof error.response.data.message === "string"
+    ) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error(error.message);
+  }
+};
+// Reset Password - Verify token
+export const handleForgetTokenVerification = async (token) => {
+  try {
+    const { data } = await api.post(`/api/verify-token?token=${token}`);
+    return data;
+  } catch (error) {
+    if (
+      error.response.data.message &&
+      typeof error.response.data.message === "string"
+    ) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error(error.message);
+  }
+};
+// Reset Password - Change Password
+export const handlePostResetPassword = async (token, credentials) => {
+  try {
+    // const { data } = await api.post(`/api/resetpassword?token=${token}`, credentials);
+    const { data } = await api.post(
+      `/api/reset-password?token=${token}&password=${credentials.password}&password_confirmation=${credentials.password_confirmation}`
+    );
+    return data;
+  } catch (error) {
+    if (
+      error.response.data.message &&
+      typeof error.response.data.message === "string"
+    ) {
+      throw new Error(error.response.data.message);
+    }
+    throw new Error(error.message);
+  }
 };

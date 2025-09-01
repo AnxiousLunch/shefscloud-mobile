@@ -27,6 +27,8 @@ import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { initializeUserCart } from "@/store/cart";
+import { Modal } from "react-native";
+import { handleForgetPassword } from "../auth_endpoints/AuthEndpoints";
 
 const { width, height } = Dimensions.get("window");
 WebBrowser.maybeCompleteAuthSession();
@@ -55,9 +57,13 @@ export default function AuthScreen() {
     clientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID,
   });
   
- const { userInfo, isLoading: reduxLoading, isInitialized } = useAppSelector((state) => state.user);
+  const { userInfo, isLoading: reduxLoading, isInitialized } = useAppSelector((state) => state.user);
   const dispatch = useDispatch();
   const router = useRouter();
+  const [isForgotVisible, setIsForgotVisible] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+
 
  useEffect(() => {
     dispatch(loadUserFromStorage());
@@ -128,6 +134,28 @@ export default function AuthScreen() {
       </View>
     );
   }
+
+  const handleForgotPassword = async () => {
+    if (!forgotEmail) {
+      Alert.alert("Error", "Please enter your email");
+      return;
+    }
+    try {
+      setIsProcessing(true);
+      const response = await handleForgetPassword({ email: forgotEmail });
+      if (response?.message || response?.msg) {
+        Alert.alert("Success", response.message || response.msg);
+        setIsForgotVisible(false);
+        setForgotEmail("");
+      }
+      console.log("sent successfullynp");
+    } catch (err) {
+      Alert.alert("Error", err.message || "Something went wrong");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
 
   const navigateToSignUp = () => {
     router.push('/(signup)');
@@ -226,9 +254,13 @@ export default function AuthScreen() {
                 </View>
 
                 {/* Forgot Password */}
-                <TouchableOpacity style={styles.forgotPassword}>
+                <TouchableOpacity 
+                  style={styles.forgotPassword}
+                  onPress={() => setIsForgotVisible(true)}
+                >
                   <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
                 </TouchableOpacity>
+
               </View>
 
               {/* Action Buttons */}
@@ -289,6 +321,50 @@ export default function AuthScreen() {
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+      <Modal
+        visible={isForgotVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setIsForgotVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Forgot Your Password?</Text>
+            <Text style={styles.modalSubtitle}>
+              Enter your email address to receive a reset password link.
+            </Text>
+
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Enter your email"
+              value={forgotEmail}
+              onChangeText={setForgotEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+
+            <TouchableOpacity
+              style={[styles.modalButton, isProcessing && styles.buttonDisabled]}
+              onPress={handleForgotPassword}
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.modalButtonText}>Send Reset Link</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => setIsForgotVisible(false)}
+              style={styles.modalClose}
+            >
+              <Text style={styles.modalCloseText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </View>
   )
 }
@@ -605,4 +681,58 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#b30000",
   },
+  modalOverlay: {
+  flex: 1,
+  backgroundColor: "rgba(0,0,0,0.5)",
+  justifyContent: "center",
+  alignItems: "center",
+},
+modalContent: {
+  width: "85%",
+  backgroundColor: "#fff",
+  borderRadius: 12,
+  padding: 20,
+  alignItems: "center",
+},
+modalTitle: {
+  fontSize: responsiveFontSize(16),
+  fontWeight: "700",
+  marginBottom: 10,
+  color: "#2d2d2d",
+},
+modalSubtitle: {
+  fontSize: responsiveFontSize(12),
+  textAlign: "center",
+  color: "#666",
+  marginBottom: 15,
+},
+modalInput: {
+  width: "100%",
+  borderWidth: 1,
+  borderColor: "#ddd",
+  borderRadius: 8,
+  padding: 10,
+  marginBottom: 15,
+},
+modalButton: {
+  backgroundColor: "#b30000",
+  borderRadius: 8,
+  paddingVertical: 12,
+  paddingHorizontal: 20,
+  width: "100%",
+  alignItems: "center",
+  marginBottom: 10,
+},
+modalButtonText: {
+  color: "#fff",
+  fontWeight: "600",
+},
+modalClose: {
+  padding: 8,
+},
+modalCloseText: {
+  color: "#b30000",
+  fontWeight: "600",
+},
+
 });

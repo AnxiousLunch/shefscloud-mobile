@@ -112,7 +112,7 @@ export default function SignUpScreen() {
         setLastName("");
         setPhone("");
         setPassword("");
-        router.replace('/');
+        router.replace('/(auth)');
     } catch (error) {
         Alert.alert("Error", "Sign up failed. Please try again.");
     } finally {
