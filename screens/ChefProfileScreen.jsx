@@ -17,14 +17,19 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from "../contexts/AuthContext";
 import * as ImagePicker from "expo-image-picker";
+import { updateUser } from "@/store/user";
+import { loadUserFromStorage } from "@/store/user";
 import {
   handleGetStats,
   handleUpdateChefProfile,
 } from "../services/shef";
+import { handleUpdateProfile } from "@/auth_endpoints/AuthEndpoints";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function ChefProfileScreen() {
   
-  const { user, logout, updateUser } = useAuth();
+  const { logout } = useAuth();
+  const [user, setUser] = useState();
   const [stats, setStats] = useState({
     earning: 0,
     dishes_sold: 0,
@@ -45,6 +50,15 @@ export default function ChefProfileScreen() {
     latitude: null,
     longitude: null,
   });
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    (async() => {
+      const user = await dispatch(loadUserFromStorage());
+      setUser(user.payload.userInfo);
+      console.log(user.payload.userInfo)
+    })()
+    }, [dispatch]);
 
   useEffect(() => {
     if (user?.access_token && user?.id) {
@@ -124,7 +138,7 @@ export default function ChefProfileScreen() {
     try {
       const res = await handleUpdateChefProfile(user.access_token, profileData);
       if (res?.data) {
-        updateUser(res.data);
+        dispatch(updateUser(res.data));
         Alert.alert("Success", "Profile updated successfully");
         setIsEditing(false);
       } else {
@@ -137,6 +151,7 @@ export default function ChefProfileScreen() {
       setIsLoading(false);
     }
   };
+
 
   return (
     <SafeAreaView style={styles.container}>

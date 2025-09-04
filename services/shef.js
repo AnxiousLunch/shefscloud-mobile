@@ -406,28 +406,33 @@ export const handleUpdateChefProfile = async (token, profileData) => {
     formData.append("longitude", profileData.longitude || "");
 
     // Append images only if they are newly picked (local file URIs)
-    if (profileData.profile_pic?.startsWith("file:")) {
+    if (profileData.profile_pic?.uri) {
+      const uriParts = profileData.profile_pic.uri.split(".");
+      const fileType = uriParts[uriParts.length - 1];
+
       formData.append("profile_pic", {
-        uri: profileData.profile_pic,
-        name: "profile.jpg",
-        type: "image/jpeg",
+        uri: profileData.profile_pic.uri,
+        name: `profile_${Date.now()}.${fileType}`,
+        type: `image/${fileType}`,
       });
     }
 
-    if (profileData.cover_pic?.startsWith("file:")) {
-      formData.append("cover_pic", {
-        uri: profileData.cover_pic,
-        name: "cover.jpg",
-        type: "image/jpeg",
-      });
-    }
-
-    const res = await axios.put("/api/chef/profile", formData, {
+    const res = await api.post("/api/update-profile", formData, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "multipart/form-data",
       },
     });
+
+    formData._parts.forEach(([key, value]) => console.log(key, value));
+
+    // const res = await fetch("http://backend-shef.shefscloud.com/api/update-profile", {
+    //   method: "POST",
+    //   headers: {
+    //     Authorization: `Bearer ${token}`,
+    //   },
+    //   body: formData,
+    // });
 
     return res; // let the screen decide how to handle it
   } catch (error) {

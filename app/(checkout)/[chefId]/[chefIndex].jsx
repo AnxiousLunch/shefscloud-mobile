@@ -20,6 +20,31 @@ import * as Location from "expo-location"
 import { Button } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+async function sendPushNotification(expoPushToken, title, body, data = {}) {
+  const message = {
+    to: expoPushToken,
+    sound: "default",
+    title,
+    body,
+    data
+  };
+  try {
+    const response = await fetch('https://exp.host/--/api/v2/push/send', {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Accept-encoding": "gzip. deflate",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(message)
+    });
+    const result = await response.json();
+    console.log("[DEBUG]: Push response", result);
+  } catch (error) {
+    console.error("Error sending push notification: ", error);
+  }
+}
+
 
 const CheckoutLogic = () => {
   const dispatch = useDispatch();
@@ -410,6 +435,8 @@ const CheckoutLogic = () => {
 
 
       const response = await handleCreateOrder(authToken, payload);
+      console.log("[DEBUG]: Create Order Response: ", response);
+      await sendPushNotification(response.fcm_token, "New Order Received", "You have a new order waiting for you!");
       // Update user info
       const updatedUserInfo = {
         ...userInfo,
@@ -558,7 +585,7 @@ const CheckoutLogic = () => {
               >
                 <MaterialIcons name="house" size={20} color={addressPlace === "home" ? "white" : "black"} />
                 <Text style={[styles.buttonText, addressPlace === "home" && { color: "white" }]}>
-                  Bunglow
+                  Bungalow
                 </Text>
               </TouchableOpacity>
 

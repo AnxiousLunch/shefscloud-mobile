@@ -161,6 +161,10 @@ export default function AuthScreen() {
     router.push('/(signup)');
   };
 
+  const navigateToBecomeAChef = () => {
+    router.push(`/(becomeChef)`);
+  }
+
   return (
     <View style={styles.container}>
       <LinearGradient
@@ -296,28 +300,40 @@ export default function AuthScreen() {
                 </TouchableOpacity>
               </View>
             </View>
-            <View style={styles.signupSection}>
-              <Text style={styles.signupText}>Don't have an account?</Text>
-              <TouchableOpacity
-                onPress={navigateToSignUp}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.signupLink}>Create Account</Text>
-              </TouchableOpacity>
-            </View>
+            <View style={styles.extraOptions}>
+  {/* Become a Chef */}
+  <TouchableOpacity onPress={navigateToBecomeAChef} activeOpacity={0.7}>
+    <Text style={styles.extraLink}>Become a Chef</Text>
+  </TouchableOpacity>
 
-            {/* Footer */}
-            <View style={styles.footer}>
-              <Text style={styles.termsText}>
-                By continuing, you agree to our{" "}
-                <Text style={styles.termsLink}
-                onPress={() => router.push('/termsofservice')}
-                >Terms of Service</Text> and{" "}
-                <Text style={styles.termsLink}
-                 onPress={() => router.push('/privacy')}
-                 >Privacy Policy</Text>
-              </Text>
-            </View>
+  {/* Divider */}
+  <Text style={styles.extraDivider}>|</Text>
+
+  {/* Create Account */}
+  <TouchableOpacity onPress={navigateToSignUp} activeOpacity={0.7}>
+    <Text style={styles.extraLink}>Create Account</Text>
+  </TouchableOpacity>
+</View>
+
+{/* Footer */}
+<View style={styles.footer}>
+  <Text style={styles.termsText}>
+    By continuing, you agree to our{" "}
+    <Text
+      style={styles.termsLink}
+      onPress={() => router.push("/termsofservice")}
+    >
+      Terms of Service
+    </Text>{" "}
+    and{" "}
+    <Text
+      style={styles.termsLink}
+      onPress={() => router.push("/privacy")}
+    >
+      Privacy Policy
+    </Text>
+  </Text>
+</View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -733,6 +749,23 @@ modalClose: {
 modalCloseText: {
   color: "#b30000",
   fontWeight: "600",
+},
+extraOptions: {
+  flexDirection: "row",
+  justifyContent: "center",
+  alignItems: "center",
+  marginBottom: responsiveHeight(2),
+  gap: responsiveValue(10, 14, 8),
+},
+extraLink: {
+  fontSize: responsiveFontSize(12),
+  fontWeight: "700",
+  color: "#b30000",
+},
+extraDivider: {
+  fontSize: responsiveFontSize(12),
+  fontWeight: "600",
+  color: "#ccc",
 },
 
 });

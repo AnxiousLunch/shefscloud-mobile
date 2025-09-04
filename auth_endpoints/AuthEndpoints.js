@@ -39,6 +39,28 @@ export const handleUserSignUp = async (credentials) => {
   }
 };
 
+export const handleChefSignUp = async (credentials) => {
+  try {
+    const { data } = await api.post("/api/register", credentials, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return data;
+  } catch (error) {
+    if (error.response) {
+      //Error Object
+      const errorObj = error.response.data.errors;
+      // Error object's key OR keys
+      const errorObjKey = Object.keys(error.response.data.errors)[0];
+      //Array of Error message - getting first message
+      throw new Error(errorObj[errorObjKey][0]);
+    }
+
+    throw new Error(error.message);
+  }
+};
+
 export const handleShowProfile = async (token) => {
   try {
     const { data } = await api.get("/api/show-profile", {

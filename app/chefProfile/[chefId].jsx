@@ -165,12 +165,12 @@ const ChefDetailScreen = () => {
   const flatListData = [
     { type: 'chef', data: chefAndDishes },
     { type: 'filters', data: { sortingWithDays, setSortingWithDays, sortingWithSlot, setSortingWithSlot, timeSlots } },
-    { type: 'dishes_header' },
-    ...dishes.map(dish => ({ type: 'dish', data: dish })),
+    { type: 'dishes_header' },   // <- this will handle ALL dishes in one nested FlatList
     { type: 'reviews_header' },
     ...reviews.map(review => ({ type: 'review', data: review })),
     { type: 'feedback_form' }
   ];
+
 
   const renderItem = ({ item, index }) => {
     switch (item.type) {
@@ -181,21 +181,21 @@ const ChefDetailScreen = () => {
         return <FilterSection {...item.data} />;
       
       case 'dishes_header':
-  return (
-    <View>
-      <View style={styles.sectionHeaderContainer}>
-        <Text style={styles.dishesTitle}>MAIN ITEMS</Text>
-      </View>
-      <FlatList
-        data={dishes}
-        keyExtractor={(dish) => `dish_${dish.id}`}
-        renderItem={({ item }) => <DishItem dish={item} />}
-        numColumns={2}
-        columnWrapperStyle={{ justifyContent: "space-between", paddingHorizontal: 12 }}
-        scrollEnabled={false} // so main FlatList handles scroll
-      />
-    </View>
-  );
+        return (
+          <View>
+            <View style={styles.sectionHeaderContainer}>
+              <Text style={styles.dishesTitle}>MAIN ITEMS</Text>
+            </View>
+            <FlatList
+              data={dishes}
+              keyExtractor={(dish) => `dish_${dish.id}`}
+              renderItem={({ item }) => <DishItem dish={item} />}
+              numColumns={2}
+              columnWrapperStyle={{ justifyContent: "space-between", paddingHorizontal: 12 }}
+              scrollEnabled={false} // so main FlatList handles scroll
+            />
+          </View>
+        );
 
       
       case 'dish':
@@ -423,21 +423,24 @@ const DishItem = ({ dish }) => {
       <Text style={styles.dishName} numberOfLines={1}>{dish.name}</Text>
       <View style={styles.ratingContainer}>
         <StarRating 
-          rating={dish.average_rating || 0} 
+          rating={parseInt(dish.average_rating).toFixed(1) || 0} 
           reviewCount={dish.total_reviews || 0}
+          starSize={12}
         />
       </View>
       <Text style={styles.dishPrice}>
         {calculateTotalPrice(dish).toLocaleString('en-US', {
           style: 'currency',
-          currency: 'USD'
+          currency: 'PKR'
         })}
       </Text>
     </View>
   );
 };
 
+
 const ReviewItem = ({ review, expandedReviews, toggleReadMore, toggleReplies }) => {
+  console.log("Review", review)
   return (
     <View style={styles.reviewCard}>
       <View style={styles.reviewHeader}>
@@ -457,7 +460,7 @@ const ReviewItem = ({ review, expandedReviews, toggleReadMore, toggleReplies }) 
             {review?.user_menu?.user?.first_name} {review?.user_menu?.user?.last_name}
           </Text>
           <StarRating 
-            rating={review?.user_menu?.average_rating || 0} 
+            rating={parseInt(review?.user_menu?.average_rating).toFixed(1) || 0} 
             reviewCount={review?.user_menu?.total_reviews || 0}
           />
         </View>

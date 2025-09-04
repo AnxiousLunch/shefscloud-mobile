@@ -301,7 +301,7 @@ export default function FoodDetailScreen() {
 
             <View style={styles.ratingContainer}>
               <Text style={styles.starsLarge}>⭐⭐⭐⭐⭐</Text>
-              <Text style={styles.ratingNumber}>{foodItem.average_rating}</Text>
+              <Text style={styles.ratingNumber}>{parseInt(foodItem.average_rating).toFixed(1)}</Text>
               <Text style={styles.reviewCount}>({foodItem.total_reviews} reviews)</Text>
             </View>
 
@@ -319,7 +319,7 @@ export default function FoodDetailScreen() {
               <View style={styles.infoGrid}>
                 <View style={styles.infoCard}>
                   <Text style={styles.infoLabel}>Portion Size</Text>
-                  <Text style={styles.infoValue}>{foodItem.portion_size || "Standard"}</Text>
+                  <Text style={styles.infoValue}>{foodItem.portion_size || "Standard"}{' '}{foodItem.base_type_id === 1 ? "grams Container" : foodItem.base_type_id === 2 ? "pieces" : "Other"}</Text>
                 </View>
                 <View style={styles.infoCard}>
                   <Text style={styles.infoLabel}>Spice Level</Text>

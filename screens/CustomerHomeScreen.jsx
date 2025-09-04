@@ -119,7 +119,7 @@ export default function CustomerHomeScreen() {
       const cityData = await AsyncStorage.getItem("region");
       if (!cityData) return;
       const res = await dispatch(loadUserFromStorage()).unwrap();
-      console.log("This is res", res);
+      // console.log("This is res", res);
       
       const city = JSON.parse(cityData);
       setCity(city);
@@ -242,8 +242,8 @@ export default function CustomerHomeScreen() {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Browse by Cuisine</Text>
             <TouchableOpacity onPress={() => router.push("/browse")}>
-  <Text style={styles.seeAll}>See All</Text>
-</TouchableOpacity>
+              <Text style={styles.seeAll}>See All</Text>
+            </TouchableOpacity>
 
           </View>
           <ScrollView 

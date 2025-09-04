@@ -82,14 +82,16 @@ export default function FoodCategoryDetails() {
             {categoryDishes.map((dish) => (
               <View key={dish.id} style={styles.card}>
                 <View style={styles.imageContainer}>
-                  <Image
-                    source={{
-                      uri: isValidURL(dish.logo)
-                        ? dish.logo
-                        : 'https://t4.ftcdn.net/jpg/04/70/29/97/360_F_470299797_UD0eoVMMSUbHCcNJCdv2t8B2g1GVqYgs.jpg',
-                    }}
-                    style={styles.mainImage}
-                  />
+                  <TouchableOpacity onPress={() => router.push(`/foodDetails/${dish.id}`)}>
+                    <Image
+                      source={{
+                        uri: isValidURL(dish.logo)
+                          ? dish.logo
+                          : 'https://t4.ftcdn.net/jpg/04/70/29/97/360_F_470299797_UD0eoVMMSUbHCcNJCdv2t8B2g1GVqYgs.jpg',
+                      }}
+                      style={styles.mainImage}
+                    />
+                  </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.chefContainer}
                     onPress={() => router.navigate(`/chefProfile/${dish.user?.id}`)}
@@ -121,7 +123,7 @@ export default function FoodCategoryDetails() {
                     <View style={styles.ratingBox}>
                       <Text style={styles.ratingText}>
                         {dish?.average_rating
-                          ? dish.average_rating
+                          ? parseInt(dish.average_rating).toFixed(1)
                           : 0}{' '}
                         ({dish?.total_reviews})
                       </Text>

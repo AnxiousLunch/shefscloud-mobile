@@ -24,8 +24,20 @@ import { useAppSelector } from "@/hooks/hooks";
 import { loadUserFromStorage } from "@/store/user";
 import { TextInputMask } from 'react-native-masked-text';
 import { handleUserSignUp } from "@/auth_endpoints/AuthEndpoints";
+import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 
 const { width, height } = Dimensions.get("window");
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 // Responsive helper functions (same as AuthScreen)
 const isTablet = width >= 768
@@ -42,6 +54,48 @@ const responsiveFontSize = (size) => {
   return Math.min(baseSize, size * 1.5);
 }
 
+async function registerForPushNotificationsAsync() {
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+    });
+  }
+
+  if (!Device.isDevice) {
+    console.log('Must use physical device for push notifications');
+    return;
+  }
+
+  const { status: existingStatus } = await Notifications.getPermissionsAsync();
+  let finalStatus = existingStatus;
+  if (existingStatus !== 'granted') {
+    const { status } = await Notifications.requestPermissionsAsync();
+    finalStatus = status;
+  }
+  if (finalStatus !== 'granted') {
+    console.log('Permission not granted for push notifications');
+    return;
+  }
+
+  const projectId =
+    Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+  if (!projectId) {
+    console.log('Project ID not found');
+    return;
+  }
+
+  try {
+    const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+    console.log('Expo push token:', token);
+    return token;
+  } catch (e) {
+    console.log('Error fetching token:', e);
+  }
+}
+
 export default function SignUpScreen() {
   const [first_name, setFirstName] = useState("");
   const [last_name, setLastName] = useState("");
@@ -55,10 +109,18 @@ export default function SignUpScreen() {
   const { userInfo, isLoading: reduxLoading, isInitialized } = useAppSelector((state) => state.user);
   const dispatch = useDispatch();
   const router = useRouter();
+  const [token, setToken] = useState();
 
   useEffect(() => {
     dispatch(loadUserFromStorage());
   }, [dispatch]);
+
+  useEffect(() => {
+    (async () => {
+      const token = await registerForPushNotificationsAsync();
+      setToken(token);
+    })()
+  }, []);
 
   useEffect(() => {
     if (isInitialized && userInfo) {
@@ -102,7 +164,14 @@ export default function SignUpScreen() {
 
     setIsLoading(true);
     try {
-        const res = await handleUserSignUp({email, password, phone, first_name, last_name});
+        const res = await handleUserSignUp({
+          email: email, 
+          password: password, 
+          first_name: first_name, 
+          last_name: last_name, 
+          phone: phone, 
+          fcm_token: token});
+
         Alert.alert(
           typeof res.message === "string"
             ? res.message
