@@ -66,7 +66,7 @@ export default function ChefLayout() {
         }}
       />
       <Tabs.Screen
-        name="notifications" // 👈 must have a file `app/(chef)/notifications.tsx`
+        name="notifications"
         options={{
           tabBarIcon: ({ focused }) => (
             <TabBarIcon iconName="notifications-outline" focused={focused} />

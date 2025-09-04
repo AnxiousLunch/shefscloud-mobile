@@ -10,6 +10,9 @@ import { Picker } from "@react-native-picker/picker";
 import { Ionicons } from "@expo/vector-icons";
 import { TextInput } from "react-native-paper";
 import React from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import * as Notifications from "expo-notifications";
+import { AppState } from "react-native";
 
 export default function ChefOrdersScreen() {
   const { user } = useAuth();
@@ -38,21 +41,16 @@ export default function ChefOrdersScreen() {
   const fetchOrders = async () => {
     try {
       if (!user?.id || !authToken) return;
-      
       setIsLoading(true);
-      
-      // Fetch orders
+
       const ordersData = await handleGetChefOrders(user.id, authToken);
       setOrders(ordersData || []);
-      
-      // Fetch pending count
+
       const pendingData = await handleGetPendingOrdersCount(user.id, authToken);
       setPendingCount(pendingData?.count || 0);
-      
-      // Fetch default settings
+
       const settings = await handleGetDefaultSetting(authToken);
       setDefaultSettings(settings || {});
-      
     } catch (error) {
       console.error("Error fetching orders:", error);
       Alert.alert("Error", "Failed to load orders");
@@ -62,8 +60,32 @@ export default function ChefOrdersScreen() {
     }
   };
 
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchOrders();
+    }, [user?.id, authToken])
+  );
+
   useEffect(() => {
-    fetchOrders();
+    const subscription = Notifications.addNotificationReceivedListener(() => {
+      // If app is on this page, refetch orders immediately
+      fetchOrders();
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [user?.id, authToken]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        // Whenever app comes to foreground, refresh if this screen is active
+        fetchOrders();
+      }
+    });
+
+    return () => subscription.remove();
   }, [user?.id, authToken]);
 
   useEffect(() => {
@@ -120,24 +142,26 @@ export default function ChefOrdersScreen() {
       switch (sortBy) {
         case "delivery_date_time":
           const dateA = a.delivery_date_time ? moment(a.delivery_date_time) : 
-                       (a.delivery_date && a.delivery_time ? moment(`${a.delivery_date} ${a.delivery_time}`) : moment.invalid());
+                      (a.delivery_date && a.delivery_time ? moment(`${a.delivery_date} ${a.delivery_time}`) : moment.invalid());
           const dateB = b.delivery_date_time ? moment(b.delivery_date_time) : 
-                       (b.delivery_date && b.delivery_time ? moment(`${b.delivery_date} ${b.delivery_time}`) : moment.invalid());
+                      (b.delivery_date && b.delivery_time ? moment(`${b.delivery_date} ${b.delivery_time}`) : moment.invalid());
           if (!dateA.isValid()) return 1;
           if (!dateB.isValid()) return -1;
           return dateA.diff(dateB);
           
         case "created_at":
+          // Changed to descending order (most recent first)
           return moment(b.created_at).diff(moment(a.created_at));
           
         case "total_price":
-          return (a.total_price || 0) - (b.total_price || 0);
+          return (b.total_price || 0) - (a.total_price || 0); // Changed to descending
           
         case "customer_name":
           return (a.name || "").localeCompare(b.name || "");
           
         default:
-          return 0;
+          // Default to sorting by creation date (most recent first)
+          return moment(b.created_at).diff(moment(a.created_at));
       }
     });
   };

@@ -9,6 +9,7 @@ import { useRouter } from "expo-router";
 import moment from "moment";
 import { Audio } from "expo-av";
 import * as Notifications from "expo-notifications";
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Add this import
 
 export default function NotificationsScreen() {
   const { authToken } = useAppSelector((state) => state.user);
@@ -18,6 +19,26 @@ export default function NotificationsScreen() {
   const [loading, setLoading] = useState(true);
   const soundRef = useRef(null);
   const lastNotificationTime = useRef(new Date());
+
+  // Load seen notification IDs from storage
+  const loadSeenNotifications = async () => {
+    try {
+      const seenNotifications = await AsyncStorage.getItem('seenNotifications');
+      return seenNotifications ? JSON.parse(seenNotifications) : [];
+    } catch (error) {
+      console.error("Error loading seen notifications:", error);
+      return [];
+    }
+  };
+
+  // Save seen notification IDs to storage
+  const saveSeenNotifications = async (seenIds) => {
+    try {
+      await AsyncStorage.setItem('seenNotifications', JSON.stringify(seenIds));
+    } catch (error) {
+      console.error("Error saving seen notifications:", error);
+    }
+  };
 
   // Initialize notification sound and permissions
   useEffect(() => {
@@ -90,7 +111,10 @@ export default function NotificationsScreen() {
           ? reviewsResponse.reviews
           : [];
 
-      // Create notifications with "isNew" flag
+      // Load seen notification IDs
+      const seenNotificationIds = await loadSeenNotifications();
+
+      // Create notifications with "hasSeen" flag
       const createNotifications = (items, type) => {
         return items
           .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
@@ -104,7 +128,7 @@ export default function NotificationsScreen() {
               ? `Order #${item.id} from ${item.name || 'a customer'}` 
               : item.comment || "New rating received",
             data: item,
-            isNew: new Date(item.created_at) > lastNotificationTime.current,
+            hasSeen: seenNotificationIds.includes(`${type}-${item.id}`), // Check if notification has been seen
           }));
       };
 
@@ -115,14 +139,17 @@ export default function NotificationsScreen() {
         (a, b) => new Date(b.created_at) - new Date(a.created_at)
       );
 
+      // Filter out seen notifications
+      const unseenNotifications = combined.filter(notification => !notification.hasSeen);
+
       // Check for new notifications to play sound
-      const newNotifications = combined.filter(n => n.isNew);
+      const newNotifications = unseenNotifications.filter(n => new Date(n.created_at) > lastNotificationTime.current);
       if (newNotifications.length > 0) {
         await playNotificationSound();
         lastNotificationTime.current = new Date();
       }
 
-      setNotifications(combined);
+      setNotifications(unseenNotifications); // Only show unseen notifications
     } catch (error) {
       console.error("Error fetching notifications:", error);
     } finally {
@@ -141,17 +168,25 @@ export default function NotificationsScreen() {
     return () => clearInterval(interval);
   }, [authToken, user?.id]);
 
-  const handleNotificationPress = (notification) => {
-    // Mark as read
-    const updatedNotifications = notifications.map(n => 
-      n.id === notification.id ? {...n, isNew: false} : n
-    );
-    setNotifications(updatedNotifications);
+  const handleNotificationPress = async (notification) => {
+    try {
+      // Mark notification as seen
+      const seenNotifications = await loadSeenNotifications();
+      const updatedSeenNotifications = [...seenNotifications, notification.id];
+      
+      // Save to storage
+      await saveSeenNotifications(updatedSeenNotifications);
+      
+      // Remove from current view
+      setNotifications(prev => prev.filter(n => n.id !== notification.id));
 
-    if (notification.type === "order") {
-      router.push("/orders");
-    } else if (notification.type === "review") {
-      router.push("/reviews");
+      if (notification.type === "order") {
+        router.push("/orders");
+      } else if (notification.type === "review") {
+        router.push("/reviews");
+      }
+    } catch (error) {
+      console.error("Error marking notification as seen:", error);
     }
   };
 
@@ -185,7 +220,7 @@ export default function NotificationsScreen() {
     <TouchableOpacity
       style={[
         styles.notificationItem,
-        item.isNew && styles.newNotificationItem
+        !item.hasSeen && styles.newNotificationItem
       ]}
       onPress={() => handleNotificationPress(item)}
       activeOpacity={0.7}
@@ -206,11 +241,11 @@ export default function NotificationsScreen() {
           <View style={styles.headerRow}>
             <Text style={[
               styles.titleText,
-              item.isNew && styles.newTitleText
+              !item.hasSeen && styles.newTitleText
             ]}>
               {item.title}
             </Text>
-            {item.isNew && <View style={styles.newBadge} />}
+            {!item.hasSeen && <View style={styles.newBadge} />}
           </View>
           
           <Text style={styles.messageText} numberOfLines={2}>
@@ -230,7 +265,7 @@ export default function NotificationsScreen() {
         />
       </View>
       
-      {item.isNew && <View style={styles.newIndicatorLine} />}
+      {!item.hasSeen && <View style={styles.newIndicatorLine} />}
     </TouchableOpacity>
   );
 
@@ -263,13 +298,8 @@ export default function NotificationsScreen() {
         <Text style={styles.headerTitle}>Notifications</Text>
         <View style={styles.headerStats}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{notifications.filter(n => n.isNew).length}</Text>
-            <Text style={styles.statLabel}>New</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
             <Text style={styles.statNumber}>{notifications.length}</Text>
-            <Text style={styles.statLabel}>Total</Text>
+            <Text style={styles.statLabel}>Unread</Text>
           </View>
         </View>
       </LinearGradient>
@@ -299,6 +329,7 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
+  // ... (keep all existing styles unchanged)
   container: {
     flex: 1,
     backgroundColor: '#F9FAFB',
@@ -308,7 +339,7 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
-    elevation: 4,
+    elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -320,6 +351,7 @@ const styles = StyleSheet.create({
     color: 'white',
     textAlign: 'center',
     marginBottom: 16,
+    marginTop: 16,
   },
   headerStats: {
     flexDirection: 'row',
