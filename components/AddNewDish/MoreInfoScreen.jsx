@@ -3,18 +3,34 @@ import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { styles } from '@/styles/addNewDishStyles';
 import { FlatList } from 'react-native';
-import CheckBox from 'expo-checkbox'
+import CheckBox from 'expo-checkbox';
 
 const MoreInfoScreen = ({
   prep_time,
   shelf_life,
   heating_instruction_id,
+  reheating_instruction,   // 👈 add this
   updateFields,
   heatInstruction,
   citiesOption,
   selectedCities,
   toggleCitySelection,
 }) => {
+  // When a template is selected, also update the text
+  const handleHeatingInstructionChange = (value) => {
+    updateFields({ heating_instruction_id: value });
+
+    if (!value) {
+      updateFields({ reheating_instruction: "" });
+      return;
+    }
+
+    const selected = heatInstruction.find((item) => item.id === value);
+    if (selected) {
+      updateFields({ reheating_instruction: selected.instruction });
+    }
+  };
+
   return (
     <View>
       <Text style={styles.sectionTitle}>More Information</Text>
@@ -25,7 +41,7 @@ const MoreInfoScreen = ({
         <View style={styles.pickerContainer}>
           <Picker
             selectedValue={heating_instruction_id}
-            onValueChange={(value) => updateFields({ heating_instruction_id: value })}
+            onValueChange={handleHeatingInstructionChange}
             style={styles.picker}
           >
             <Picker.Item label="--- Select Heating Instruction ---" value="" />
@@ -38,6 +54,17 @@ const MoreInfoScreen = ({
             ))}
           </Picker>
         </View>
+
+        {/* Text area for reheating instruction */}
+        <TextInput
+          style={[styles.input, { height: 240, textAlignVertical: 'top' }]}
+          placeholder="Description of Dish..."
+          multiline
+          numberOfLines={5}
+          editable={!!heating_instruction_id}   // disable until one is picked
+          value={reheating_instruction || ""}
+          onChangeText={(text) => updateFields({ reheating_instruction: text })}
+        />
       </View>
 
       <View style={styles.divider} />
@@ -48,7 +75,9 @@ const MoreInfoScreen = ({
         <TextInput
           style={styles.input}
           value={prep_time ? String(prep_time) : ''}
-          onChangeText={(text) => updateFields({ prep_time: parseInt(text) || 0 })}
+          onChangeText={(text) =>
+            updateFields({ prep_time: parseInt(text) || 0 })
+          }
           placeholder="e.g. 30"
           keyboardType="numeric"
         />
@@ -59,7 +88,7 @@ const MoreInfoScreen = ({
         <Text style={styles.subLabel}>
           Choose the cities where you'd like to offer your delicious dish
         </Text>
-        
+
         <FlatList
           data={citiesOption}
           keyExtractor={(item) => item.id.toString()}
@@ -67,24 +96,24 @@ const MoreInfoScreen = ({
           contentContainerStyle={{ paddingBottom: 10 }}
           nestedScrollEnabled={true}
           renderItem={({ item }) => (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.cityItem}
               onPress={() => toggleCitySelection(item)}
             >
               <CheckBox
-                value={selectedCities.some(city => city.id === item.id)}
+                value={selectedCities.some((city) => city.id === item.id)}
                 onValueChange={() => toggleCitySelection(item)}
               />
               <Text style={styles.cityText}>{item.label}</Text>
             </TouchableOpacity>
           )}
         />
-        
+
         {selectedCities.length > 0 && (
           <View style={styles.selectedCitiesContainer}>
             <Text style={styles.selectedLabel}>Selected cities:</Text>
             <View style={styles.selectedCitiesList}>
-              {selectedCities.map(city => (
+              {selectedCities.map((city) => (
                 <View key={city.id} style={styles.cityTag}>
                   <Text style={styles.cityTagText}>{city.label}</Text>
                 </View>
@@ -94,7 +123,6 @@ const MoreInfoScreen = ({
         )}
       </View>
 
-
       <View style={styles.divider} />
 
       {/* Shelf Life */}
@@ -103,7 +131,9 @@ const MoreInfoScreen = ({
         <TextInput
           style={styles.input}
           value={shelf_life ? String(shelf_life) : ''}
-          onChangeText={(text) => updateFields({ shelf_life: parseInt(text) || 0 })}
+          onChangeText={(text) =>
+            updateFields({ shelf_life: parseInt(text) || 0 })
+          }
           placeholder="e.g. 3"
           keyboardType="numeric"
         />

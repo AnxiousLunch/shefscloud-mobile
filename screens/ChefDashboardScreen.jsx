@@ -138,10 +138,10 @@ export default function ChefDashboardScreen() {
       try {
         setIsLoadingSales(true);
        setIsLoadingSales(true);
-const startDate = "2020-01-01";
-const endDate = "2025-08-09"
+    const startDate = "2020-01-01";
+    const endDate = "2025-08-09"
     console.log("User ID:", user?.id);
-    console.log("Possible Chef ID:", user?.chef_id || user?.last_order_address?.chef_id);
+    console.log("Possible Chef ID:", user?.id || user?.last_order_address?.chef_id);
 
 const chefIdToUse = user?.id;  // ✅ Always use the current user's ID
 

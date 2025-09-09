@@ -350,9 +350,8 @@ export const handlePostTransaction = async (
     }`;
 
     // Make the API call
-    const { data } = await api.post(
+    const { data } = await api.get(
       url,
-      {},
       {
         headers: { Authorization: `Bearer ${token}` },
       }

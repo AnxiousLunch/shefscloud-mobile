@@ -159,12 +159,13 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e2e8f0',
     borderRadius: 8,
-    overflow: 'hidden',
+    height: "auto",
   },
   picker: {
     height: 48,
     width: '100%',
     color: '#333',
+    height: "auto",
   },
   multiSelectContainer: {
     marginTop: 8,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, ActivityIndicator, Alert , Platform } from "react-native";
+import { View, Text, ActivityIndicator, Alert, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSelector, useDispatch } from "react-redux";
 import { AppleMaps, GoogleMaps } from "expo-maps";
@@ -8,7 +8,7 @@ import {
   handleCheckDiscount,
   handleCreateOrder
 } from "@/services/order"
-import {handleGetDefaultSetting} from "@/services/default_setting"
+import { handleGetDefaultSetting } from "@/services/default_setting"
 import { updateCartItem, removeFromCart, onOrderSubmit, removeFromCartThunk, onOrderSubmitThunk } from "@/store/cart";
 import { updateUser } from "@/store/user";
 import { ScrollView, TextInput, Image, TouchableOpacity, StyleSheet } from "react-native";
@@ -19,6 +19,10 @@ import { useRoute } from "@react-navigation/native";
 import * as Location from "expo-location"
 import { Button } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+// Add these imports for Bykea integration
+import { handleGetBykeaAuthorization, handleGetBykeaFare } from "@/services/shef";
+import { handleGetChefAddress } from "@/services/shef";
 
 async function sendPushNotification(expoPushToken, title, body, data = {}) {
   const message = {
@@ -45,7 +49,6 @@ async function sendPushNotification(expoPushToken, title, body, data = {}) {
   }
 }
 
-
 const CheckoutLogic = () => {
   const dispatch = useDispatch();
   const [error, setError] = useState(null);
@@ -66,7 +69,7 @@ const CheckoutLogic = () => {
   const [coordinates, setCoordinates] = useState({
     latitude: 24.8607,
     longitude: 67.0011
-  }); // Dummy Karachi coordinates
+  });
   const [selectedCoords, setSelectedCoords] = useState();
   const [addressPlace, setAddressPlace] = useState("home");
   const [isMapTouched, setIsMapTouched] = useState(false);
@@ -75,7 +78,7 @@ const CheckoutLogic = () => {
   // Redux state
   const { userInfo, authToken } = useSelector((state) => state.user);
   const { cartItem: cart } = useSelector((state) => state.cart);
-  const {chefId, chefIndex} = useLocalSearchParams();
+  const { chefId, chefIndex } = useLocalSearchParams();
 
   const [location, setLocation] = useState(null);
 
@@ -135,47 +138,17 @@ const CheckoutLogic = () => {
     apartment_city: "",
     apartment_addition_direction: "",
     line2: "",
-    latitude: 24.8607, // Dummy latitude
-    longitude: 67.0011, // Dummy longitude
+    latitude: 24.8607,
+    longitude: 67.0011,
     name: `${userInfo?.first_name} ${userInfo?.last_name}` || "",
     phone: userInfo?.phone || "",
     postal_code: "",
-    city: "Karachi", // Dummy city
+    city: "Karachi",
     state: "",
     delivery_instruction: "",
     delivery_notes: "",
     address_type: "home",
   });
-
-  
-  useEffect(() => {
-    (async () => {
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== "granted") {
-          console.log("Location permission denied");
-          return;
-        }
-
-        let loc = await Location.getCurrentPositionAsync({});
-        const coords = {
-          latitude: loc.coords.latitude,
-          longitude: loc.coords.longitude,
-        };
-
-        setLocation(coords);
-        setCoordinates(coords); // update your checkout state
-        setOrderDeliveryAddress(prev => ({
-          ...prev,
-          latitude: coords.latitude,
-          longitude: coords.longitude
-        }));
-      } catch (err) {
-        console.error("Location error:", err);
-      }
-    })();
-  }, []);
-
 
   // Helper functions
   const handleButtonClick = (buttonId, percent) => {
@@ -198,17 +171,103 @@ const CheckoutLogic = () => {
     updateOrder({ tip_price: tip_amount });
   };
 
-  // Dummy initialization instead of actual geocoding
-  const initDummyLocation = () => {
-    setBykeaToken("dummy_bykea_token");
-    setBykeaFare(150); // Fixed delivery fare
-    setChefAddress({  
-      addresses: [{ 
-        latitude: "24.8607", 
-        longitude: "67.0011" 
-      }] 
-    });
+  // Get Bykea authorization token
+  const getBykeaToken = async () => {
+    try {
+      const Authorization = await handleGetBykeaAuthorization({
+        username: "923202024035", // Replace with your Bykea credentials
+        password: "S7vN8TQpXbyCwWKsLHJjZh",
+      });
+      setBykeaToken(Authorization.data.token);
+    } catch (error) {
+      console.error("Error getting Bykea token: ", error);
+    }
   };
+
+  // Fetch chef's address
+  const fetchChefAddress = async () => {
+    try {
+      const chefAddress = await handleGetChefAddress(authToken, cart[0]?.id);
+      setChefAddress(chefAddress);
+    } catch (error) {
+      console.error("Error fetching chef address: ", error);
+    }
+  };
+
+  // Calculate Bykea fare
+  const calculateBykeaFare = async () => {
+    if (!bykeaToken || !chefAddress || !coordinates.latitude || !coordinates.longitude) return;
+    
+    try {
+      let formattedPhone = order.phone.replace("+", "");
+      if (formattedPhone.startsWith("03")) {
+        formattedPhone = "92" + formattedPhone.slice(1); 
+        // removes the first "0" and prepends "92"
+      }
+      const data = {
+        service_code: 22,
+        customer: {
+          phone: formattedPhone,
+        },
+        pickup: {
+          lat: parseFloat(chefAddress?.addresses[0].latitude),
+          lng: parseFloat(chefAddress?.addresses[0].longitude),
+        },
+        dropoff: {
+          lat: coordinates.latitude,
+          lng: coordinates.longitude,
+        },
+      };
+      
+      const bykeaFareResponse = await handleGetBykeaFare(data, bykeaToken);
+      setBykeaFare(bykeaFareResponse.data.fare_max);
+    } catch (error) {
+      console.error("Error calculating Bykea fare: ", error);
+    }
+  };
+
+  // Get user's location
+  useEffect(() => {
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          console.log("Location permission denied");
+          return;
+        }
+
+        let loc = await Location.getCurrentPositionAsync({});
+        const coords = {
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
+        };
+
+        setLocation(coords);
+        setCoordinates(coords);
+        updateOrderDeliveryAddress({
+          latitude: coords.latitude,
+          longitude: coords.longitude
+        });
+      } catch (err) {
+        console.error("Location error:", err);
+      }
+    })();
+  }, []);
+
+  // Initialize Bykea integration
+  useEffect(() => {
+    const initBykea = async () => {
+      await getBykeaToken();
+      await fetchChefAddress();
+    };
+    
+    initBykea();
+  }, []);
+
+  // Calculate fare when dependencies change
+  useEffect(() => {
+    calculateBykeaFare();
+  }, [bykeaToken, chefAddress, coordinates]);
 
   const fetchDefaultSetting = async () => {
     try {
@@ -289,9 +348,9 @@ const CheckoutLogic = () => {
         deliveryDate = chef.delivery_date;
         deliverySlot = chef.delivery_slot;
 
-        chef.menu.forEach((menu) => {
-          const chef_earning_fee = menu.chef_earning_fee || 0;
-          const quantity = menu.quantity || 0;
+        chef.menu.forEach((menuItem, menuIndex) => {
+          const chef_earning_fee = menuItem.chef_earning_fee || 0;
+          const quantity = menuItem.quantity || 0;
           const delivery_price = bykeaFare;
 
           const platformPercentageFee =
@@ -309,8 +368,8 @@ const CheckoutLogic = () => {
 
           // Push each menu as an order detail with proper name
           newOrderDetails.push({
-            name: menu.name || "Unnamed Item",
-            user_menu_id: menu.id,
+            name: menuItem.name || "Unnamed Item",
+            user_menu_id: menuItem.id,
             unit_price: chef_earning_fee,
             quantity,
             platform_percentage: defaultSetting?.platform_charge_percentage || 0,
@@ -433,10 +492,10 @@ const CheckoutLogic = () => {
 
       console.log("[DEBUG] Full order payload:", JSON.stringify(payload, null, 2));
 
-
       const response = await handleCreateOrder(authToken, payload);
       console.log("[DEBUG]: Create Order Response: ", response);
       await sendPushNotification(response.fcm_token, "New Order Received", "You have a new order waiting for you!");
+      
       // Update user info
       const updatedUserInfo = {
         ...userInfo,
@@ -455,7 +514,6 @@ const CheckoutLogic = () => {
           delivery_slot: order.delivery_slot,
         })
       );
-      // await dispatch(removeFromCart({ chefId: parseInt(chefId), chefIndex: parseInt(chefIndex) }));
 
       setOrder({ ...order, tip_price: 0, discount_price: 0 });
       setPromoCode({ code: "", order_total: 0, menus: [] });
@@ -478,8 +536,6 @@ const CheckoutLogic = () => {
         // Fetch default settings
         await fetchDefaultSetting();
         
-        // Initialize dummy location and Bykea values
-        initDummyLocation();
         console.log("user info", userInfo);
         
         // Load last order address if exists
@@ -520,9 +576,9 @@ const CheckoutLogic = () => {
     if (defaultSetting && cart.length) {
       calculateOrderDetails();
     }
-  }, [defaultSetting, cart, order.tip_price]);
+  }, [defaultSetting, cart, order.tip_price, bykeaFare]);
 
-  
+  // ... rest of the component remains the same until the return statement
 
   return (
     <ScrollView style={styles.container}
@@ -659,196 +715,193 @@ const CheckoutLogic = () => {
               </View>
             )}
 
-
-
             {addressPlace === "office" && (
-                    <>
-                      {/* Office Department, Floor, Company, Building No */}
-                      <View style={styles.grid}>
-                        <Field
-                          label="Office Dept"
-                          required
-                          value={orderDeliveryAddress.office_department}
-                          onChangeText={(text) =>
-                            updateOrderDeliveryAddress({ office_department: text })
-                          }
-                          placeholder="Office department"
-                        />
-                        <Field
-                          label="Floor"
-                          required
-                          value={orderDeliveryAddress.office_floor}
-                          onChangeText={(text) =>
-                            updateOrderDeliveryAddress({ office_floor: text })
-                          }
-                          placeholder="Floor"
-                        />
-                        <Field
-                          label="Company"
-                          required
-                          value={orderDeliveryAddress.office_company}
-                          onChangeText={(text) =>
-                            updateOrderDeliveryAddress({ office_company: text })
-                          }
-                          placeholder="Company"
-                        />
-                        <Field
-                          label="Building no."
-                          required
-                          value={orderDeliveryAddress.office_building_no}
-                          onChangeText={(text) =>
-                            updateOrderDeliveryAddress({ office_building_no: text })
-                          }
-                          placeholder="Building no."
-                        />
-                      </View>
+              <>
+                {/* Office Department, Floor, Company, Building No */}
+                <View style={styles.grid}>
+                  <Field
+                    label="Office Dept"
+                    required
+                    value={orderDeliveryAddress.office_department}
+                    onChangeText={(text) =>
+                      updateOrderDeliveryAddress({ office_department: text })
+                    }
+                    placeholder="Office department"
+                  />
+                  <Field
+                    label="Floor"
+                    required
+                    value={orderDeliveryAddress.office_floor}
+                    onChangeText={(text) =>
+                      updateOrderDeliveryAddress({ office_floor: text })
+                    }
+                    placeholder="Floor"
+                  />
+                  <Field
+                    label="Company"
+                    required
+                    value={orderDeliveryAddress.office_company}
+                    onChangeText={(text) =>
+                      updateOrderDeliveryAddress({ office_company: text })
+                    }
+                    placeholder="Company"
+                  />
+                  <Field
+                    label="Building no."
+                    required
+                    value={orderDeliveryAddress.office_building_no}
+                    onChangeText={(text) =>
+                      updateOrderDeliveryAddress({ office_building_no: text })
+                    }
+                    placeholder="Building no."
+                  />
+                </View>
 
-                      {/* Street, City */}
-                      <View style={styles.grid}>
-                        <Field
-                          label="Street Address"
-                          required
-                          value={orderDeliveryAddress.office_street_address}
-                          onChangeText={(text) =>
-                            updateOrderDeliveryAddress({ office_street_address: text })
-                          }
-                          placeholder="Street Address"
-                        />
-                        <Field
-                          label="City"
-                          required
-                          value={orderDeliveryAddress.office_city}
-                          onChangeText={(text) =>
-                            updateOrderDeliveryAddress({ office_city: text })
-                          }
-                          placeholder="City"
-                        />
-                      </View>
+                {/* Street, City */}
+                <View style={styles.grid}>
+                  <Field
+                    label="Street Address"
+                    required
+                    value={orderDeliveryAddress.office_street_address}
+                    onChangeText={(text) =>
+                      updateOrderDeliveryAddress({ office_street_address: text })
+                    }
+                    placeholder="Street Address"
+                  />
+                  <Field
+                    label="City"
+                    required
+                    value={orderDeliveryAddress.office_city}
+                    onChangeText={(text) =>
+                      updateOrderDeliveryAddress({ office_city: text })
+                    }
+                    placeholder="City"
+                  />
+                </View>
 
-                      {/* Additional Direction */}
-                      <Field
-                        label="Additional Direction"
-                        value={orderDeliveryAddress.office_addition_direction}
-                        onChangeText={(text) =>
-                          updateOrderDeliveryAddress({ office_addition_direction: text })
-                        }
-                        placeholder="Additional direction"
-                      />
-                    </>
-                  )}
+                {/* Additional Direction */}
+                <Field
+                  label="Additional Direction"
+                  value={orderDeliveryAddress.office_addition_direction}
+                  onChangeText={(text) =>
+                    updateOrderDeliveryAddress({ office_addition_direction: text })
+                  }
+                  placeholder="Additional direction"
+                />
+              </>
+            )}
 
-                  {addressPlace === "apartment" && (
-                    <>
-                      {/* Apartment Name, Apt No, Floor, City */}
-                      <View style={styles.grid}>
-                        <Field
-                          label="Apartment Name"
-                          required
-                          value={orderDeliveryAddress.apartment_name}
-                          onChangeText={(text) =>
-                            updateOrderDeliveryAddress({ apartment_name: text })
-                          }
-                          placeholder="Building Name"
-                        />
-                        <Field
-                          label="Apt. No"
-                          required
-                          value={orderDeliveryAddress.apartment_apartment_no}
-                          onChangeText={(text) =>
-                            updateOrderDeliveryAddress({ apartment_apartment_no: text })
-                          }
-                          placeholder="Apartment No"
-                        />
-                        <Field
-                          label="Floor"
-                          required
-                          value={orderDeliveryAddress.apartment_floor}
-                          onChangeText={(text) =>
-                            updateOrderDeliveryAddress({ apartment_floor: text })
-                          }
-                          placeholder="Floor"
-                        />
-                        <Field
-                          label="City"
-                          required
-                          value={orderDeliveryAddress.apartment_city}
-                          onChangeText={(text) =>
-                            updateOrderDeliveryAddress({ apartment_city: text })
-                          }
-                          placeholder="City"
-                        />
-                        <Field
-                          label="Street Address"
-                          required
-                          value={orderDeliveryAddress.apartment_street_address}
-                          onChangeText={(text) =>
-                            updateOrderDeliveryAddress({ apartment_street_address: text })
-                          }
-                          placeholder="Street Address"
-                          fullWidth
-                        />
-                        <Field
-                          label="Additional Direction"
-                          value={orderDeliveryAddress.apartment_addition_direction}
-                          onChangeText={(text) =>
-                            updateOrderDeliveryAddress({
-                              apartment_addition_direction: text,
-                            })
-                          }
-                          placeholder="Additional direction"
-                          fullWidth
-                        />
-                      </View>
-                    </>
-                  )}
-                  <View style={styles.mapContainer}
-                    onTouchStart={() => setIsMapTouched(true)}
-                    onTouchEnd={() => setIsMapTouched(false)}
-                  >
-                    {location ? (
-                      Platform.OS === "ios" ? (
-                        <AppleMaps.View
-                          style={styles.map}
-                          cameraPosition={{
-                            coordinates: {
-                              latitude: location.latitude,
-                              longitude: location.longitude,
-                            },
-                          }}
-                          markers={[
-                            {
-                              coordinates: location,
-                              draggable: true,
-                              subtitle: "Your location",
-                              showCallout: true,
-                            },
-                          ]}
-                        />
-                      ) : (
-                        <GoogleMaps.View
-                          style={styles.map}
-                          cameraPosition={{
-                            coordinates: {
-                              latitude: location.latitude,
-                              longitude: location.longitude,
-                            },
-                          }}
-                          markers={[
-                            {
-                              coordinates: location,
-                              draggable: true,
-                              snippet: "Your location",
-                              showCallout: true,
-                            },
-                          ]}
-                        />
-                      )
-                    ) : (
-                      <Text>Fetching your location...</Text>
-                    )}
-                  </View>
+            {addressPlace === "apartment" && (
+              <>
+                {/* Apartment Name, Apt No, Floor, City */}
+                <View style={styles.grid}>
+                  <Field
+                    label="Apartment Name"
+                    required
+                    value={orderDeliveryAddress.apartment_name}
+                    onChangeText={(text) =>
+                      updateOrderDeliveryAddress({ apartment_name: text })
+                    }
+                    placeholder="Building Name"
+                  />
+                  <Field
+                    label="Apt. No"
+                    required
+                    value={orderDeliveryAddress.apartment_apartment_no}
+                    onChangeText={(text) =>
+                      updateOrderDeliveryAddress({ apartment_apartment_no: text })
+                    }
+                    placeholder="Apartment No"
+                  />
+                  <Field
+                    label="Floor"
+                    required
+                    value={orderDeliveryAddress.apartment_floor}
+                    onChangeText={(text) =>
+                      updateOrderDeliveryAddress({ apartment_floor: text })
+                    }
+                    placeholder="Floor"
+                  />
+                  <Field
+                    label="City"
+                    required
+                    value={orderDeliveryAddress.apartment_city}
+                    onChangeText={(text) =>
+                      updateOrderDeliveryAddress({ apartment_city: text })
+                    }
+                    placeholder="City"
+                  />
+                  <Field
+                    label="Street Address"
+                    required
+                    value={orderDeliveryAddress.apartment_street_address}
+                    onChangeText={(text) =>
+                      updateOrderDeliveryAddress({ apartment_street_address: text })
+                    }
+                    placeholder="Street Address"
+                    fullWidth
+                  />
+                  <Field
+                    label="Additional Direction"
+                    value={orderDeliveryAddress.apartment_addition_direction}
+                    onChangeText={(text) =>
+                      updateOrderDeliveryAddress({
+                        apartment_addition_direction: text,
+                      })
+                    }
+                    placeholder="Additional direction"
+                    fullWidth
+                  />
+                </View>
+              </>
+            )}
+            <View style={styles.mapContainer}
+              onTouchStart={() => setIsMapTouched(true)}
+              onTouchEnd={() => setIsMapTouched(false)}
+            >
+              {location ? (
+                Platform.OS === "ios" ? (
+                  <AppleMaps.View
+                    style={styles.map}
+                    cameraPosition={{
+                      coordinates: {
+                        latitude: location.latitude,
+                        longitude: location.longitude,
+                      },
+                    }}
+                    markers={[
+                      {
+                        coordinates: location,
+                        draggable: true,
+                        subtitle: "Your location",
+                        showCallout: true,
+                      },
+                    ]}
+                  />
+                ) : (
+                  <GoogleMaps.View
+                    style={styles.map}
+                    cameraPosition={{
+                      coordinates: {
+                        latitude: location.latitude,
+                        longitude: location.longitude,
+                      },
+                    }}
+                    markers={[
+                      {
+                        coordinates: location,
+                        draggable: true,
+                        snippet: "Your location",
+                        showCallout: true,
+                      },
+                    ]}
+                  />
+                )
+              ) : (
+                <Text>Fetching your location...</Text>
+              )}
+            </View>
           </View>
-
 
           {/* Delivery Instructions */}
           <View style={styles.card}>
@@ -1112,7 +1165,6 @@ const CheckoutLogic = () => {
     </ScrollView>
   );
 };
-
 
 function Field({ label, required, value, onChangeText, placeholder, fullWidth }) {
   return (
@@ -1514,6 +1566,5 @@ buttonText: { // more space between icon and text
     height: "100%",
   },
 });
-
 
 export default CheckoutLogic;
