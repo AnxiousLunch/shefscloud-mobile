@@ -3,7 +3,7 @@
     "name": "ShefsCloud",
     "slug": "shefscloud_mobile",
     "icon": "./assets/icon_5.png",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "scheme": "shefscloud",
@@ -22,6 +22,7 @@
     },
     "android": {
       "edgeToEdgeEnabled": true,
+      "versionCode": 2,
       "config": {
         "googleMaps": {
           "apiKey": "AIzaSyBiA5URXPErjPFP5LqtYlEjo62sbze_2SE"
@@ -36,6 +37,7 @@
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.ACCESS_MEDIA_LOCATION",
+        "android.permission.READ_MEDIA_IMAGES",
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION"
       ],

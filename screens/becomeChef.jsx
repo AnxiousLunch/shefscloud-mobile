@@ -91,7 +91,7 @@ const BecomeAChefScreen = () => {
     } catch (error) {
       setLocationError("Unable to get location. Please try again.");
       setIsModalOpen(true);
-    }
+  }
   };
 
   useEffect(() => {
@@ -148,6 +148,12 @@ const BecomeAChefScreen = () => {
 
   const pickImage = async (field) => {
     try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permission required", "We need access to your photos to continue.");
+        return;
+      }
+
       let result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -160,6 +166,7 @@ const BecomeAChefScreen = () => {
       }
     } catch (error) {
       Alert.alert("Error", "Failed to pick image. Please try again.");
+      console.log(error);
     }
   };
 

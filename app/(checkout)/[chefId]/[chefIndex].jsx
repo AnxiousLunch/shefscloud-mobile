@@ -33,7 +33,7 @@ async function sendPushNotification(expoPushToken, title, body, data = {}) {
     data
   };
   try {
-    const response = await fetch('https://exp.host/--/api/v2/push/send', {
+    const response = await fetch('https://exclearp.host/--/api/v2/push/send', {
       method: "POST",
       headers: {
         Accept: "application/json",

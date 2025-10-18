@@ -78,7 +78,7 @@ async function registerForPushNotificationsAsync() {
   }
 
   try {
-    const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+    const token = (await Notifications.getDevicePushTokenAsync({ projectId })).data;
     console.log('Expo push token:', token);
     return token;
   } catch (e) {
